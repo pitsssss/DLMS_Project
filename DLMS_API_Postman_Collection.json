@@ -1,0 +1,293 @@
+{
+  "info": {
+    "name": "DLMS API — Auth + Applications (Phase 3)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "citizen_email", "value": "testcitizen@example.com" },
+    { "key": "citizen_phone", "value": "0977000001" },
+    { "key": "citizen_password", "value": "password123" },
+    { "key": "otp_code", "value": "123456" },
+    { "key": "citizen_token", "value": "" },
+    { "key": "admin_email", "value": "admin@example.com" },
+    { "key": "employee_email", "value": "employee@example.com" },
+    { "key": "seed_password", "value": "password" },
+    { "key": "admin_token", "value": "" },
+    { "key": "employee_token", "value": "" },
+    { "key": "reset_token", "value": "" },
+    { "key": "new_password", "value": "newpassword123" },
+    { "key": "license_type_id", "value": "1" },
+    { "key": "service_type_id", "value": "1" },
+    { "key": "application_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Register Citizen By Email",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Citizen\",\n  \"email\": \"{{citizen_email}}\",\n  \"phone\": \"{{citizen_phone}}\",\n  \"password\": \"{{citizen_password}}\",\n  \"password_confirmation\": \"{{citizen_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "2. Verify Email OTP",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"code\": \"{{otp_code}}\",\n  \"purpose\": \"register\"\n}"
+        },
+        "url": "{{base_url}}/auth/verify-otp"
+      }
+    },
+    {
+      "name": "3. Login Citizen By Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.token) {",
+              "    pm.collectionVariables.set('citizen_token', j.data.token);",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"password\": \"{{citizen_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "4. Get Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/auth/me"
+      }
+    },
+    {
+      "name": "5. Complete Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Citizen\",\n  \"national_id\": \"11001100110\",\n  \"birth_date\": \"1998-01-15\",\n  \"governorate\": \"Damascus\",\n  \"address\": \"Damascus - Syria\"\n}"
+        },
+        "url": "{{base_url}}/profile/complete"
+      }
+    },
+    {
+      "name": "6. Forgot Password By Email",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/forgot-password"
+      }
+    },
+    {
+      "name": "7. Verify Forgot Password OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.reset_token) {",
+              "    pm.collectionVariables.set('reset_token', j.data.reset_token);",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"code\": \"{{otp_code}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/verify-forgot-password-otp"
+      }
+    },
+    {
+      "name": "8. Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"reset_token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\",\n  \"password_confirmation\": \"{{new_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/reset-password"
+      }
+    },
+    {
+      "name": "9. Login With New Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"password\": \"{{new_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "10. Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{seed_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "11. Login Employee",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{employee_email}}\",\n  \"password\": \"{{seed_password}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "12. List License Types (public)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+              "    pm.collectionVariables.set('license_type_id', String(j.data[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+        "url": "{{base_url}}/license-types"
+      }
+    },
+    {
+      "name": "13. List Service Types (public)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+              "    pm.collectionVariables.set('service_type_id', String(j.data[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+        "url": "{{base_url}}/service-types"
+      }
+    },
+    {
+      "name": "14. Create Application Draft (citizen)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.id) {",
+              "    pm.collectionVariables.set('application_id', String(j.data.id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"license_type_id\": {{license_type_id}},\n  \"service_type_id\": {{service_type_id}}\n}"
+        },
+        "url": "{{base_url}}/applications"
+      }
+    },
+    {
+      "name": "15. List My Applications",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications?per_page=15"
+      }
+    },
+    {
+      "name": "16. Get Application By Id",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}"
+      }
+    }
+  ]
+}
