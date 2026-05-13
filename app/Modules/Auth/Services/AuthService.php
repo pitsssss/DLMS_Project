@@ -114,6 +114,7 @@ class AuthService
 
             $this->users->updateUser($user, [
                 'password' => $newPassword,
+                'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
 
             $user->tokens()->delete();

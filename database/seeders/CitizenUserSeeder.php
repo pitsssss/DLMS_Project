@@ -15,17 +15,17 @@ class CitizenUserSeeder extends Seeder
         $role = Role::where('name', 'citizen')->firstOrFail();
 
         User::firstOrCreate(
-            ['email' => 'citizen@example.com'],
+            ['phone' => '0977777777'],
             [
                 'name' => 'Sample Citizen',
-                'phone' => '0977777777',
+                'email' => 'citizen@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,
                 'user_type' => UserType::Citizen,
                 'profile_completed' => false,
                 'is_active' => true,
                 'email_verified_at' => now(),
-                'phone_verified_at' => null,
+                'phone_verified_at' => now(),
             ]
         );
     }

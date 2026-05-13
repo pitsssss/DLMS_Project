@@ -15,17 +15,17 @@ class AdminUserSeeder extends Seeder
         $role = Role::where('name', 'admin')->firstOrFail();
 
         User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['phone' => '0999999999'],
             [
                 'name' => 'System Administrator',
-                'phone' => '0999999999',
+                'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,
                 'user_type' => UserType::Admin,
                 'profile_completed' => true,
                 'is_active' => true,
                 'email_verified_at' => now(),
-                'phone_verified_at' => null,
+                'phone_verified_at' => now(),
             ]
         );
     }

@@ -15,17 +15,17 @@ class EmployeeUserSeeder extends Seeder
         $role = Role::where('name', 'employee')->firstOrFail();
 
         User::firstOrCreate(
-            ['email' => 'employee@example.com'],
+            ['phone' => '0988888888'],
             [
                 'name' => 'Sample Employee',
-                'phone' => '0988888888',
+                'email' => 'employee@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,
                 'user_type' => UserType::Employee,
                 'profile_completed' => true,
                 'is_active' => true,
                 'email_verified_at' => now(),
-                'phone_verified_at' => null,
+                'phone_verified_at' => now(),
             ]
         );
     }
