@@ -65,3 +65,4 @@ Route::prefix('appointment-slots')->group(function (): void {
 
 Route::prefix('admin')->group(function (): void {
 });
+//todo: add admin routes    
