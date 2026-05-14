@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Auth + Applications (Phase 3)",
+    "name": "DLMS API — Phase 5 (+ Payments)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,7 +19,12 @@
     { "key": "new_password", "value": "newpassword123" },
     { "key": "license_type_id", "value": "1" },
     { "key": "service_type_id", "value": "1" },
-    { "key": "application_id", "value": "" }
+    { "key": "application_id", "value": "" },
+    { "key": "required_document_id", "value": "" },
+    { "key": "pending_document_id", "value": "" },
+    { "key": "payment_id", "value": "" },
+    { "key": "checkout_url", "value": "" },
+    { "key": "stripe_session_id", "value": "" }
   ],
   "item": [
     {
@@ -178,6 +183,22 @@
     },
     {
       "name": "11. Login Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.token) {",
+              "    pm.collectionVariables.set('employee_token', j.data.token);",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json", "type": "text" }],
@@ -222,8 +243,10 @@
             "exec": [
               "try {",
               "  var j = pm.response.json();",
-              "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
-              "    pm.collectionVariables.set('service_type_id', String(j.data[0].id));",
+              "  if (Array.isArray(j.data)) {",
+              "    var row = j.data.find(function (d) { return d.code === 'new_license'; });",
+              "    if (row && row.id) { pm.collectionVariables.set('service_type_id', String(row.id)); }",
+              "    else if (j.data.length && j.data[0].id) { pm.collectionVariables.set('service_type_id', String(j.data[0].id)); }",
               "  }",
               "} catch (e) {}"
             ]
@@ -287,6 +310,209 @@
           { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
         ],
         "url": "{{base_url}}/applications/{{application_id}}"
+      }
+    },
+    {
+      "name": "17. Required Documents Checklist",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+              "    pm.collectionVariables.set('required_document_id', String(j.data[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/required-documents"
+      }
+    },
+    {
+      "name": "18. Upload Application Document (multipart)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "required_document_id",
+              "value": "{{required_document_id}}",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": "",
+              "description": "Select a PDF or image (jpg/png) matching allowed_extensions for this document type."
+            }
+          ]
+        },
+        "url": "{{base_url}}/applications/{{application_id}}/documents"
+      }
+    },
+    {
+      "name": "19. Submit Documents For Review",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/submit-documents"
+      }
+    },
+    {
+      "name": "20. List Pending Documents (employee)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.items && j.data.items.length && j.data.items[0].id) {",
+              "    pm.collectionVariables.set('pending_document_id', String(j.data.items[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/documents/pending-review?per_page=20"
+      }
+    },
+    {
+      "name": "21. Approve Document (employee)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/documents/{{pending_document_id}}/approve"
+      }
+    },
+    {
+      "name": "22. Reject Document (employee)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rejection_reason\": \"Document is unclear. Please upload a higher resolution scan.\"\n}"
+        },
+        "url": "{{base_url}}/admin/documents/{{pending_document_id}}/reject"
+      }
+    },
+    {
+      "name": "23. Get Application Fee (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/fee"
+      }
+    },
+    {
+      "name": "24. Create Application Payment (citizen)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (!j.data) return;",
+              "  if (j.data.payment && j.data.payment.id) {",
+              "    pm.collectionVariables.set('payment_id', String(j.data.payment.id));",
+              "    if (j.data.checkout_url) pm.collectionVariables.set('checkout_url', String(j.data.checkout_url));",
+              "    var pr = j.data.payment.provider_reference;",
+              "    if (pr) pm.collectionVariables.set('stripe_session_id', String(pr));",
+              "    var m = j.data.payment.metadata;",
+              "    if (m && m.stripe_session_id) pm.collectionVariables.set('stripe_session_id', String(m.stripe_session_id));",
+              "  } else if (j.data.id) {",
+              "    pm.collectionVariables.set('payment_id', String(j.data.id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{base_url}}/applications/{{application_id}}/payments"
+      }
+    },
+    {
+      "name": "25. Check Payment Status (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/payments/{{payment_id}}/status"
+      }
+    },
+    {
+      "name": "26. Confirm Application Payment (mock only)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/payments/{{payment_id}}/confirm"
+      }
+    },
+    {
+      "name": "27. List Application Payments (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/payments"
       }
     }
   ]

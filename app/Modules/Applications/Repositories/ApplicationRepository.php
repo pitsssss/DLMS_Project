@@ -60,4 +60,52 @@ class ApplicationRepository
             ->with(['licenseType', 'serviceType', 'currentTestType'])
             ->first();
     }
+
+    public function findById(int $applicationId): ?LicenseApplication
+    {
+        return LicenseApplication::query()
+            ->whereKey($applicationId)
+            ->with(['licenseType', 'serviceType', 'currentTestType', 'citizen'])
+            ->first();
+    }
+
+    public function transitionStatus(
+        LicenseApplication $application,
+        ApplicationStatus $newStatus,
+        ?User $actor,
+        ?string $notes = null,
+        ?string $applicationRejectionReason = null
+    ): LicenseApplication {
+        return DB::transaction(function () use ($application, $newStatus, $actor, $notes, $applicationRejectionReason) {
+            $oldStatus = $application->status;
+
+            $application->status = $newStatus;
+
+            if ($newStatus === ApplicationStatus::DocumentsUnderReview) {
+                $application->rejection_reason = null;
+                $application->submitted_at ??= now();
+            }
+
+            if ($newStatus === ApplicationStatus::DocumentsRejected && $applicationRejectionReason !== null) {
+                $application->rejection_reason = $applicationRejectionReason;
+            }
+
+            if ($newStatus === ApplicationStatus::PaymentPending) {
+                $application->rejection_reason = null;
+            }
+
+            $application->save();
+
+            ApplicationStatusHistory::query()->create([
+                'application_id' => $application->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changed_by' => $actor?->id,
+                'reason' => $applicationRejectionReason,
+                'notes' => $notes,
+            ]);
+
+            return $application->fresh(['licenseType', 'serviceType', 'currentTestType']);
+        });
+    }
 }

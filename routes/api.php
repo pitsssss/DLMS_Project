@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Applications\Controllers\ApplicationController;
+use App\Modules\Applications\Controllers\ApplicationDocumentController;
 use App\Modules\Applications\Controllers\LicenseTypeController;
 use App\Modules\Applications\Controllers\ServiceTypeController;
 use App\Modules\Auth\Controllers\ForgotPasswordController;
@@ -8,6 +9,8 @@ use App\Modules\Auth\Controllers\LoginController;
 use App\Modules\Auth\Controllers\LogoutController;
 use App\Modules\Auth\Controllers\ProfileController;
 use App\Modules\Auth\Controllers\RegisterController;
+use App\Modules\Payments\Controllers\ApplicationPaymentController;
+use App\Modules\Payments\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -15,7 +18,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => 'DLMS API is running.',
         'data' => [
-            'phase' => 3,
+            'phase' => 5,
         ],
     ]);
 });
@@ -45,8 +48,37 @@ Route::get('/service-types', [ServiceTypeController::class, 'index']);
 Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(function (): void {
     Route::get('/', [ApplicationController::class, 'index']);
     Route::post('/', [ApplicationController::class, 'store']);
+    Route::get('/{application}/required-documents', [ApplicationDocumentController::class, 'requiredDocuments'])
+        ->whereNumber('application');
+    Route::get('/{application}/documents', [ApplicationDocumentController::class, 'index'])
+        ->whereNumber('application');
+    Route::get('/{application}/fee', [ApplicationPaymentController::class, 'showFee'])
+        ->whereNumber('application');
+    Route::get('/{application}/payments', [ApplicationPaymentController::class, 'index'])
+        ->whereNumber('application');
+    Route::post('/{application}/payments', [ApplicationPaymentController::class, 'store'])
+        ->whereNumber('application')
+        ->middleware('throttle:15,1');
+    Route::get('/{application}/payments/{payment}/status', [ApplicationPaymentController::class, 'status'])
+        ->whereNumber('application')
+        ->whereNumber('payment');
+    Route::post('/{application}/payments/{payment}/confirm', [ApplicationPaymentController::class, 'confirm'])
+        ->whereNumber('application')
+        ->whereNumber('payment')
+        ->middleware('throttle:15,1');
+    Route::post('/{application}/documents', [ApplicationDocumentController::class, 'store'])
+        ->whereNumber('application')
+        ->middleware('throttle:30,1');
+    Route::post('/{application}/submit-documents', [ApplicationDocumentController::class, 'submit'])
+        ->whereNumber('application')
+        ->middleware('throttle:10,1');
     Route::get('/{application}', [ApplicationController::class, 'show'])->whereNumber('application');
 });
+
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])
+    ->middleware('throttle:100,1');
+
+require base_path('app/Modules/Admin/Routes/admin.php');
 
 Route::prefix('appointments')->group(function (): void {
 });
@@ -62,7 +94,3 @@ Route::prefix('chatbot')->group(function (): void {
 
 Route::prefix('appointment-slots')->group(function (): void {
 });
-
-Route::prefix('admin')->group(function (): void {
-});
-//todo: add admin routes    

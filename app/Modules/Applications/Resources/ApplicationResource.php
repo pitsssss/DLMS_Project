@@ -3,6 +3,7 @@
 namespace App\Modules\Applications\Resources;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin \App\Models\LicenseApplication */
@@ -48,6 +49,15 @@ class ApplicationResource extends JsonResource
             'issued_at' => $this->issued_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'documents' => $this->whenLoaded('applicationDocuments', function () {
+                /** @var Collection<int, \App\Models\ApplicationDocument> $docs */
+                $docs = $this->applicationDocuments;
+
+                return $docs
+                    ->map(fn ($doc) => (new ApplicationDocumentResource($doc))->resolve())
+                    ->values()
+                    ->all();
+            }),
         ];
     }
 }

@@ -136,7 +136,7 @@ The system aims to:
 | Citizen              | Uses the mobile app to submit applications, upload documents, pay fees, book appointments, and track application status.          |
 | Employee             | Uses the admin dashboard to process applications, review documents, record test results, and issue licenses based on permissions. |
 | Admin                | Has full access to system settings, users, roles, reports, audit logs, and administrative operations.                             |
-| Payment Gateway      | Mock external payment provider used for development.                                                                              |
+| Payment Gateway      | Configurable: mock confirmation or Stripe Checkout (test/live keys via `.env`).                                                                 |
 | Notification Service | Internal service for storing and sending database notifications.                                                                  |
 | OTP Service          | Mock OTP service used for phone verification.                                                                                     |
 
@@ -207,7 +207,7 @@ The project follows a clean modular architecture.
 | Users         | User management, roles, and permissions.                                         |
 | Applications  | License service requests and application lifecycle.                              |
 | Documents     | Document upload, review, approval, and rejection.                                |
-| Payments      | Mock payment processing and payment records.                                     |
+| Payments      | Application fees: mock confirmation or Stripe Checkout with webhook completion.   |
 | Appointments  | Appointment slots, booking, rescheduling, and cancellation.                      |
 | Tests         | Test results, test sequence, and retake logic.                                   |
 | Licenses      | License issuance, renewal, replacement, blocking, and unblocking.                |
@@ -530,12 +530,53 @@ tests/
 
 ---
 
+## Payment provider (`PAYMENT_PROVIDER`)
+
+Set in `.env` (see `.env.example`):
+
+* `mock` — citizen creates a payment, then calls `POST /applications/{id}/payments/{payment}/confirm` to complete it (local and automated tests default to this via `phpunit.xml`).
+* `stripe` — citizen creates a payment and receives `checkout_url` plus `publishable_key`; completion is driven by Stripe webhooks and by polling `GET .../payments/{payment}/status`. Manual confirm is disabled for Stripe.
+
+Secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) are read only from server config and are never returned by the API.
+
+---
+
 ## Mock Payment Gateway
 
-* Used for development and testing.
-* Simulates payment success by default.
-* Stores provider reference.
+* Used when `PAYMENT_PROVIDER=mock`.
+* Simulates payment success after manual confirm.
+* Stores a mock provider reference.
 * Does not store card data.
+
+---
+
+## Stripe Checkout (test mode)
+
+1. Add Stripe values to `.env` (use test keys only; never commit real keys):
+
+   * `PAYMENT_PROVIDER=stripe`
+   * `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+   * `STRIPE_CURRENCY`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL` (success URL may include Stripe’s `{CHECKOUT_SESSION_ID}` placeholder).
+
+2. Clear config cache: `php artisan config:clear`
+
+3. Start Laravel: `php artisan serve`
+
+4. Move an application to `payment_pending` (same flow as before: citizen register → verify email → login → complete profile → create application → upload documents → submit → employee approves all documents).
+
+5. `POST /api/applications/{application}/payments` — copy `data.checkout_url` from the JSON response.
+
+6. Open `checkout_url` in a browser and pay with Stripe test card `4242 4242 4242 4242`, any future expiry, any CVC, any postal code.
+
+7. Optionally call `GET /api/applications/{application}/payments/{payment}/status` to see internal status and latest Stripe session fields.
+
+8. Webhook (source of truth): install [Stripe CLI](https://stripe.com/docs/stripe-cli), run `stripe login`, then:
+
+   ```bash
+   stripe listen --forward-to http://127.0.0.1:8000/api/webhooks/stripe
+   ```
+
+   Use the signing secret printed by the CLI as `STRIPE_WEBHOOK_SECRET` in `.env`, run `php artisan config:clear`, and repeat a checkout. When the webhook is delivered, the payment should become `completed` and the application should move to `appointment_pending`.
 
 ---
 
@@ -543,7 +584,6 @@ tests/
 
 Possible future improvements:
 
-* Real payment gateway integration.
 * Real SMS gateway integration.
 * Push notifications.
 * Advanced chatbot integration.

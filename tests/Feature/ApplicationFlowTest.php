@@ -169,10 +169,10 @@ class ApplicationFlowTest extends TestCase
         ])->assertStatus(422);
     }
 
-    public function test_ping_reports_phase_three(): void
+    public function test_ping_reports_phase_five(): void
     {
         $this->getJson('/api/ping')
             ->assertOk()
-            ->assertJsonPath('data.phase', 3);
+            ->assertJsonPath('data.phase', 5);
     }
 }

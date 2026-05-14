@@ -52,6 +52,11 @@ class ApplicationController extends Controller
     public function show(Request $request, int $application, ApplicationService $applications)
     {
         $model = $applications->getForCitizen($request->user(), $application);
+        $model->load([
+            'applicationDocuments' => function ($q): void {
+                $q->orderByDesc('id')->with('requiredDocument');
+            },
+        ]);
 
         return $this->successResponse(
             new ApplicationResource($model),
