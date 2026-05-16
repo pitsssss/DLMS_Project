@@ -9,8 +9,12 @@ use App\Modules\Auth\Controllers\LoginController;
 use App\Modules\Auth\Controllers\LogoutController;
 use App\Modules\Auth\Controllers\ProfileController;
 use App\Modules\Auth\Controllers\RegisterController;
+use App\Modules\Appointments\Controllers\ApplicationAppointmentController;
+use App\Modules\Appointments\Controllers\AppointmentController;
+use App\Modules\Appointments\Controllers\AppointmentSlotController;
 use App\Modules\Payments\Controllers\ApplicationPaymentController;
 use App\Modules\Payments\Controllers\StripeWebhookController;
+use App\Modules\Tests\Controllers\ApplicationTestResultController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -18,7 +22,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => 'DLMS API is running.',
         'data' => [
-            'phase' => 5,
+            'phase' => 6,
         ],
     ]);
 });
@@ -66,6 +70,15 @@ Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(fu
         ->whereNumber('application')
         ->whereNumber('payment')
         ->middleware('throttle:15,1');
+    Route::get('/{application}/available-tests', [ApplicationAppointmentController::class, 'availableTests'])
+        ->whereNumber('application');
+    Route::get('/{application}/appointments', [ApplicationAppointmentController::class, 'index'])
+        ->whereNumber('application');
+    Route::post('/{application}/appointments', [ApplicationAppointmentController::class, 'store'])
+        ->whereNumber('application')
+        ->middleware('throttle:15,1');
+    Route::get('/{application}/test-results', [ApplicationTestResultController::class, 'index'])
+        ->whereNumber('application');
     Route::post('/{application}/documents', [ApplicationDocumentController::class, 'store'])
         ->whereNumber('application')
         ->middleware('throttle:30,1');
@@ -75,13 +88,20 @@ Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(fu
     Route::get('/{application}', [ApplicationController::class, 'show'])->whereNumber('application');
 });
 
+Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
+    Route::get('/appointment-slots', [AppointmentSlotController::class, 'index']);
+    Route::put('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])
+        ->whereNumber('appointment')
+        ->middleware('throttle:15,1');
+    Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
+        ->whereNumber('appointment')
+        ->middleware('throttle:15,1');
+});
+
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])
     ->middleware('throttle:100,1');
 
 require base_path('app/Modules/Admin/Routes/admin.php');
-
-Route::prefix('appointments')->group(function (): void {
-});
 
 Route::prefix('licenses')->group(function (): void {
 });
@@ -90,7 +110,4 @@ Route::prefix('notifications')->group(function (): void {
 });
 
 Route::prefix('chatbot')->group(function (): void {
-});
-
-Route::prefix('appointment-slots')->group(function (): void {
 });

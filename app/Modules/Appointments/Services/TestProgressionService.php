@@ -1,0 +1,180 @@
+<?php
+
+namespace App\Modules\Appointments\Services;
+
+use App\Enums\AppointmentStatus;
+use App\Enums\ApplicationStatus;
+use App\Enums\TestResultStatus;
+use App\Exceptions\ApiException;
+use App\Models\LicenseApplication;
+use App\Models\TestAppointment;
+use App\Models\TestResult;
+use App\Models\TestType;
+use Illuminate\Database\Eloquent\Collection;
+
+class TestProgressionService
+{
+    /**
+     * @return Collection<int, TestType>
+     */
+    public function requiredTestTypes(): Collection
+    {
+        return TestType::query()
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->orderBy('sequence_order')
+            ->get();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function passedTestTypeIds(LicenseApplication $application): array
+    {
+        return TestResult::query()
+            ->where('application_id', $application->id)
+            ->where('result', TestResultStatus::Passed)
+            ->pluck('test_type_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    public function attemptCount(LicenseApplication $application, int $testTypeId): int
+    {
+        return TestResult::query()
+            ->where('application_id', $application->id)
+            ->where('test_type_id', $testTypeId)
+            ->whereIn('result', [TestResultStatus::Failed, TestResultStatus::NoShow])
+            ->count();
+    }
+
+    public function hasActiveBookedAppointment(LicenseApplication $application, int $testTypeId): bool
+    {
+        return TestAppointment::query()
+            ->where('application_id', $application->id)
+            ->where('test_type_id', $testTypeId)
+            ->where('status', AppointmentStatus::Booked)
+            ->exists();
+    }
+
+    public function allRequiredTestsPassed(LicenseApplication $application): bool
+    {
+        $requiredIds = $this->requiredTestTypes()->pluck('id')->all();
+        $passedIds = $this->passedTestTypeIds($application);
+
+        foreach ($requiredIds as $id) {
+            if (! in_array($id, $passedIds, true)) {
+                return false;
+            }
+        }
+
+        return $requiredIds !== [];
+    }
+
+    public function resolveBookableTestType(LicenseApplication $application): ?TestType
+    {
+        if (! $this->applicationAllowsBooking($application)) {
+            return null;
+        }
+
+        $passedIds = $this->passedTestTypeIds($application);
+
+        if ($application->status === ApplicationStatus::WaitingRetest) {
+            if ($application->current_test_type_id === null) {
+                return null;
+            }
+
+            $testType = TestType::query()->find($application->current_test_type_id);
+            if ($testType === null || ! $testType->is_active) {
+                return null;
+            }
+
+            if ($this->hasActiveBookedAppointment($application, $testType->id)) {
+                return null;
+            }
+
+            return $testType;
+        }
+
+        foreach ($this->requiredTestTypes() as $testType) {
+            if (in_array($testType->id, $passedIds, true)) {
+                continue;
+            }
+
+            if ($this->hasActiveBookedAppointment($application, $testType->id)) {
+                return null;
+            }
+
+            return $testType;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function availableTestsPayload(LicenseApplication $application): array
+    {
+        $bookable = $this->resolveBookableTestType($application);
+        $passedIds = $this->passedTestTypeIds($application);
+
+        $items = [];
+        foreach ($this->requiredTestTypes() as $testType) {
+            $items[] = [
+                'id' => $testType->id,
+                'name' => $testType->name,
+                'code' => $testType->code,
+                'sequence_order' => $testType->sequence_order,
+                'max_attempts' => $testType->max_attempts,
+                'passed' => in_array($testType->id, $passedIds, true),
+                'can_book' => $bookable !== null && $bookable->id === $testType->id,
+                'attempts_used' => $this->attemptCount($application, $testType->id),
+            ];
+        }
+
+        return $items;
+    }
+
+    public function assertCanBook(LicenseApplication $application, TestType $testType): void
+    {
+        if (! $this->applicationAllowsBooking($application)) {
+            throw new ApiException('Appointments cannot be booked for this application in its current status.', 422);
+        }
+
+        $bookable = $this->resolveBookableTestType($application);
+
+        if ($bookable === null || $bookable->id !== $testType->id) {
+            throw new ApiException('This test cannot be booked yet. Complete prior tests or finish an existing booking first.', 422);
+        }
+
+        foreach ($this->requiredTestTypes() as $required) {
+            if ($required->sequence_order >= $testType->sequence_order) {
+                break;
+            }
+
+            if (! in_array($required->id, $this->passedTestTypeIds($application), true)) {
+                throw new ApiException('Earlier tests must be passed before booking this test.', 422);
+            }
+        }
+    }
+
+    public function applicationAllowsBooking(LicenseApplication $application): bool
+    {
+        return in_array($application->status, [
+            ApplicationStatus::AppointmentPending,
+            ApplicationStatus::InTesting,
+            ApplicationStatus::WaitingRetest,
+        ], true);
+    }
+
+    public function nextTestTypeAfterPass(TestType $passedTestType): ?TestType
+    {
+        return TestType::query()
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->where('sequence_order', '>', $passedTestType->sequence_order)
+            ->orderBy('sequence_order')
+            ->first();
+    }
+}

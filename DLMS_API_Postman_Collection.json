@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Phase 5 (+ Payments)",
+    "name": "DLMS API — Phase 6 (+ Appointments)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -24,7 +24,9 @@
     { "key": "pending_document_id", "value": "" },
     { "key": "payment_id", "value": "" },
     { "key": "checkout_url", "value": "" },
-    { "key": "stripe_session_id", "value": "" }
+    { "key": "stripe_session_id", "value": "" },
+    { "key": "appointment_id", "value": "" },
+    { "key": "appointment_slot_id", "value": "" }
   ],
   "item": [
     {
@@ -513,6 +515,74 @@
           { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
         ],
         "url": "{{base_url}}/applications/{{application_id}}/payments"
+      }
+    },
+    {
+      "name": "28. Available Tests (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/available-tests"
+      }
+    },
+    {
+      "name": "29. List Appointment Slots (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/appointment-slots?test_type_id=1"
+      }
+    },
+    {
+      "name": "30. Book Application Appointment (citizen)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.id) pm.collectionVariables.set('appointment_id', String(j.data.id));",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"appointment_slot_id\": {{appointment_slot_id}}\n}"
+        },
+        "url": "{{base_url}}/applications/{{application_id}}/appointments"
+      }
+    },
+    {
+      "name": "31. Record Test Result (employee)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"result\": \"passed\",\n  \"notes\": \"Citizen met requirements.\"\n}"
+        },
+        "url": "{{base_url}}/admin/test-appointments/{{appointment_id}}/record-result"
       }
     }
   ]
