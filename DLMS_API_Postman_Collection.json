@@ -530,6 +530,22 @@
     },
     {
       "name": "29. List Appointment Slots (citizen)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.length && j.data[0].id) {",
+              "    pm.collectionVariables.set('appointment_slot_id', String(j.data[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -583,6 +599,60 @@
           "raw": "{\n  \"result\": \"passed\",\n  \"notes\": \"Citizen met requirements.\"\n}"
         },
         "url": "{{base_url}}/admin/test-appointments/{{appointment_id}}/record-result"
+      }
+    },
+    {
+      "name": "32. List Application Appointments (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/appointments"
+      }
+    },
+    {
+      "name": "33. List Application Test Results (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/applications/{{application_id}}/test-results"
+      }
+    },
+    {
+      "name": "34. Reschedule Appointment (citizen)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"appointment_slot_id\": {{appointment_slot_id}}\n}"
+        },
+        "url": "{{base_url}}/appointments/{{appointment_id}}/reschedule"
+      }
+    },
+    {
+      "name": "35. Cancel Appointment (citizen)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cancellation_reason\": \"Schedule conflict\"\n}"
+        },
+        "url": "{{base_url}}/appointments/{{appointment_id}}/cancel"
       }
     }
   ]
