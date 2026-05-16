@@ -28,6 +28,7 @@ The system manages the full lifecycle of driving license services: citizen regis
 * Testing
 * Postman Collection
 * Project Structure
+* Docker & Ghaymah Cloud Deployment
 * Development Guidelines
 * Mock Services
 * Future Enhancements
@@ -501,6 +502,254 @@ routes/
 tests/
   Feature/
 ```
+
+---
+
+# Docker & Ghaymah Cloud Deployment
+
+This project includes a production-ready Docker setup for deploying the Laravel API on **Ghaymah Cloud** (Docker-only deployments) and a **docker-compose** stack for local testing only.
+
+## Files added for Docker
+
+| File | Purpose |
+| ---- | ------- |
+| `Dockerfile` | Production image: Laravel, PHP 8.2-FPM, Nginx, Supervisor (port 80) |
+| `.dockerignore` | Excludes secrets, vendor, caches, and local-only files from the image |
+| `docker-compose.yml` | Local testing only: app + MySQL + phpMyAdmin |
+| `.env.docker.example` | Example production environment variables (no real secrets) |
+| `docker/nginx/default.conf` | Nginx virtual host for Laravel |
+| `docker/php/php.ini` | PHP upload limits and Opcache settings |
+| `docker/php/entrypoint.sh` | Container startup: permissions, optional migrations, Supervisor |
+| `docker/supervisor/supervisord.conf` | Runs PHP-FPM and Nginx in one container |
+
+The production image does **not** include MySQL, phpMyAdmin, or a `.env` file.
+
+---
+
+## Local Docker (docker-compose)
+
+`docker-compose.yml` is for **local development and testing only**. It is not the Ghaymah production deployment method.
+
+### 1. Configure `.env` for local Docker
+
+Copy or adjust your local `.env` (your normal XAMPP workflow is unchanged). For Docker Compose, use the compose MySQL service:
+
+```env
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=dlms_backend
+DB_USERNAME=dlms_user
+DB_PASSWORD=dlms_password
+```
+
+**Important:** `DB_HOST=mysql` is only valid inside docker-compose (the MySQL service name). It must **not** be used on Ghaymah production.
+
+Because the app directory is mounted into the container, Laravel reads `.env` from your project root. If `vendor/` is missing on the host, install dependencies inside the container:
+
+```bash
+docker compose exec app composer install
+```
+
+### 2. Build and run
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+### 3. First-time setup (local)
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
+```
+
+### 4. Useful local commands
+
+```bash
+docker compose down
+docker compose exec app bash
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan migrate:fresh --seed
+docker compose exec app php artisan route:list
+docker compose exec app php artisan test
+```
+
+### 5. Local URLs
+
+| Service | URL |
+| ------- | --- |
+| API | http://localhost:8000/api |
+| Health check | http://localhost:8000/api/ping |
+| phpMyAdmin | http://localhost:8080 |
+
+MySQL from the host machine: `127.0.0.1:3307` (user `dlms_user`, database `dlms_backend`).
+
+### 6. Stripe webhook (local Docker)
+
+```bash
+stripe listen --forward-to http://localhost:8000/api/webhooks/stripe
+```
+
+Use the signing secret from the CLI as `STRIPE_WEBHOOK_SECRET`, then `docker compose exec app php artisan config:clear`.
+
+---
+
+## Production Docker image (Ghaymah Cloud)
+
+Ghaymah Cloud deploys the **Dockerfile** image. The container exposes **port 80**. Database access uses **Ghaymah Managed MySQL** via environment variables only—no MySQL inside the container.
+
+### Build production image locally
+
+```bash
+docker build -t dlms-api .
+```
+
+### Run production image locally (smoke test)
+
+Copy `.env.docker.example` to a local file, fill in placeholders (including `APP_KEY`), then:
+
+```bash
+docker run --rm -p 8000:80 --env-file .env.docker.example dlms-api
+```
+
+Test: http://localhost:8000/api/ping
+
+---
+
+## Ghaymah Cloud environment variables
+
+On Ghaymah Cloud, configure all values in the platform **environment variables** panel. Do not commit real secrets. See `.env.docker.example` for the full list.
+
+| Variable | Notes |
+| -------- | ----- |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_URL` | Your real Ghaymah HTTPS domain |
+| `APP_KEY` | Generate with `php artisan key:generate --show` and set in Ghaymah (required) |
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST` | Host from **Ghaymah Managed MySQL** (not `mysql`, not `127.0.0.1`) |
+| `DB_PORT` | Port from Ghaymah (often `3306`) |
+| `DB_DATABASE` | Managed database name |
+| `DB_USERNAME` | Managed database user |
+| `DB_PASSWORD` | Managed database password |
+| `FILESYSTEM_DISK` | `public` (after `php artisan storage:link` on deploy) |
+| `MAIL_*` | Gmail SMTP (or your provider); Laravel 11 uses `MAIL_SCHEME=tls` |
+| `PAYMENT_PROVIDER` | `stripe` for production Checkout |
+| `STRIPE_*` | Test/live keys and webhook secret from Stripe Dashboard |
+| `OTP_*` | OTP settings; leave `OTP_FIXED_CODE` empty in production |
+
+Optional container flags (Ghaymah env):
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `RUN_MIGRATIONS` | `false` | Set `true` once to run `php artisan migrate --force` on startup |
+| `RUN_SEEDERS` | `false` | Set `true` to run `php artisan db:seed --force` (use with care) |
+
+Never enable `migrate:fresh` via environment variables.
+
+---
+
+## Ghaymah Managed MySQL
+
+| Environment | `DB_HOST` |
+| ----------- | --------- |
+| Local docker-compose | `mysql` (Docker service name) |
+| Ghaymah production | Hostname provided by Ghaymah Managed MySQL |
+| Local XAMPP (non-Docker) | `127.0.0.1` |
+
+XAMPP MySQL is **not** deployed automatically to Ghaymah. You must provision Ghaymah Managed MySQL and point the app at it with the variables above.
+
+---
+
+## Database migration on Ghaymah
+
+**Option 1 — recommended (clean demo/academic deploy):**
+
+```bash
+# One-time via Ghaymah shell, or set RUN_MIGRATIONS=true once
+php artisan migrate --force
+php artisan db:seed --force
+```
+
+**Option 2:** Export SQL from local XAMPP phpMyAdmin and import into Ghaymah Managed MySQL.
+
+For most deployments, migrations and seeders are preferable to copying a dev database.
+
+---
+
+## Storage and uploads
+
+Uploaded files use Laravel `storage/app` (including `storage/app/public` and `storage/app/private`). The entrypoint ensures directories exist and permissions are set for `www-data`.
+
+After deploy, run once:
+
+```bash
+php artisan storage:link
+```
+
+This links `public/storage` to `storage/app/public` for public disk files. Private document behavior is unchanged.
+
+---
+
+## Flutter / mobile client base URL
+
+| Environment | `baseUrl` |
+| ----------- | --------- |
+| Ghaymah production | `https://your-ghaymah-domain.com/api` |
+| Local Docker (desktop) | `http://localhost:8000/api` |
+| Android emulator → host Docker | `http://10.0.2.2:8000/api` |
+
+Do **not** use `http://127.0.0.1:8000/api` for a backend deployed on Ghaymah.
+
+---
+
+## Stripe on Ghaymah production
+
+1. Set `PAYMENT_PROVIDER=stripe` and all `STRIPE_*` variables in Ghaymah.
+2. Set `STRIPE_SUCCESS_URL` and `STRIPE_CANCEL_URL` to your real frontend URLs on the Ghaymah domain.
+3. In [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/webhooks), add endpoint:
+
+   ```text
+   https://your-ghaymah-domain.com/api/webhooks/stripe
+   ```
+
+4. Copy the signing secret to `STRIPE_WEBHOOK_SECRET` on Ghaymah.
+5. Use HTTPS only in production.
+
+---
+
+## How the production Dockerfile works
+
+1. **Base:** `php:8.2-fpm` with Nginx, Supervisor, and PHP extensions required by Laravel (`pdo_mysql`, `gd`, `zip`, `intl`, `opcache`, etc.).
+2. **Build:** Copies the application, runs `composer install --no-dev --optimize-autoloader`.
+3. **Config:** Installs Nginx site, custom `php.ini`, Supervisor, and `entrypoint.sh`.
+4. **Permissions:** `storage` and `bootstrap/cache` owned by `www-data`.
+5. **Runtime:** `entrypoint.sh` prepares storage, optionally clears caches (if `APP_KEY` is set), optionally runs migrations/seeders, then starts Supervisor.
+6. **Supervisor** runs PHP-FPM (`127.0.0.1:9000`) and Nginx (port 80) with logs on stdout/stderr for Ghaymah log collection.
+
+No `.env`, migrations, or `key:generate` run at image build time.
+
+---
+
+## Production warnings
+
+* Set `APP_ENV=production` and `APP_DEBUG=false`.
+* Set `APP_URL` to your real Ghaymah HTTPS domain.
+* Set `APP_KEY` in Ghaymah environment variables (never in the image).
+* Use **Ghaymah Managed MySQL**; do not use XAMPP or in-container MySQL in production.
+* Do not expose phpMyAdmin in production.
+* Do not commit `.env`, real Stripe keys, or Gmail app passwords.
+* Configure Stripe webhook to `https://your-ghaymah-domain.com/api/webhooks/stripe`.
+* Run migrations deliberately; back up the production database before schema changes.
+* Ensure storage permissions remain writable after deploy.
+* Use HTTPS for all client and webhook traffic.
 
 ---
 
