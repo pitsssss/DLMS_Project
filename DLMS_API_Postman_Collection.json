@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Phase 6 (+ Appointments)",
+    "name": "DLMS API — Phase 7 (+ Licenses & Fines)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -26,7 +26,9 @@
     { "key": "checkout_url", "value": "" },
     { "key": "stripe_session_id", "value": "" },
     { "key": "appointment_id", "value": "" },
-    { "key": "appointment_slot_id", "value": "" }
+    { "key": "appointment_slot_id", "value": "" },
+    { "key": "license_id", "value": "" },
+    { "key": "fine_id", "value": "" }
   ],
   "item": [
     {
@@ -653,6 +655,186 @@
           "raw": "{\n  \"cancellation_reason\": \"Schedule conflict\"\n}"
         },
         "url": "{{base_url}}/appointments/{{appointment_id}}/cancel"
+      }
+    },
+    {
+      "name": "36. Issue License (employee)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.id) pm.collectionVariables.set('license_id', String(j.data.id));",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/applications/{{application_id}}/issue-license"
+      }
+    },
+    {
+      "name": "37. List My Licenses (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/licenses"
+      }
+    },
+    {
+      "name": "38. Show License (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/licenses/{{license_id}}"
+      }
+    },
+    {
+      "name": "39. Block License (employee)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Under investigation\"\n}"
+        },
+        "url": "{{base_url}}/admin/licenses/{{license_id}}/block"
+      }
+    },
+    {
+      "name": "40. Unblock License (employee)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/licenses/{{license_id}}/unblock"
+      }
+    },
+    {
+      "name": "41. List Fines (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/fines?per_page=20"
+      }
+    },
+    {
+      "name": "42. Create Fine (admin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.id) pm.collectionVariables.set('fine_id', String(j.data.id));",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"citizen_id\": 1,\n  \"amount\": 10000,\n  \"reason\": \"Traffic violation\"\n}"
+        },
+        "url": "{{base_url}}/admin/fines"
+      }
+    },
+    {
+      "name": "43. Update Fine (admin)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"paid\"\n}"
+        },
+        "url": "{{base_url}}/admin/fines/{{fine_id}}"
+      }
+    },
+    {
+      "name": "44. List My Fines (citizen)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/fines"
+      }
+    },
+    {
+      "name": "45. Renew License (citizen)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/licenses/{{license_id}}/renew"
+      }
+    },
+    {
+      "name": "46. Replacement License (citizen)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"lost\"\n}"
+        },
+        "url": "{{base_url}}/licenses/{{license_id}}/replacement"
+      }
+    },
+    {
+      "name": "47. Unblock Request (citizen)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/licenses/{{license_id}}/unblock-request"
       }
     }
   ]

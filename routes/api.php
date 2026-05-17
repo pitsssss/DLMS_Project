@@ -15,6 +15,8 @@ use App\Modules\Appointments\Controllers\AppointmentSlotController;
 use App\Modules\Payments\Controllers\ApplicationPaymentController;
 use App\Modules\Payments\Controllers\StripeWebhookController;
 use App\Modules\Tests\Controllers\ApplicationTestResultController;
+use App\Modules\Fines\Controllers\FineController;
+use App\Modules\Licenses\Controllers\LicenseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -22,7 +24,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => 'DLMS API is running.',
         'data' => [
-            'phase' => 6,
+            'phase' => 7,
         ],
     ]);
 });
@@ -96,15 +98,26 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
         ->whereNumber('appointment')
         ->middleware('throttle:15,1');
+
+    Route::get('/licenses', [LicenseController::class, 'index']);
+    Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
+    Route::post('/licenses/{license}/renew', [LicenseController::class, 'renew'])
+        ->whereNumber('license')
+        ->middleware('throttle:10,1');
+    Route::post('/licenses/{license}/replacement', [LicenseController::class, 'replacement'])
+        ->whereNumber('license')
+        ->middleware('throttle:10,1');
+    Route::post('/licenses/{license}/unblock-request', [LicenseController::class, 'unblockRequest'])
+        ->whereNumber('license')
+        ->middleware('throttle:10,1');
+
+    Route::get('/fines', [FineController::class, 'index']);
 });
 
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])
     ->middleware('throttle:100,1');
 
 require base_path('app/Modules/Admin/Routes/admin.php');
-
-Route::prefix('licenses')->group(function (): void {
-});
 
 Route::prefix('notifications')->group(function (): void {
 });
