@@ -8,6 +8,8 @@ use App\Models\Fine;
 use App\Models\License;
 use App\Models\User;
 use App\Modules\Fines\Repositories\FineRepository;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Services\AuditLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +17,9 @@ use Illuminate\Support\Facades\DB;
 class FineService
 {
     public function __construct(
-        private readonly FineRepository $fines
+        private readonly FineRepository $fines,
+        private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications
     ) {}
 
     /**
@@ -52,7 +56,7 @@ class FineService
             }
         }
 
-        return Fine::query()->create([
+        $fine = Fine::query()->create([
             'citizen_id' => $citizenId,
             'license_id' => $licenseId,
             'amount' => $amount,
@@ -60,11 +64,30 @@ class FineService
             'status' => FineStatus::Unpaid,
             'paid_at' => null,
         ]);
+
+        $this->auditLogs->log(
+            $actor,
+            'fine.created',
+            'fine',
+            $fine->id,
+            null,
+            ['amount' => $amount, 'citizen_id' => $citizenId, 'status' => FineStatus::Unpaid->value]
+        );
+
+        $this->notifications->sendToUser(
+            $citizenId,
+            'New fine issued',
+            'A fine of '.$amount.' has been issued: '.$reason,
+            'fine.created',
+            ['fine_id' => $fine->id]
+        );
+
+        return $fine;
     }
 
     public function update(User $actor, int $fineId, array $data): Fine
     {
-        return DB::transaction(function () use ($fineId, $data) {
+        return DB::transaction(function () use ($fineId, $data, $actor) {
             $fine = Fine::query()->whereKey($fineId)->lockForUpdate()->first();
 
             if ($fine === null) {
@@ -100,6 +123,25 @@ class FineService
             }
 
             $fine->save();
+
+            if (isset($data['status']) && FineStatus::from($data['status']) === FineStatus::Paid) {
+                $this->notifications->sendToUser(
+                    $fine->citizen_id,
+                    'Fine paid',
+                    'Your fine has been marked as paid.',
+                    'fine.paid',
+                    ['fine_id' => $fine->id]
+                );
+            }
+
+            $this->auditLogs->log(
+                $actor,
+                'fine.updated',
+                'fine',
+                $fine->id,
+                null,
+                ['status' => $fine->status->value]
+            );
 
             return $fine->fresh(['citizen', 'license']);
         });

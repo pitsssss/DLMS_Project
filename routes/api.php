@@ -17,6 +17,7 @@ use App\Modules\Payments\Controllers\StripeWebhookController;
 use App\Modules\Tests\Controllers\ApplicationTestResultController;
 use App\Modules\Fines\Controllers\FineController;
 use App\Modules\Licenses\Controllers\LicenseController;
+use App\Modules\Notifications\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -24,7 +25,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => 'DLMS API is running.',
         'data' => [
-            'phase' => 7,
+            'phase' => 8,
         ],
     ]);
 });
@@ -99,6 +100,8 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
         ->whereNumber('appointment')
         ->middleware('throttle:15,1');
 
+        
+
     Route::get('/licenses', [LicenseController::class, 'index']);
     Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
     Route::post('/licenses/{license}/renew', [LicenseController::class, 'renew'])
@@ -112,15 +115,16 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
         ->middleware('throttle:10,1');
 
     Route::get('/fines', [FineController::class, 'index']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::put('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        ->whereNumber('notification');
 });
 
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])
     ->middleware('throttle:100,1');
 
 require base_path('app/Modules/Admin/Routes/admin.php');
-
-Route::prefix('notifications')->group(function (): void {
-});
 
 Route::prefix('chatbot')->group(function (): void {
 });

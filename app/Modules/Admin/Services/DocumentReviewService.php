@@ -10,6 +10,8 @@ use App\Models\LicenseApplication;
 use App\Models\RequiredDocument;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Services\AuditLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,9 @@ use Illuminate\Support\Facades\DB;
 class DocumentReviewService
 {
     public function __construct(
-        private readonly ApplicationRepository $applications
+        private readonly ApplicationRepository $applications,
+        private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications
     ) {}
 
     /**
@@ -57,6 +61,23 @@ class DocumentReviewService
                 );
             }
 
+            $this->auditLogs->log(
+                $reviewer,
+                'document.approved',
+                'application_document',
+                $document->id,
+                ['status' => DocumentStatus::PendingReview->value],
+                ['status' => DocumentStatus::Approved->value]
+            );
+
+            $this->notifications->sendToUser(
+                $application->citizen_id,
+                'Document approved',
+                'A submitted document was approved.',
+                'document.approved',
+                ['document_id' => $document->id, 'application_id' => $application->id]
+            );
+
             return $document->fresh(['requiredDocument', 'application']);
         });
     }
@@ -80,6 +101,15 @@ class DocumentReviewService
                 $reviewer,
                 'One or more documents were rejected.',
                 $rejectionReason
+            );
+
+            $this->auditLogs->log(
+                $reviewer,
+                'document.rejected',
+                'application_document',
+                $document->id,
+                ['status' => DocumentStatus::PendingReview->value],
+                ['status' => DocumentStatus::Rejected->value, 'rejection_reason' => $rejectionReason]
             );
 
             return $document->fresh(['requiredDocument', 'application']);

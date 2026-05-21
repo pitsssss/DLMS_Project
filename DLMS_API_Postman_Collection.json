@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Phase 7 (+ Licenses & Fines)",
+    "name": "DLMS API — Phase 8 (+ Notifications & Reports)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -28,7 +28,8 @@
     { "key": "appointment_id", "value": "" },
     { "key": "appointment_slot_id", "value": "" },
     { "key": "license_id", "value": "" },
-    { "key": "fine_id", "value": "" }
+    { "key": "fine_id", "value": "" },
+    { "key": "notification_id", "value": "" }
   ],
   "item": [
     {
@@ -835,6 +836,77 @@
           { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
         ],
         "url": "{{base_url}}/licenses/{{license_id}}/unblock-request"
+      }
+    },
+    {
+      "name": "48. List Notifications (citizen)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var j = pm.response.json();",
+              "  if (j.data && j.data.items && j.data.items.length) {",
+              "    pm.collectionVariables.set('notification_id', String(j.data.items[0].id));",
+              "  }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/notifications?unread_only=true"
+      }
+    },
+    {
+      "name": "49. Mark Notification Read (citizen)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/notifications/{{notification_id}}/read"
+      }
+    },
+    {
+      "name": "50. Reports Overview (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/reports/overview"
+      }
+    },
+    {
+      "name": "51. List Audit Logs (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/audit-logs?per_page=20"
+      }
+    },
+    {
+      "name": "52. Application Status History (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/admin/application-status-histories/{{application_id}}"
       }
     }
   ]

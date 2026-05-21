@@ -17,6 +17,8 @@ use App\Models\User;
 use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Licenses\Repositories\LicenseRepository;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +27,9 @@ class LicenseService
     public function __construct(
         private readonly LicenseRepository $licenses,
         private readonly ApplicationRepository $applications,
-        private readonly TestProgressionService $progression
+        private readonly TestProgressionService $progression,
+        private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications
     ) {}
 
     /**
@@ -88,6 +92,15 @@ class LicenseService
                 ApplicationStatus::LicenseIssued,
                 $employee,
                 'Driving license issued.'
+            );
+
+            $this->auditLogs->log(
+                $employee,
+                'license.issued',
+                'license',
+                $license->id,
+                null,
+                ['license_number' => $license->license_number, 'application_id' => $application->id]
             );
 
             return $license->fresh(['licenseType', 'application']);
@@ -203,8 +216,26 @@ class LicenseService
                 throw new ApiException('This license cannot be blocked in its current status.', 422);
             }
 
+            $previousStatus = $license->status;
             $license->status = LicenseStatus::Blocked;
             $license->save();
+
+            $this->auditLogs->log(
+                $actor,
+                'license.blocked',
+                'license',
+                $license->id,
+                ['status' => $previousStatus->value],
+                ['status' => LicenseStatus::Blocked->value]
+            );
+
+            $this->notifications->sendToUser(
+                $license->citizen_id,
+                'License blocked',
+                'Your driving license has been blocked. Contact the traffic department for details.',
+                'license.blocked',
+                ['license_id' => $license->id, 'license_number' => $license->license_number]
+            );
 
             return $license->fresh(['licenseType', 'application', 'citizen']);
         });
@@ -231,6 +262,23 @@ class LicenseService
                 ? LicenseStatus::Expired
                 : LicenseStatus::Active;
             $license->save();
+
+            $this->auditLogs->log(
+                $actor,
+                'license.unblocked',
+                'license',
+                $license->id,
+                ['status' => LicenseStatus::Blocked->value],
+                ['status' => $license->status->value]
+            );
+
+            $this->notifications->sendToUser(
+                $license->citizen_id,
+                'License unblocked',
+                'Your driving license has been unblocked and is active again.',
+                'license.unblocked',
+                ['license_id' => $license->id]
+            );
 
             return $license->fresh(['licenseType', 'application', 'citizen']);
         });

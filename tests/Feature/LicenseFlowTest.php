@@ -171,9 +171,9 @@ class LicenseFlowTest extends TestCase
         return [$citizen, $application];
     }
 
-    public function test_ping_reports_phase_seven(): void
+    public function test_ping_reports_phase_eight(): void
     {
-        $this->getJson('/api/ping')->assertOk()->assertJsonPath('data.phase', 7);
+        $this->getJson('/api/ping')->assertOk()->assertJsonPath('data.phase', 8);
     }
 
     public function test_employee_can_issue_license_for_approved_application(): void

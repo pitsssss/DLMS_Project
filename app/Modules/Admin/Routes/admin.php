@@ -1,10 +1,13 @@
 <?php
 
 use App\Modules\Admin\Controllers\ApplicationLicenseController;
+use App\Modules\Admin\Controllers\ApplicationStatusHistoryController;
+use App\Modules\Admin\Controllers\AuditLogController;
 use App\Modules\Admin\Controllers\DocumentReviewController;
 use App\Modules\Admin\Controllers\FineManagementController;
 use App\Modules\Admin\Controllers\LicenseManagementController;
 use App\Modules\Admin\Controllers\TestAppointmentResultController;
+use App\Modules\Reports\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
@@ -55,4 +58,18 @@ Route::prefix('admin')
         Route::put('/fines/{fine}', [FineManagementController::class, 'update'])
             ->whereNumber('fine')
             ->middleware('throttle:60,1');
+    });
+
+Route::prefix('admin')
+    ->middleware(['auth:sanctum', 'permission:view_audit_logs'])
+    ->group(function (): void {
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/application-status-histories/{application}', [ApplicationStatusHistoryController::class, 'index'])
+            ->whereNumber('application');
+    });
+
+Route::prefix('admin')
+    ->middleware(['auth:sanctum', 'permission:view_reports'])
+    ->group(function (): void {
+        Route::get('/reports/overview', [ReportController::class, 'overview']);
     });

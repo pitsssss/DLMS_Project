@@ -13,6 +13,8 @@ use App\Models\TestType;
 use App\Models\User;
 use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +22,9 @@ class TestResultService
 {
     public function __construct(
         private readonly ApplicationRepository $applications,
-        private readonly TestProgressionService $progression
+        private readonly TestProgressionService $progression,
+        private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications
     ) {}
 
     /**
@@ -99,6 +103,23 @@ class TestResultService
                 TestResultStatus::NoShow => $this->handleNoShow($application, $testType, $employee),
                 default => throw new ApiException('Invalid test result.', 422),
             };
+
+            $this->auditLogs->log(
+                $employee,
+                'test_result.recorded',
+                'test_result',
+                $testResult->id,
+                null,
+                ['result' => $result->value, 'test_type_id' => $testType->id, 'application_id' => $application->id]
+            );
+
+            $this->notifications->sendToUser(
+                $application->citizen_id,
+                'Test result recorded',
+                'Your '.$testType->name.' result has been recorded: '.$result->value.'.',
+                'test_result.'.$result->value,
+                ['application_id' => $application->id, 'test_result_id' => $testResult->id]
+            );
 
             return $testResult->fresh(['testType', 'testAppointment', 'recordedBy']);
         });

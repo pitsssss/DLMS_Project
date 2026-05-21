@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Payments\Support\StripeMoney;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -21,7 +22,8 @@ class ApplicationPaymentService
     public function __construct(
         private readonly ApplicationRepository $applications,
         private readonly PaymentProviderManager $providerManager,
-        private readonly StripePaymentGatewayService $stripeGateway
+        private readonly StripePaymentGatewayService $stripeGateway,
+        private readonly AuditLogService $auditLogs
     ) {}
 
     /**
@@ -207,6 +209,15 @@ class ApplicationPaymentService
             }
             $payment->metadata = array_merge($payment->metadata ?? [], $mergeMetadata);
             $payment->save();
+
+            $this->auditLogs->log(
+                $actor,
+                'payment.completed',
+                'payment',
+                $payment->id,
+                ['status' => PaymentStatus::Pending->value],
+                ['status' => PaymentStatus::Completed->value, 'amount' => $payment->amount]
+            );
 
             if ($application->status === ApplicationStatus::PaymentPending) {
                 $this->applications->transitionStatus(

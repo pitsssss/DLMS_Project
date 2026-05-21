@@ -6,11 +6,18 @@ use App\Enums\ApplicationStatus;
 use App\Models\ApplicationStatusHistory;
 use App\Models\LicenseApplication;
 use App\Models\User;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Services\AuditLogService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ApplicationRepository
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications
+    ) {}
+
     public function generateUniqueApplicationNumber(): string
     {
         for ($i = 0; $i < 12; $i++) {
@@ -104,6 +111,17 @@ class ApplicationRepository
                 'reason' => $applicationRejectionReason,
                 'notes' => $notes,
             ]);
+
+            $this->auditLogs->log(
+                $actor,
+                'application.status_changed',
+                'license_application',
+                $application->id,
+                ['status' => $oldStatus->value],
+                ['status' => $newStatus->value]
+            );
+
+            $this->notifications->notifyApplicationStatusChange($application, $newStatus);
 
             return $application->fresh(['licenseType', 'serviceType', 'currentTestType']);
         });
