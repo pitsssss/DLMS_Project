@@ -25,7 +25,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => 'DLMS API is running.',
         'data' => [
-            'phase' => 8,
+            'phase' => 9,
         ],
     ]);
 });
@@ -119,6 +119,10 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::put('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
         ->whereNumber('notification');
+
+    Route::prefix('ai-agent')->group(function (): void {
+        require base_path('app/Modules/AIAgent/Routes/ai-agent.php');
+    });
 });
 
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])

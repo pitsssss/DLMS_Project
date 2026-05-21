@@ -2,7 +2,7 @@
 
 **DLMS** is a Laravel 11 RESTful API backend for a government-style digital driving license management platform.
 
-The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a simple chatbot assistant.
+The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a controlled AI service agent for citizens (Phase 9A).
 
 ---
 
@@ -27,6 +27,7 @@ The system manages the full lifecycle of driving license services: citizen regis
 * API Routes Summary
 * Testing
 * Postman Collection
+* AI Service Agent (Phase 9)
 * Project Structure
 * Docker & Ghaymah Cloud Deployment
 * Development Guidelines
@@ -96,7 +97,7 @@ The system aims to:
 * Request lost/damaged license replacement.
 * Request license unblock.
 * View notifications.
-* Use a simple chatbot assistant.
+* Use the controlled AI service agent (Phase 9A) to navigate license services step by step.
 
 ---
 
@@ -461,6 +462,88 @@ Role: citizen
 
 ---
 
+# AI Service Agent (Phase 9)
+
+Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. The backend owns safety rules, structured model output validation, session history, proposed actions, and audit-friendly evaluations.
+
+## Phase plan
+
+| Sub-phase | Scope |
+| --------- | ----- |
+| **9A (current)** | Foundation: Gemini integration, intent/slot handling, sessions/messages/actions/evaluations, **proposed actions only** (no execution). |
+| **9B (future)** | Controlled execution of safe citizen actions after explicit confirmation via existing Laravel services. |
+| **9C (future)** | Admin monitoring APIs and analytics reports. |
+
+## Phase 9A limitations
+
+* Citizen-only endpoints (`auth:sanctum` + `citizen` middleware).
+* No real system actions are executed (no applications, payments, appointments, document submission, etc.).
+* Proposed actions are stored as `pending` or `awaiting_confirmation` only.
+* Admin-only operations are rejected with a polite message.
+* Invalid or failed Gemini responses fall back to safe rule-based replies.
+
+## Environment variables
+
+Add to `.env` (see `.env.example`):
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+AI_AGENT_ENABLED=true
+AI_AGENT_REQUIRE_CONFIRMATION=true
+AI_AGENT_MAX_HISTORY_MESSAGES=10
+AI_AGENT_TEMPERATURE=0.2
+```
+
+Configuration is read from `config/ai.php`. **Never expose `GEMINI_API_KEY` to the Flutter/mobile client or Postman collection variables** — only the Laravel backend calls Gemini.
+
+## Citizen API routes
+
+| Method | Route | Description |
+| ------ | ----- | ----------- |
+| POST | `/api/ai-agent/message` | Send a message; creates or continues a session. |
+| GET | `/api/ai-agent/sessions` | List the citizen’s AI sessions. |
+| GET | `/api/ai-agent/sessions/{session}` | Show session messages and proposed actions. |
+
+Example `POST /api/ai-agent/message` response:
+
+```json
+{
+  "success": true,
+  "message": "AI agent response generated successfully.",
+  "data": {
+    "session_id": 1,
+    "reply": "ما نوع الرخصة التي تريدها؟",
+    "intent": "create_new_license_application",
+    "confidence": 0.91,
+    "missing_slots": ["license_type"],
+    "requires_confirmation": false,
+    "pending_action": null
+  }
+}
+```
+
+When slots are complete, `pending_action` may be returned with `status: awaiting_confirmation` — still **not executed** in Phase 9A.
+
+## Postman (Phase 9A)
+
+Import `DLMS_API_Postman_Collection.json`. After citizen login, use folder **Phase 9A - AI Agent**:
+
+1. **Send AI Agent Message** — saves `ai_agent_session_id` (and `ai_agent_action_id` when present).
+2. **Continue AI Agent Session** — send `session_id` with a follow-up message (e.g. license type).
+3. **List / Show AI Agent Sessions**.
+
+## Testing the AI agent
+
+```bash
+php artisan test --filter=AIAgentFlowTest
+```
+
+Tests mock `GeminiAgentClient` and do not call the real Gemini API.
+
+---
+
 # Testing
 
 Run all tests:
@@ -488,7 +571,7 @@ app/
     Licenses/
     Settings/
     Reports/
-    Chatbot/
+    AIAgent/
     Notifications/
     AuditLogs/
 
@@ -835,7 +918,8 @@ Possible future improvements:
 
 * Real SMS gateway integration.
 * Push notifications.
-* Advanced chatbot integration.
+* Phase 9B: execute confirmed citizen actions through existing services.
+* Phase 9C: AI agent admin logs and analytics.
 * PDF license generation.
 * QR code verification for licenses.
 * Advanced reporting dashboard.
@@ -867,4 +951,5 @@ Recommended implementation phases:
 6. Appointments and tests.
 7. Licenses and fines.
 8. Notifications, audit logs, reports.
-9. Testing and documentation.
+9. AI service agent (9A foundation; 9B execution; 9C admin reports).
+10. Testing and documentation.

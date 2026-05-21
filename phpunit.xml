@@ -35,5 +35,8 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="PAYMENT_PROVIDER" value="mock"/>
+        <env name="AI_AGENT_ENABLED" value="true"/>
+        <env name="AI_AGENT_REQUIRE_CONFIRMATION" value="true"/>
+        <env name="GEMINI_API_KEY" value="test-key-not-used-in-tests"/>
     </php>
 </phpunit>

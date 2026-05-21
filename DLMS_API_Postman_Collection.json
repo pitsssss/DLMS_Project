@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Phase 8 (+ Notifications & Reports)",
+    "name": "DLMS API — Phase 9A (+ AI Agent)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -29,7 +29,9 @@
     { "key": "appointment_slot_id", "value": "" },
     { "key": "license_id", "value": "" },
     { "key": "fine_id", "value": "" },
-    { "key": "notification_id", "value": "" }
+    { "key": "notification_id", "value": "" },
+    { "key": "ai_agent_session_id", "value": "" },
+    { "key": "ai_agent_action_id", "value": "" }
   ],
   "item": [
     {
@@ -908,6 +910,103 @@
         ],
         "url": "{{base_url}}/admin/application-status-histories/{{application_id}}"
       }
+    },
+    {
+      "name": "Phase 9A - AI Agent",
+      "item": [
+        {
+          "name": "53. Send AI Agent Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.session_id) {",
+                  "    pm.collectionVariables.set('ai_agent_session_id', String(j.data.session_id));",
+                  "  }",
+                  "  if (j.data && j.data.pending_action && j.data.pending_action.id) {",
+                  "    pm.collectionVariables.set('ai_agent_action_id', String(j.data.pending_action.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"بدي رخصة جديدة\"\n}"
+            },
+            "url": "{{base_url}}/ai-agent/message"
+          }
+        },
+        {
+          "name": "54. Continue AI Agent Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.session_id) {",
+                  "    pm.collectionVariables.set('ai_agent_session_id', String(j.data.session_id));",
+                  "  }",
+                  "  if (j.data && j.data.pending_action && j.data.pending_action.id) {",
+                  "    pm.collectionVariables.set('ai_agent_action_id', String(j.data.pending_action.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"رخصة خاصة\",\n  \"session_id\": {{ai_agent_session_id}}\n}"
+            },
+            "url": "{{base_url}}/ai-agent/message"
+          }
+        },
+        {
+          "name": "55. List AI Agent Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions"
+          }
+        },
+        {
+          "name": "56. Show AI Agent Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}"
+          }
+        }
+      ]
     }
   ]
 }

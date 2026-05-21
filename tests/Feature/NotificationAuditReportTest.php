@@ -37,9 +37,9 @@ class NotificationAuditReportTest extends TestCase
         $this->withoutMiddleware([ThrottleRequests::class]);
     }
 
-    public function test_ping_reports_phase_eight(): void
+    public function test_ping_reports_phase_nine(): void
     {
-        $this->getJson('/api/ping')->assertOk()->assertJsonPath('data.phase', 8);
+        $this->getJson('/api/ping')->assertOk()->assertJsonPath('data.phase', 9);
     }
 
     public function test_citizen_can_list_and_mark_notifications_read(): void

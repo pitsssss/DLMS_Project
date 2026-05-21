@@ -173,6 +173,6 @@ class ApplicationFlowTest extends TestCase
     {
         $this->getJson('/api/ping')
             ->assertOk()
-            ->assertJsonPath('data.phase', 8);
+            ->assertJsonPath('data.phase', 9);
     }
 }
