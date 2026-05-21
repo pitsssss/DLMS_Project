@@ -134,4 +134,67 @@ class AgentPostProcessor
             'arguments' => $arguments,
         ];
     }
+
+    /**
+     * Ensure the assistant reply matches a pending action that requires confirmation.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function applyConfirmationReply(array $payload): array
+    {
+        if (! ($payload['requires_confirmation'] ?? false)) {
+            return $payload;
+        }
+
+        $proposed = $payload['proposed_action'] ?? null;
+        if (! is_array($proposed) || empty($proposed['name'])) {
+            return $payload;
+        }
+
+        $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
+            ? $payload['language']
+            : 'ar';
+
+        $actionName = (string) $proposed['name'];
+        $arguments = is_array($proposed['arguments'] ?? null) ? $proposed['arguments'] : [];
+
+        if ($actionName === 'create_application') {
+            $licenseTypeCode = (string) ($arguments['license_type_code'] ?? '');
+            $payload['reply'] = $this->createApplicationConfirmationReply($licenseTypeCode, $language);
+
+            return $payload;
+        }
+
+        $payload['reply'] = $language === 'ar'
+            ? 'سيتم تجهيز الإجراء المطلوب. هل تؤكد المتابعة؟'
+            : 'I will prepare the requested action. Do you want to continue?';
+
+        return $payload;
+    }
+
+    private function createApplicationConfirmationReply(string $licenseTypeCode, string $language): string
+    {
+        if ($language === 'en') {
+            $label = match ($licenseTypeCode) {
+                'private' => 'private driving license',
+                'public' => 'public driving license',
+                'truck' => 'truck driving license',
+                'bus' => 'bus driving license',
+                default => 'driving license',
+            };
+
+            return "I will prepare a new {$label} application. Do you want to continue?";
+        }
+
+        $label = match ($licenseTypeCode) {
+            'private' => 'رخصة قيادة خاصة',
+            'public' => 'رخصة قيادة عامة',
+            'truck' => 'رخصة قيادة شاحنة',
+            'bus' => 'رخصة قيادة حافلة',
+            default => 'رخصة قيادة',
+        };
+
+        return "سيتم تجهيز طلب إصدار {$label}. هل تؤكد المتابعة؟";
+    }
 }

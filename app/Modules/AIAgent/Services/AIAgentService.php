@@ -23,6 +23,7 @@ class AIAgentService
         private readonly AgentPostProcessor $postProcessor,
         private readonly AgentSlotFiller $slotFiller,
         private readonly AgentEvaluationService $evaluationService,
+        private readonly AgentSessionContextService $sessionContext,
     ) {}
 
     /**
@@ -43,6 +44,8 @@ class AIAgentService
             $session = $this->resolveSession($user, $sessionId);
             $userMessage = $prepared['message'];
 
+            $state = $this->sessionContext->mergeUserMessage($session, $userMessage);
+
             $this->storeMessage($session, AgentMessageRole::User, $userMessage);
 
             $startedAt = hrtime(true);
@@ -52,7 +55,7 @@ class AIAgentService
             try {
                 $contents = $this->contextBuilder->buildGeminiContents($session);
                 $raw = $this->geminiClient->generateStructuredResponse(
-                    $this->contextBuilder->buildSystemInstruction(),
+                    $this->contextBuilder->buildSystemInstruction($session),
                     $contents
                 );
                 $payload = $this->postProcessor->normalize(
@@ -73,7 +76,9 @@ class AIAgentService
                 );
             }
 
-            $payload = $this->slotFiller->apply($session, $payload, $userMessage);
+            $payload = $this->slotFiller->apply($session, $payload, $userMessage, $state);
+            $payload = $this->postProcessor->applyConfirmationReply($payload);
+            $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);
 
             $pendingAction = $this->persistProposedAction($user, $session, $payload);
 
@@ -88,6 +93,8 @@ class AIAgentService
                     'pending_action_id' => $pendingAction?->id,
                 ]
             );
+
+            $this->slotFiller->persistSessionContext($session, $payload, $state, $pendingAction);
 
             $session->current_intent = $payload['intent'];
             $session->last_message_at = now();

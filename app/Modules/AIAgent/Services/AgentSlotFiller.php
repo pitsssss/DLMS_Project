@@ -2,11 +2,16 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSlotFiller
 {
-    private const LICENSE_TYPE_CODES = ['private', 'public', 'truck', 'bus'];
+    public function __construct(
+        private readonly AgentSessionContextService $sessionContext,
+    ) {}
 
     /**
      * Merge slots from session context and the latest user message into the model payload.
@@ -14,81 +19,46 @@ class AgentSlotFiller
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    public function apply(AIAgentSession $session, array $payload, string $userMessage): array
+    public function apply(AIAgentSession $session, array $payload, string $userMessage, array $state): array
     {
-        $context = $session->context ?? [];
-        $normalized = mb_strtolower(trim($userMessage));
+        $payload = $this->sessionContext->applyContinuity($session, $payload, $state, $userMessage);
 
-        $licenseType = $context['license_type_code'] ?? null;
-        if ($licenseType === null) {
-            $licenseType = $this->extractLicenseType($normalized);
-        }
+        $licenseType = $state['collected_slots']['license_type_code']
+            ?? LicenseTypeSlotExtractor::extract($userMessage);
 
-        if ($licenseType !== null) {
-            $context['license_type_code'] = $licenseType;
-        }
-
-        if (($payload['intent'] ?? null) === 'create_new_license_application') {
-            $missing = $payload['missing_slots'] ?? [];
-
+        if (($payload['intent'] ?? null) === AgentIntent::CreateNewLicenseApplication->value) {
             if ($licenseType === null) {
+                $missing = $payload['missing_slots'] ?? [];
                 if (! in_array('license_type', $missing, true)) {
                     $missing[] = 'license_type';
                 }
                 $payload['missing_slots'] = array_values(array_unique($missing));
                 $payload['proposed_action'] = null;
                 $payload['requires_confirmation'] = false;
-            } else {
-                $payload['missing_slots'] = array_values(array_filter(
-                    $missing,
-                    static fn (string $slot) => $slot !== 'license_type'
-                ));
-
-                if (empty($payload['missing_slots']) && empty($payload['proposed_action'])) {
-                    $payload['proposed_action'] = [
-                        'name' => 'create_application',
-                        'arguments' => [
-                            'license_type_code' => $licenseType,
-                            'service_type_code' => $context['service_type_code'] ?? 'new_license',
-                        ],
-                    ];
-                    $payload['requires_confirmation'] = true;
-                }
+            } elseif (empty($payload['missing_slots']) && empty($payload['proposed_action'])) {
+                $payload['proposed_action'] = [
+                    'name' => 'create_application',
+                    'arguments' => [
+                        'license_type_code' => $licenseType,
+                        'service_type_code' => $state['service_type_code'] ?? 'new_license',
+                    ],
+                ];
+                $payload['requires_confirmation'] = true;
             }
         }
-
-        $session->context = $context;
 
         return $payload;
     }
 
-    private function extractLicenseType(string $normalized): ?string
-    {
-        $map = [
-            'خاصة' => 'private',
-            'خاصه' => 'private',
-            'private' => 'private',
-            'عامة' => 'public',
-            'عامه' => 'public',
-            'public' => 'public',
-            'شاحنة' => 'truck',
-            'truck' => 'truck',
-            'حافلة' => 'bus',
-            'bus' => 'bus',
-        ];
-
-        foreach ($map as $needle => $code) {
-            if (str_contains($normalized, $needle)) {
-                return $code;
-            }
-        }
-
-        foreach (self::LICENSE_TYPE_CODES as $code) {
-            if (preg_match('/\b'.preg_quote($code, '/').'\b/u', $normalized)) {
-                return $code;
-            }
-        }
-
-        return null;
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function persistSessionContext(
+        AIAgentSession $session,
+        array $payload,
+        array $state,
+        ?AIAgentAction $pendingAction = null,
+    ): void {
+        $session->context = $this->sessionContext->buildPersistedContext($session, $payload, $state, $pendingAction);
     }
 }

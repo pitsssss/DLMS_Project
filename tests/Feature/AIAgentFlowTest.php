@@ -98,7 +98,14 @@ class AIAgentFlowTest extends TestCase
         $this->assertDatabaseHas('ai_agent_sessions', [
             'id' => $sessionId,
             'user_id' => $citizen->id,
+            'current_intent' => 'create_new_license_application',
         ]);
+
+        $session = AIAgentSession::query()->findOrFail($sessionId);
+        $this->assertSame('create_new_license_application', $session->context['intent'] ?? null);
+        $this->assertSame(['license_type'], $session->context['missing_slots'] ?? null);
+        $this->assertSame('new_license', $session->context['service_type_code'] ?? null);
+
         $this->assertDatabaseCount('ai_agent_messages', 2);
         $this->assertEquals(0, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
     }
@@ -126,20 +133,15 @@ class AIAgentFlowTest extends TestCase
 
         $sessionId = (int) $first->json('data.session_id');
 
+        // Simulate Gemini misclassifying a slot answer as general_help.
         $this->mockGemini([
-            'intent' => 'create_new_license_application',
-            'confidence' => 0.94,
+            'intent' => 'general_help',
+            'confidence' => 0.45,
             'language' => 'ar',
-            'reply' => 'سيتم تجهيز طلب إصدار رخصة قيادة خاصة. هل تؤكد المتابعة؟',
+            'reply' => 'كيف يمكنني مساعدتك؟',
             'missing_slots' => [],
-            'proposed_action' => [
-                'name' => 'create_application',
-                'arguments' => [
-                    'license_type_code' => 'private',
-                    'service_type_code' => 'new_license',
-                ],
-            ],
-            'requires_confirmation' => true,
+            'proposed_action' => null,
+            'requires_confirmation' => false,
             'safety_status' => 'safe',
             'requires_human_support' => false,
         ]);
@@ -149,8 +151,16 @@ class AIAgentFlowTest extends TestCase
             'session_id' => $sessionId,
         ])->assertOk()
             ->assertJsonPath('data.session_id', $sessionId)
+            ->assertJsonPath('data.intent', 'create_new_license_application')
+            ->assertJsonPath('data.missing_slots', [])
             ->assertJsonPath('data.pending_action.name', 'create_application')
-            ->assertJsonPath('data.pending_action.status', 'awaiting_confirmation');
+            ->assertJsonPath('data.pending_action.status', 'awaiting_confirmation')
+            ->assertJsonPath('data.pending_action.arguments.license_type_code', 'private')
+            ->assertJsonPath('data.pending_action.arguments.service_type_code', 'new_license');
+
+        $reply = (string) $second->json('data.reply');
+        $this->assertStringContainsString('هل تؤكد', $reply);
+        $this->assertStringContainsString('رخصة قيادة خاصة', $reply);
 
         $this->assertDatabaseHas('ai_agent_actions', [
             'session_id' => $sessionId,
@@ -247,7 +257,12 @@ class AIAgentFlowTest extends TestCase
             'user_id' => $citizen->id,
             'status' => 'active',
             'current_intent' => 'create_new_license_application',
-            'context' => ['license_type_code' => 'private'],
+            'context' => [
+                'intent' => 'create_new_license_application',
+                'missing_slots' => ['license_type'],
+                'collected_slots' => [],
+                'service_type_code' => 'new_license',
+            ],
         ]);
 
         AIAgentMessage::query()->create([
@@ -398,6 +413,75 @@ class AIAgentFlowTest extends TestCase
         ])->assertOk();
 
         $this->assertEquals(1, AIAgentEvaluation::query()->count());
+    }
+
+    /**
+     * @dataProvider licenseTypeMessageProvider
+     */
+    public function test_slot_answer_creates_pending_action_for_license_type_variations(
+        string $message,
+        string $expectedCode,
+    ): void {
+        $citizen = $this->citizen();
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini([
+            'intent' => 'create_new_license_application',
+            'confidence' => 0.91,
+            'language' => 'ar',
+            'reply' => 'ما نوع الرخصة التي تريدها؟',
+            'missing_slots' => ['license_type'],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $first = $this->postJson('/api/ai-agent/message', [
+            'message' => 'بدي رخصة جديدة',
+        ])->assertOk();
+
+        $sessionId = (int) $first->json('data.session_id');
+
+        $this->mockGemini([
+            'intent' => 'general_help',
+            'confidence' => 0.4,
+            'language' => 'ar',
+            'reply' => 'كيف يمكنني مساعدتك؟',
+            'missing_slots' => [],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $response = $this->postJson('/api/ai-agent/message', [
+            'message' => $message,
+            'session_id' => $sessionId,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.intent', 'create_new_license_application')
+            ->assertJsonPath('data.pending_action.name', 'create_application')
+            ->assertJsonPath('data.pending_action.arguments.license_type_code', $expectedCode);
+
+        $reply = (string) $response->json('data.reply');
+        $this->assertStringContainsString('هل تؤكد', $reply);
+
+        $this->assertEquals(0, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function licenseTypeMessageProvider(): array
+    {
+        return [
+            'private phrase' => ['رخصة خاصة', 'private'],
+            'private word' => ['خاصة', 'private'],
+            'public word' => ['عامة', 'public'],
+            'truck word' => ['شاحنة', 'truck'],
+            'bus word' => ['حافلة', 'bus'],
+        ];
     }
 
     public function test_citizen_can_list_and_show_sessions(): void

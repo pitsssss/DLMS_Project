@@ -5,29 +5,24 @@ namespace App\Modules\AIAgent\Services;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentIntentDetector
 {
+    public function __construct(
+        private readonly AgentSessionContextService $sessionContext,
+    ) {}
+
     /**
      * Rule-based fallback when Gemini is unavailable or returns invalid JSON.
      *
-     * @return array{
-     *   intent: string,
-     *   confidence: float,
-     *   language: string,
-     *   reply: string,
-     *   missing_slots: array<int, string>,
-     *   proposed_action: array<string, mixed>|null,
-     *   requires_confirmation: bool,
-     *   safety_status: string,
-     *   requires_human_support: bool
-     * }
+     * @return array<string, mixed>
      */
     public function detectFallback(string $message, AIAgentSession $session, ?string $languageHint = null): array
     {
         $language = $languageHint ?? 'ar';
-        $normalized = mb_strtolower($message);
-        $context = $session->context ?? [];
+        $normalized = mb_strtolower(trim($message));
+        $state = $this->sessionContext->mergeUserMessage($session, $message);
 
         if (AgentSafetyRules::messageLooksAdminRelated($message)) {
             return $this->adminDeniedResponse($language);
@@ -37,8 +32,17 @@ class AgentIntentDetector
             return $this->outOfScopeResponse($language);
         }
 
+        if ($this->sessionContext->isNewLicenseContinuation($state, $state['extracted_license_type'] ?? null)) {
+            return $this->sessionContext->applyContinuity(
+                $session,
+                $this->generalHelpShape($language),
+                $state,
+                $message
+            );
+        }
+
         if ($this->matchesNewLicenseIntent($normalized)) {
-            $licenseType = $context['license_type_code'] ?? $this->extractLicenseTypeFromMessage($normalized);
+            $licenseType = $state['collected_slots']['license_type_code'] ?? null;
 
             if ($licenseType === null) {
                 return [
@@ -56,27 +60,22 @@ class AgentIntentDetector
                 ];
             }
 
-            return [
-                'intent' => AgentIntent::CreateNewLicenseApplication->value,
-                'confidence' => 0.78,
-                'language' => $language,
-                'reply' => $language === 'ar'
-                    ? 'سيتم تجهيز طلب إصدار رخصة قيادة '.$this->licenseLabelAr($licenseType).'. هل تؤكد المتابعة؟'
-                    : 'I will prepare a new '.$licenseType.' license application. Do you want to continue?',
-                'missing_slots' => [],
-                'proposed_action' => [
-                    'name' => 'create_application',
-                    'arguments' => [
-                        'license_type_code' => $licenseType,
-                        'service_type_code' => 'new_license',
-                    ],
-                ],
-                'requires_confirmation' => true,
-                'safety_status' => 'safe',
-                'requires_human_support' => false,
-            ];
+            return $this->sessionContext->applyContinuity(
+                $session,
+                $this->generalHelpShape($language),
+                $state,
+                $message
+            );
         }
 
+        return $this->generalHelpShape($language);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function generalHelpShape(string $language): array
+    {
         return [
             'intent' => AgentIntent::GeneralHelp->value,
             'confidence' => 0.45,
@@ -111,32 +110,6 @@ class AgentIntentDetector
         }
 
         return false;
-    }
-
-    private function extractLicenseTypeFromMessage(string $normalized): ?string
-    {
-        $map = [
-            'خاصة' => 'private',
-            'خاصه' => 'private',
-            'private' => 'private',
-            'عامة' => 'public',
-            'عامه' => 'public',
-            'public' => 'public',
-            'شاحنة' => 'truck',
-            'truck' => 'truck',
-            'حافلة' => 'bus',
-            'bus' => 'bus',
-            'رخصة خاصة' => 'private',
-            'رخصه خاصه' => 'private',
-        ];
-
-        foreach ($map as $needle => $code) {
-            if (str_contains($normalized, $needle)) {
-                return $code;
-            }
-        }
-
-        return null;
     }
 
     private function isOutOfScope(string $normalized): bool
@@ -198,16 +171,5 @@ class AgentIntentDetector
             'safety_status' => 'safe',
             'requires_human_support' => false,
         ];
-    }
-
-    private function licenseLabelAr(string $code): string
-    {
-        return match ($code) {
-            'private' => 'خاصة',
-            'public' => 'عامة',
-            'truck' => 'شاحنة',
-            'bus' => 'حافلة',
-            default => $code,
-        };
     }
 }
