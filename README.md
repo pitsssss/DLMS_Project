@@ -26,6 +26,7 @@ The system manages the full lifecycle of driving license services: citizen regis
 * Default Seeded Users
 * API Routes Summary
 * Testing
+* Developer Testing Dashboard
 * Postman Collection
 * AI Service Agent (Phase 9)
 * Project Structure
@@ -571,6 +572,48 @@ php artisan test --filter=AIAgent
 ```
 
 Tests mock `GeminiAgentClient` and do not call the real Gemini API.
+
+---
+
+# Developer Testing Dashboard
+
+**Internal developer tool only — not the production admin dashboard.**
+
+| Item | Detail |
+|------|--------|
+| URL | `GET /dev-dashboard` |
+| Allowed environments | `local`, `staging`, `testing` only |
+| Production | Returns **404** (middleware `EnsureDevDashboardAllowed`) |
+
+## Purpose
+
+- Exercise DLMS API flows without Postman
+- Run citizen, employee, admin, and AI agent steps from one Blade UI
+- Store tokens and entity IDs in the Laravel **session**
+- View raw JSON responses, HTTP status, and saved variables after each action
+
+## Usage
+
+1. Start the app locally (`php artisan serve` or Docker).
+2. Open `/dev-dashboard` in the browser.
+3. Use section buttons (Auth → Applications → Documents → …) or **One-click Scenarios**.
+4. Watch the **Status Panel** and **Raw API Response** at the top.
+5. Click **Clear Session** or **Reset Dashboard Session** to wipe stored tokens/IDs.
+
+## Session variables
+
+Examples: `citizen_token`, `employee_token`, `admin_token`, `application_id`, `payment_id`, `appointment_id`, `license_id`, `ai_agent_session_id`, `ai_agent_action_id`, and related IDs. Tokens are shown shortened in the UI; full values stay in session server-side.
+
+## Flows covered
+
+Auth (register/OTP/login/profile), applications, documents (upload/review), payments (mock confirm), appointments & test results, licenses & fines, notifications, reports, audit logs, AI agent (message/confirm/cancel), and chained scenarios.
+
+## Limitations
+
+- Does **not** replace Postman for every edge case or Stripe webhooks (use Stripe CLI).
+- Calls real `/api/*` routes via Laravel HTTP client (no direct service bypass).
+- Document upload scenarios may still need a real file where required.
+- **Never deploy or expose `/dev-dashboard` in production.**
 
 ---
 

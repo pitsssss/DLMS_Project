@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'citizen' => \App\Http\Middleware\EnsureCitizen::class,
             'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'dev.dashboard' => \App\Http\Middleware\EnsureDevDashboardAllowed::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
