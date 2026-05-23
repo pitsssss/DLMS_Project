@@ -471,7 +471,8 @@ Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. T
 | Sub-phase | Scope |
 | --------- | ----- |
 | **9A (current)** | Foundation: Gemini integration, intent/slot handling, sessions/messages/actions/evaluations, **proposed actions only** (no execution). |
-| **9B (future)** | Controlled execution of safe citizen actions after explicit confirmation via existing Laravel services. |
+| **9B (current — batch 1)** | Confirm/cancel endpoints; safe read/create actions via existing services. |
+| **9B (later)** | Payments, appointments, document submission via AI agent. |
 | **9C (future)** | Admin monitoring APIs and analytics reports. |
 
 ## Phase 9A limitations
@@ -524,20 +525,49 @@ Example `POST /api/ai-agent/message` response:
 }
 ```
 
-When slots are complete, `pending_action` may be returned with `status: awaiting_confirmation` — still **not executed** in Phase 9A.
+When slots are complete, `pending_action` may be returned with `status: awaiting_confirmation` — the action is **not executed** until the citizen confirms it (Phase 9B).
 
-## Postman (Phase 9A)
+## Phase 9B — Controlled action execution (first batch)
 
-Import `DLMS_API_Postman_Collection.json`. After citizen login, use folder **Phase 9A - AI Agent**:
+Citizens can confirm or cancel their own pending actions:
+
+| Method | Route | Description |
+| ------ | ----- | ----------- |
+| POST | `/api/ai-agent/actions/{action}/confirm` | Confirm and execute an action in `awaiting_confirmation`. |
+| POST | `/api/ai-agent/actions/{action}/cancel` | Cancel a pending action. |
+
+**Executable in this batch:** `create_application`, `get_application_status`, `get_required_documents`, `get_fines`, `get_licenses`.
+
+**Not yet executable via AI agent:** payments, appointments, document submission, reschedule/cancel appointment.
+
+Execution uses existing services only (`ApplicationService`, `ApplicationDocumentService`, `FineService`, `LicenseService`). Admin-only actions are rejected with **403** and marked `failed`.
+
+### End-to-end citizen flow
+
+1. `POST /api/ai-agent/message` — e.g. `بدي رخصة جديدة`
+2. `POST /api/ai-agent/message` with `session_id` — e.g. `رخصة خاصة` → `pending_action` created
+3. `POST /api/ai-agent/actions/{id}/confirm` → application created (draft)
+4. Or `POST /api/ai-agent/actions/{id}/cancel` to abort
+
+## Postman (Phase 9A + 9B)
+
+Import `DLMS_API_Postman_Collection.json`. After citizen login:
+
+**Phase 9A - AI Agent**
 
 1. **Send AI Agent Message** — saves `ai_agent_session_id` (and `ai_agent_action_id` when present).
 2. **Continue AI Agent Session** — send `session_id` with a follow-up message (e.g. license type).
 3. **List / Show AI Agent Sessions**.
 
+**Phase 9B - AI Agent Actions**
+
+4. **Confirm AI Agent Action** — executes the pending action; may save `application_id`.
+5. **Cancel AI Agent Action** — cancels instead of executing.
+
 ## Testing the AI agent
 
 ```bash
-php artisan test --filter=AIAgentFlowTest
+php artisan test --filter=AIAgent
 ```
 
 Tests mock `GeminiAgentClient` and do not call the real Gemini API.
@@ -918,7 +948,7 @@ Possible future improvements:
 
 * Real SMS gateway integration.
 * Push notifications.
-* Phase 9B: execute confirmed citizen actions through existing services.
+* Phase 9B extension: payments and appointments via AI agent confirm flow.
 * Phase 9C: AI agent admin logs and analytics.
 * PDF license generation.
 * QR code verification for licenses.

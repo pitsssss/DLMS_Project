@@ -1,0 +1,2641 @@
+{
+  "info": {
+    "_postman_id": "e321b882-bcd1-422c-b84f-662563b130cb",
+    "name": "DLMS API - phase 9",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53642485"
+  },
+  "item": [
+    {
+      "name": "01 Seeded Users Login",
+      "item": [
+        {
+          "name": "Login Seeded Admin + Save Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });",
+                  "pm.test('Save token to admin_token if present', function () {",
+                  "  const json = pm.response.json();",
+                  "  const token = json?.data?.token || json?.data?.access_token || json?.token;",
+                  "  if (token) pm.collectionVariables.set('admin_token', token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{seed_admin_phone}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Seeded Employee + Save Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });",
+                  "pm.test('Save token to employee_token if present', function () {",
+                  "  const json = pm.response.json();",
+                  "  const token = json?.data?.token || json?.data?.access_token || json?.token;",
+                  "  if (token) pm.collectionVariables.set('employee_token', token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{seed_employee_phone}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me - Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employee_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Seeded Citizen + Save Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });",
+                  "pm.test('Save token to seed_citizen_token if present', function () {",
+                  "  const json = pm.response.json();",
+                  "  const token = json?.data?.token || json?.data?.access_token || json?.token;",
+                  "  if (token) pm.collectionVariables.set('seed_citizen_token', token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{seed_citizen_phone}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "May fail if the seeded citizen is inactive or not phone-verified."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me - Seeded Citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seed_citizen_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "00 Health Check",
+      "item": [
+        {
+          "name": "GET /api/ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ping",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            },
+            "description": "Health check route from Phase 1."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "1. Register Citizen By Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Peter Toss\",\n  \"email\": \"{{citizen_email}}\",\n  \"phone\": \"{{citizen_phone}}\",\n  \"password\": \"{{citizen_password}}\",\n  \"password_confirmation\": \"{{citizen_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Verify Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"code\": \"{{otp_code}}\",\n  \"purpose\": \"register\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login Citizen By Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) {",
+                  "    pm.collectionVariables.set('citizen_token', j.data.token);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"password\": \"{{citizen_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17.Logout - Citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{citizen_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "forgot password",
+      "item": [
+        {
+          "name": "6. Forgot Password By Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Verify Forgot Password OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.reset_token) {",
+                  "    pm.collectionVariables.set('reset_token', j.data.reset_token);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"code\": \"{{otp_code}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-forgot-password-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify-forgot-password-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"reset_token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\",\n  \"password_confirmation\": \"{{new_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Login With New Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizen_email}}\",\n  \"password\": \"{{new_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "item": [
+        {
+          "name": "4. Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Complete Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Peter Toss\",\n  \"national_id\": \"11001100110\",\n  \"birth_date\": \"1998-01-15\",\n  \"governorate\": \"Damascus\",\n  \"address\": \"Damascus - Syria\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/complete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "complete"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.1.Update Profile - Citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is not 500', function () { pm.expect(pm.response.code).to.not.eql(500); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Response has success field', function () { const json = pm.response.json(); pm.expect(json).to.have.property('success'); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{citizen_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Peter Toss Updated\",\n  \"governorate\": \"Damascus\",\n  \"address\": \"Updated Address\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "update"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employee dashboard",
+      "item": [
+        {
+          "name": "Fine's Employee",
+          "item": [
+            {
+              "name": "41. List Fines (admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fines?per_page=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "fines"
+                  ],
+                  "query": [
+                    {
+                      "key": "per_page",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "42. Create Fine (admin)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try {",
+                      "  var j = pm.response.json();",
+                      "  if (j.data && j.data.id) pm.collectionVariables.set('fine_id', String(j.data.id));",
+                      "} catch (e) {}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"citizen_id\": 1,\n  \"amount\": 10000,\n  \"reason\": \"Traffic violation\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/fines",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "fines"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "43. Update Fine (admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"paid\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/fines/{{fine_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "fines",
+                    "{{fine_id}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "11. Login Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{employee_email}}\",\n  \"password\": \"{{seed_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20. List Pending Documents (employee)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.items && j.data.items.length && j.data.items[0].id) {",
+                  "    pm.collectionVariables.set('pending_document_id', String(j.data.items[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents/pending-review?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                "pending-review"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "21. Approve Document (employee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents/{{pending_document_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                "{{pending_document_id}}",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "22. Reject Document (employee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason\": \"Document is unclear. Please upload a higher resolution scan.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/documents/{{pending_document_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                "{{pending_document_id}}",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "31. Record Test Result (employee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"result\": \"passed\",\n  \"notes\": \"Citizen met requirements.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/test-appointments/{{appointment_id}}/record-result",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "test-appointments",
+                "{{appointment_id}}",
+                "record-result"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "36. Issue License (employee)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('license_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/applications/{{application_id}}/issue-license",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "applications",
+                "{{application_id}}",
+                "issue-license"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "39. Block License (employee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Under investigation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/licenses/{{license_id}}/block",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "licenses",
+                "{{license_id}}",
+                "block"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "40. Unblock License (employee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/licenses/{{license_id}}/unblock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "licenses",
+                "{{license_id}}",
+                "unblock"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Dashboard",
+      "item": [
+        {
+          "name": "10. Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{seed_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "50. Reports Overview (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports/overview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "overview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "51. List Audit Logs (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/audit-logs?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "52. Application Status History (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/application-status-histories/{{application_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "application-status-histories",
+                "{{application_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "user application",
+      "item": [
+        {
+          "name": "12. List License Types (public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('license_type_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/license-types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "license-types"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13. List Service Types (public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('service_type_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/service-types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "service-types"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14. Create Application Draft (citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) {",
+                  "    pm.collectionVariables.set('application_id', String(j.data.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"license_type_id\": {{license_type_id}},\n  \"service_type_id\": {{service_type_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15. List My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications?per_page=15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16. Get Application By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17. Required Documents Checklist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('required_document_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/required-documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "required-documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18. Upload Application Document (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "required_document_id",
+                  "value": "{{required_document_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Select a PDF or image (jpg/png) matching allowed_extensions for this document type.",
+                  "src": [
+                    "",
+                    "/C:/Users/asasv/Downloads/ERD -v1.pdf"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "19. Submit Documents For Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/submit-documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "submit-documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "28. Available Tests (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/available-tests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "available-tests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "29. List Appointment Slots (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/appointment-slots?test_type_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointment-slots"
+              ],
+              "query": [
+                {
+                  "key": "test_type_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "30. Book Application Appointment (citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('appointment_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointment_slot_id\": {{appointment_slot_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/appointments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "34. Reschedule Appointment (citizen)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointment_slot_id\": {{appointment_slot_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments",
+                "{{appointment_id}}",
+                "reschedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "35. Cancel Appointment (citizen)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellation_reason\": \"Schedule conflict\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments",
+                "{{appointment_id}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "32. List Application Appointments (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/appointments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "33. List Application Test Results (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/test-results",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "test-results"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "37. List My Licenses (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "licenses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "38. Show License (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "licenses",
+                "{{license_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "44. List My Fines (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fines",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "fines"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "45. Renew License (citizen)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_id}}/renew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "licenses",
+                "{{license_id}}",
+                "renew"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "46. Replacement License (citizen)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"lost\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_id}}/replacement",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "licenses",
+                "{{license_id}}",
+                "replacement"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "47. Unblock Request (citizen)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_id}}/unblock-request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "licenses",
+                "{{license_id}}",
+                "unblock-request"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "payement",
+      "item": [
+        {
+          "name": "23. Get Application Fee (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/fee",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "fee"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "24. Create Application Payment (citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (!j.data) return;",
+                  "  if (j.data.payment && j.data.payment.id) {",
+                  "    pm.collectionVariables.set('payment_id', String(j.data.payment.id));",
+                  "    if (j.data.checkout_url) pm.collectionVariables.set('checkout_url', String(j.data.checkout_url));",
+                  "    var pr = j.data.payment.provider_reference;",
+                  "    if (pr) pm.collectionVariables.set('stripe_session_id', String(pr));",
+                  "    var m = j.data.payment.metadata;",
+                  "    if (m && m.stripe_session_id) pm.collectionVariables.set('stripe_session_id', String(m.stripe_session_id));",
+                  "  } else if (j.data.id) {",
+                  "    pm.collectionVariables.set('payment_id', String(j.data.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "25. Check Payment Status (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/payments/{{payment_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "payments",
+                "{{payment_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26. Confirm Application Payment (mock only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/payments/{{payment_id}}/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "payments",
+                "{{payment_id}}",
+                "confirm"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27. List Application Payments (citizen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/applications/{{application_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "{{application_id}}",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "48. List Notifications (citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.items && j.data.items.length) {",
+                  "    pm.collectionVariables.set('notification_id', String(j.data.items[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications?unread_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "unread_only",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "49. Mark Notification Read (citizen)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Phase 9A - AI Agent",
+      "item": [
+        {
+          "name": "53. Send AI Agent Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.session_id) {",
+                  "    pm.collectionVariables.set('ai_agent_session_id', String(j.data.session_id));",
+                  "  }",
+                  "  if (j.data && j.data.pending_action && j.data.pending_action.id) {",
+                  "    pm.collectionVariables.set('ai_agent_action_id', String(j.data.pending_action.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"بدي رخصة جديدة\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai-agent/message",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai-agent",
+                "message"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "54. Continue AI Agent Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.session_id) {",
+                  "    pm.collectionVariables.set('ai_agent_session_id', String(j.data.session_id));",
+                  "  }",
+                  "  if (j.data && j.data.pending_action && j.data.pending_action.id) {",
+                  "    pm.collectionVariables.set('ai_agent_action_id', String(j.data.pending_action.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"رخصة خاصة\",\n  \"session_id\": {{ai_agent_session_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai-agent/message",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai-agent",
+                "message"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "55. List AI Agent Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai-agent/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai-agent",
+                "sessions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "56. Show AI Agent Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai-agent",
+                "sessions",
+                "{{ai_agent_session_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "citizen_email",
+      "value": "testcitizen@example.com"
+    },
+    {
+      "key": "citizen_phone",
+      "value": "0977000001"
+    },
+    {
+      "key": "citizen_password",
+      "value": "password123"
+    },
+    {
+      "key": "otp_code",
+      "value": "123456"
+    },
+    {
+      "key": "citizen_token",
+      "value": ""
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@example.com"
+    },
+    {
+      "key": "employee_email",
+      "value": "employee@example.com"
+    },
+    {
+      "key": "seed_password",
+      "value": "password"
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "employee_token",
+      "value": ""
+    },
+    {
+      "key": "reset_token",
+      "value": ""
+    },
+    {
+      "key": "new_password",
+      "value": "newpassword123"
+    },
+    {
+      "key": "license_type_id",
+      "value": "1"
+    },
+    {
+      "key": "service_type_id",
+      "value": "1"
+    },
+    {
+      "key": "application_id",
+      "value": ""
+    },
+    {
+      "key": "required_document_id",
+      "value": ""
+    },
+    {
+      "key": "pending_document_id",
+      "value": ""
+    },
+    {
+      "key": "payment_id",
+      "value": ""
+    },
+    {
+      "key": "checkout_url",
+      "value": ""
+    },
+    {
+      "key": "stripe_session_id",
+      "value": ""
+    },
+    {
+      "key": "appointment_id",
+      "value": ""
+    },
+    {
+      "key": "license_id",
+      "value": ""
+    },
+    {
+      "key": "fine_id",
+      "value": ""
+    },
+    {
+      "key": "ai_agent_session_id",
+      "value": ""
+    },
+    {
+      "key": "ai_agent_action_id",
+      "value": ""
+    }
+  ]
+}

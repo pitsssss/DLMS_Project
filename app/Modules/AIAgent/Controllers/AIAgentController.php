@@ -5,6 +5,7 @@ namespace App\Modules\AIAgent\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\AIAgent\Requests\SendAgentMessageRequest;
 use App\Modules\AIAgent\Resources\AIAgentSessionResource;
+use App\Modules\AIAgent\Services\AIAgentActionService;
 use App\Modules\AIAgent\Services\AIAgentService;
 use Illuminate\Http\Request;
 
@@ -51,5 +52,19 @@ class AIAgentController extends Controller
             new AIAgentSessionResource($model),
             'AI agent session retrieved successfully.'
         );
+    }
+
+    public function confirmAction(Request $request, int $action, AIAgentActionService $actions)
+    {
+        $data = $actions->confirm($request->user(), $action);
+
+        return $this->successResponse($data, 'AI agent action executed successfully.');
+    }
+
+    public function cancelAction(Request $request, int $action, AIAgentActionService $actions)
+    {
+        $data = $actions->cancel($request->user(), $action);
+
+        return $this->successResponse($data, 'AI agent action cancelled successfully.');
     }
 }

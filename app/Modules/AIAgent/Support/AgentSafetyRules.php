@@ -6,6 +6,15 @@ use App\Modules\AIAgent\Enums\AgentIntent;
 
 class AgentSafetyRules
 {
+    /** @var list<string> Phase 9B: safe citizen actions that may be executed after confirmation. */
+    public const PHASE_9B_EXECUTABLE_ACTIONS = [
+        'create_application',
+        'get_application_status',
+        'get_required_documents',
+        'get_fines',
+        'get_licenses',
+    ];
+
     /** @var list<string> */
     public const ALLOWED_PROPOSED_ACTIONS = [
         'create_application',
@@ -73,6 +82,11 @@ class AgentSafetyRules
     public static function isAllowedProposedAction(string $actionName): bool
     {
         return in_array($actionName, self::ALLOWED_PROPOSED_ACTIONS, true);
+    }
+
+    public static function isPhase9bExecutable(string $actionName): bool
+    {
+        return in_array($actionName, self::PHASE_9B_EXECUTABLE_ACTIONS, true);
     }
 
     public static function messageLooksAdminRelated(string $message): bool

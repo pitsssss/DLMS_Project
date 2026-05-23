@@ -39,4 +39,34 @@ class AgentEvaluationService
             ],
         ]);
     }
+
+    public function recordActionOutcome(
+        AIAgentSession $session,
+        ?AIAgentMessage $message,
+        \App\Modules\AIAgent\Models\AIAgentAction $action,
+        bool $success,
+        string $outcome,
+        ?string $error = null,
+    ): AIAgentEvaluation {
+        return AIAgentEvaluation::query()->create([
+            'session_id' => $session->id,
+            'message_id' => $message?->id,
+            'intent' => $session->current_intent,
+            'confidence' => $success ? 1.0 : 0.0,
+            'safety_score' => $success ? 1.0 : 0.0,
+            'tool_selected' => $action->action_name,
+            'requires_human_support' => false,
+            'latency_ms' => null,
+            'model_used' => 'action_executor',
+            'was_fallback' => false,
+            'metadata' => [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => $outcome,
+                'success' => $success,
+                'error' => $error,
+                'status' => $action->status->value,
+            ],
+        ]);
+    }
 }

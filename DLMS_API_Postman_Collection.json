@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "DLMS API — Phase 9A (+ AI Agent)",
+    "name": "DLMS API — Phase 9B (+ AI Agent Actions)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1004,6 +1004,49 @@
               { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 9B - AI Agent Actions",
+      "item": [
+        {
+          "name": "57. Confirm AI Agent Action",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.result && j.data.result.application_id) {",
+                  "    pm.collectionVariables.set('application_id', String(j.data.result.application_id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/actions/{{ai_agent_action_id}}/confirm"
+          }
+        },
+        {
+          "name": "58. Cancel AI Agent Action",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/actions/{{ai_agent_action_id}}/cancel"
           }
         }
       ]

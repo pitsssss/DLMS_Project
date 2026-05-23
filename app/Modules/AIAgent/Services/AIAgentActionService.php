@@ -1,0 +1,223 @@
+<?php
+
+namespace App\Modules\AIAgent\Services;
+
+use App\Exceptions\ApiException;
+use App\Models\User;
+use App\Modules\AIAgent\Enums\AgentActionStatus;
+use App\Modules\AIAgent\Enums\AgentMessageRole;
+use App\Modules\AIAgent\Models\AIAgentAction;
+use App\Modules\AIAgent\Models\AIAgentMessage;
+use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentSafetyRules;
+use Illuminate\Support\Facades\DB;
+
+class AIAgentActionService
+{
+    public function __construct(
+        private readonly AgentActionExecutor $executor,
+        private readonly AgentActionReplyBuilder $replyBuilder,
+        private readonly AgentEvaluationService $evaluationService,
+    ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function confirm(User $user, int $actionId): array
+    {
+        $action = $this->resolveOwnedAction($user, $actionId);
+
+        if (AgentSafetyRules::isAdminOnlyAction($action->action_name)) {
+            $this->markFailed($action, 'This action requires an authorized employee.');
+
+            throw new ApiException('This action requires an authorized employee.', 403);
+        }
+
+        $this->assertAwaitingConfirmation($action);
+
+        if (! AgentSafetyRules::isPhase9bExecutable($action->action_name)) {
+            throw new ApiException('This action cannot be executed yet. Please use the standard API endpoints.', 422);
+        }
+
+        $action->status = AgentActionStatus::Confirmed;
+        $action->confirmed_at = now();
+        $action->save();
+
+        try {
+            $result = $this->executor->execute($user, $action);
+
+            $action->status = AgentActionStatus::Executed;
+            $action->executed_at = now();
+            $action->result = $result;
+            $action->error_message = null;
+            $action->save();
+
+            $reply = $this->replyBuilder->success($action, $result);
+            $message = $this->storeAssistantMessage($action, $reply, [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => 'executed',
+            ]);
+
+            $this->recordActionEvaluation($action, $message, true);
+
+            return $this->formatConfirmResponse($action, $result, $reply);
+        } catch (ApiException $e) {
+            $this->markFailed($action, $e->getMessage());
+            $this->storeAssistantMessage($action, $this->replyBuilder->failure($e->getMessage()), [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => 'failed',
+            ]);
+            $this->recordActionEvaluation($action, null, false, $e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function cancel(User $user, int $actionId): array
+    {
+        return DB::transaction(function () use ($user, $actionId) {
+            $action = $this->resolveOwnedAction($user, $actionId);
+
+            $this->assertCancellable($action);
+
+            $action->status = AgentActionStatus::Cancelled;
+            $action->save();
+
+            $reply = $this->replyBuilder->cancel();
+            $message = $this->storeAssistantMessage($action, $reply, [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => 'cancelled',
+            ]);
+
+            $this->recordActionEvaluation($action, $message, true, null, 'cancelled');
+
+            return [
+                'action' => $this->actionSummary($action),
+                'reply' => $reply,
+            ];
+        });
+    }
+
+    private function resolveOwnedAction(User $user, int $actionId): AIAgentAction
+    {
+        $action = AIAgentAction::query()
+            ->whereKey($actionId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($action === null) {
+            throw new ApiException('AI agent action not found.', 404);
+        }
+
+        return $action;
+    }
+
+    private function assertAwaitingConfirmation(AIAgentAction $action): void
+    {
+        if ($action->status === AgentActionStatus::AwaitingConfirmation) {
+            return;
+        }
+
+        $message = match ($action->status) {
+            AgentActionStatus::Executed => 'This action has already been executed.',
+            AgentActionStatus::Cancelled => 'This action has been cancelled.',
+            AgentActionStatus::Failed => 'This action has failed and cannot be confirmed.',
+            AgentActionStatus::Confirmed => 'This action is already being processed.',
+            default => 'This action is not awaiting confirmation.',
+        };
+
+        throw new ApiException($message, 422);
+    }
+
+    private function assertCancellable(AIAgentAction $action): void
+    {
+        if (in_array($action->status, [
+            AgentActionStatus::AwaitingConfirmation,
+            AgentActionStatus::Pending,
+        ], true)) {
+            return;
+        }
+
+        throw new ApiException('This action cannot be cancelled.', 422);
+    }
+
+    private function markFailed(AIAgentAction $action, string $errorMessage): void
+    {
+        $action->status = AgentActionStatus::Failed;
+        $action->error_message = $errorMessage;
+        $action->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
+     */
+    private function formatConfirmResponse(AIAgentAction $action, array $result, string $reply): array
+    {
+        return [
+            'action' => $this->actionSummary($action),
+            'result' => $result,
+            'reply' => $reply,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function actionSummary(AIAgentAction $action): array
+    {
+        return [
+            'id' => $action->id,
+            'name' => $action->action_name,
+            'status' => $action->status->value,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function storeAssistantMessage(AIAgentAction $action, string $reply, array $metadata): AIAgentMessage
+    {
+        $message = AIAgentMessage::query()->create([
+            'session_id' => $action->session_id,
+            'role' => AgentMessageRole::Assistant,
+            'content' => $reply,
+            'metadata' => $metadata,
+        ]);
+
+        AIAgentSession::query()
+            ->whereKey($action->session_id)
+            ->update(['last_message_at' => now()]);
+
+        return $message;
+    }
+
+    private function recordActionEvaluation(
+        AIAgentAction $action,
+        ?AIAgentMessage $message,
+        bool $success,
+        ?string $error = null,
+        string $outcome = 'executed',
+    ): void {
+        $session = AIAgentSession::query()->find($action->session_id);
+
+        if ($session === null) {
+            return;
+        }
+
+        $this->evaluationService->recordActionOutcome(
+            $session,
+            $message,
+            $action,
+            $success,
+            $outcome,
+            $error
+        );
+    }
+}
