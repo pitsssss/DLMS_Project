@@ -9,7 +9,7 @@
         </div>
         <div class="text-end font-en small">
             <div>API: <code class="text-white">{{ $apiBaseUrl }}</code></div>
-            <form method="POST" action="{{ route('dev-dashboard.reset') }}" class="d-inline mt-1">
+            <form method="POST" action="{{ $devRoutes['reset'] }}" class="d-inline mt-1">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-outline-light">Clear Session</button>
             </form>
@@ -51,17 +51,17 @@
                 <h5 class="text-secondary mb-3">نظرة عامة | Overview</h5>
                 <div class="card card-dev">
                     <div class="card-body action-grid">
-                        <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                        <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                             @csrf
                             <input type="hidden" name="action" value="ping">
                             <button type="submit" class="btn btn-syrtak">Ping API</button>
                         </form>
-                        <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                        <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                             @csrf
                             <input type="hidden" name="action" value="refresh_application">
                             <button type="submit" class="btn btn-outline-syrtak">Refresh Application</button>
                         </form>
-                        <form method="POST" action="{{ route('dev-dashboard.reset') }}" class="d-inline">
+                        <form method="POST" action="{{ $devRoutes['reset'] }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-outline-danger">Reset Dashboard Session</button>
                         </form>
@@ -94,7 +94,7 @@
                             ['issue_license', 'Issue License'],
                             ['ai_create_application', 'AI Create Application'],
                         ] as [$scenario, $label])
-                            <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                            <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                                 @csrf
                                 <input type="hidden" name="action" value="scenario_{{ $scenario }}">
                                 <button type="submit" class="btn btn-sm btn-syrtak">{{ $label }}</button>

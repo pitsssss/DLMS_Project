@@ -5,7 +5,7 @@
             <div class="card card-dev h-100">
                 <div class="card-header">Citizen</div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="register_citizen">
                         <label class="form-label small font-en">Email</label>
@@ -13,7 +13,7 @@
                         <button type="submit" class="btn btn-sm btn-syrtak w-100">Register Test Citizen</button>
                     </form>
 
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="verify_citizen_otp">
                         <label class="form-label small font-en">OTP Code</label>
@@ -21,7 +21,7 @@
                         <button type="submit" class="btn btn-sm btn-outline-syrtak w-100">Verify Citizen OTP</button>
                     </form>
 
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="login_citizen">
                         <label class="form-label small font-en">Email / Password</label>
@@ -30,13 +30,13 @@
                         <button type="submit" class="btn btn-sm btn-syrtak w-100">Login Citizen</button>
                     </form>
 
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="complete_citizen_profile">
                         <button type="submit" class="btn btn-sm btn-outline-syrtak w-100">Complete Citizen Profile</button>
                     </form>
 
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="citizen_me">
                         <button type="submit" class="btn btn-sm btn-secondary w-100 font-en">GET /auth/me</button>
@@ -49,7 +49,7 @@
             <div class="card card-dev h-100">
                 <div class="card-header">Employee</div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="login_employee">
                         <label class="form-label small font-en">Email or phone (identifier)</label>
@@ -57,7 +57,7 @@
                         <input type="password" name="employee_password" class="form-control form-control-sm mb-2" value="{{ $defaults['employee_password'] }}">
                         <button type="submit" class="btn btn-sm btn-syrtak w-100 mb-3">Login Employee</button>
                     </form>
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="employee_me">
                         <button type="submit" class="btn btn-sm btn-secondary w-100 font-en">GET /auth/me</button>
@@ -71,7 +71,7 @@
             <div class="card card-dev h-100">
                 <div class="card-header">Admin</div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="login_admin">
                         <label class="form-label small font-en">Email or phone (identifier)</label>
@@ -79,7 +79,7 @@
                         <input type="password" name="admin_password" class="form-control form-control-sm mb-2" value="{{ $defaults['admin_password'] }}">
                         <button type="submit" class="btn btn-sm btn-syrtak w-100 mb-3">Login Admin</button>
                     </form>
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="admin_me">
                         <button type="submit" class="btn btn-sm btn-secondary w-100 font-en">GET /auth/me</button>

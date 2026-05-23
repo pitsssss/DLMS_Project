@@ -11,7 +11,7 @@
                 ['refresh_application', 'Refresh Application'],
                 ['admin_application_status_history', 'Status History (Admin)'],
             ] as [$action, $label])
-                <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                     @csrf
                     <input type="hidden" name="action" value="{{ $action }}">
                     <button type="submit" class="btn btn-sm {{ $action === 'create_application' ? 'btn-syrtak' : 'btn-outline-syrtak' }}">{{ $label }}</button>
