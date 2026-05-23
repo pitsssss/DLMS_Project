@@ -51,7 +51,8 @@ class DlmsTestingDashboardController extends Controller
     public function index(): View
     {
         return view('dev-dashboard.index', [
-            'apiBaseUrl' => url('/api'),
+            'apiBaseUrl' => '/api',
+            'devRoutes' => $this->devDashboardRoutes(),
             'environment' => app()->environment(),
             'status' => $this->buildStatusPanel(),
             'lastResponse' => session('dev_last_response'),
@@ -151,9 +152,7 @@ class DlmsTestingDashboardController extends Controller
 
         Session::forget('dev_last_response');
 
-        return redirect()
-            ->route('dev-dashboard.index')
-            ->with('dev_flash', 'Dashboard session cleared.');
+        return $this->redirectToDashboard('Dashboard session cleared.');
     }
 
     private function runScenario(string $name, Request $request): RedirectResponse
@@ -1397,7 +1396,30 @@ class DlmsTestingDashboardController extends Controller
     {
         Session::flash('dev_last_response', $result);
 
-        return redirect()->route('dev-dashboard.index');
+        return $this->redirectToDashboard();
+    }
+
+    /**
+     * @return array{index: string, action: string, reset: string}
+     */
+    private function devDashboardRoutes(): array
+    {
+        return [
+            'index' => route('dev-dashboard.index', absolute: false),
+            'action' => route('dev-dashboard.action', absolute: false),
+            'reset' => route('dev-dashboard.reset', absolute: false),
+        ];
+    }
+
+    private function redirectToDashboard(?string $flashMessage = null): RedirectResponse
+    {
+        $redirect = redirect()->route('dev-dashboard.index');
+
+        if ($flashMessage !== null) {
+            $redirect->with('dev_flash', $flashMessage);
+        }
+
+        return $redirect;
     }
 
     private function redirectWithError(string $message): RedirectResponse

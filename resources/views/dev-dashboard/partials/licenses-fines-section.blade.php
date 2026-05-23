@@ -13,7 +13,7 @@
                     ['block_license', 'Block License'],
                     ['unblock_license', 'Unblock License'],
                 ] as [$action, $label])
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="action" value="{{ $action }}">
                         <button type="submit" class="btn btn-sm btn-outline-syrtak">{{ $label }}</button>
@@ -23,7 +23,7 @@
 
             <div class="row g-2">
                 <div class="col-md-4">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="replacement_license">
                         <select name="replacement_type" class="form-select form-select-sm mb-1">
@@ -34,14 +34,14 @@
                     </form>
                 </div>
                 <div class="col-md-4">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="unblock_license_request">
                         <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Unblock Request</button>
                     </form>
                 </div>
                 <div class="col-md-4">
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
                         @csrf
                         <input type="hidden" name="action" value="create_fine">
                         <input type="number" name="fine_amount" class="form-control form-control-sm mb-1" value="100" placeholder="amount">

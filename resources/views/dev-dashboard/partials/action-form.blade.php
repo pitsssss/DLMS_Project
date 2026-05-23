@@ -7,7 +7,14 @@
     'multipart' => false,
 ])
 
-<form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline"
+@php
+    $devRoutes = $devRoutes ?? [
+        'action' => route('dev-dashboard.action', absolute: false),
+        'reset' => route('dev-dashboard.reset', absolute: false),
+        'index' => route('dev-dashboard.index', absolute: false),
+    ];
+@endphp
+<form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline"
       @if($multipart) enctype="multipart/form-data" @endif>
     @csrf
     <input type="hidden" name="action" value="{{ $action }}">

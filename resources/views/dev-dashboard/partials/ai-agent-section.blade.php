@@ -5,7 +5,7 @@
             AI Service Agent — Phase 9
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+            <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                 @csrf
                 <input type="hidden" name="action" value="ai_agent_message">
                 <label class="form-label">رسالة | Message</label>
@@ -33,7 +33,7 @@
                     ['ai_agent_sessions', 'List Sessions'],
                     ['ai_agent_show_session', 'Show Session'],
                 ] as [$action, $label])
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="action" value="{{ $action }}">
                         <button type="submit" class="btn btn-sm {{ str_contains($action, 'confirm') ? 'btn-success' : 'btn-outline-syrtak' }}">{{ $label }}</button>

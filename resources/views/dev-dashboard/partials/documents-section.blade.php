@@ -11,7 +11,7 @@
                     ['approve_pending_document', 'Approve Document'],
                     ['approve_all_documents', 'Approve All (App)'],
                 ] as [$action, $label])
-                    <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="action" value="{{ $action }}">
                         <button type="submit" class="btn btn-sm btn-outline-syrtak">{{ $label }}</button>
@@ -19,7 +19,7 @@
                 @endforeach
             </div>
 
-            <form method="POST" action="{{ route('dev-dashboard.action') }}" enctype="multipart/form-data" class="row g-2 align-items-end mb-3">
+            <form method="POST" action="{{ $devRoutes['action'] }}" enctype="multipart/form-data" class="row g-2 align-items-end mb-3">
                 @csrf
                 <input type="hidden" name="action" value="upload_document">
                 <div class="col-md-3">
@@ -34,13 +34,13 @@
                     <button type="submit" class="btn btn-sm btn-syrtak w-100">Upload</button>
                 </div>
             </form>
-            <form method="POST" action="{{ route('dev-dashboard.action') }}" class="mb-3">
+            <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                 @csrf
                 <input type="hidden" name="action" value="upload_sample_document">
                 <button type="submit" class="btn btn-sm btn-outline-secondary font-en">Upload Sample PDF</button>
             </form>
 
-            <form method="POST" action="{{ route('dev-dashboard.action') }}" class="row g-2">
+            <form method="POST" action="{{ $devRoutes['action'] }}" class="row g-2">
                 @csrf
                 <input type="hidden" name="action" value="reject_pending_document">
                 <div class="col-md-8">

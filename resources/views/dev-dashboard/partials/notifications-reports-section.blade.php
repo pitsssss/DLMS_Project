@@ -9,13 +9,13 @@
                 ['audit_logs', 'Audit Logs'],
                 ['admin_application_status_history', 'App Status History'],
             ] as [$action, $label])
-                <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+                <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                     @csrf
                     <input type="hidden" name="action" value="{{ $action }}">
                     <button type="submit" class="btn btn-sm btn-outline-syrtak">{{ $label }}</button>
                 </form>
             @endforeach
-            <form method="POST" action="{{ route('dev-dashboard.action') }}" class="d-inline">
+            <form method="POST" action="{{ $devRoutes['action'] }}" class="d-inline">
                 @csrf
                 <input type="hidden" name="action" value="list_notifications">
                 <input type="hidden" name="unread_only" value="1">
