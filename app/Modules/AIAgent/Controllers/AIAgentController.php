@@ -19,7 +19,7 @@ class AIAgentController extends Controller
             $request->validated('session_id')
         );
 
-        return $this->successResponse($data, 'messages.ai_agent.response');
+        return $this->successResponse($data, 'AI agent response generated successfully.');
     }
 
     public function listSessions(Request $request, AIAgentService $agent)
@@ -41,7 +41,7 @@ class AIAgentController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'messages.ai_agent.sessions_list');
+        ], 'AI agent sessions retrieved successfully.');
     }
 
     public function showSession(Request $request, int $session, AIAgentService $agent)
@@ -50,7 +50,7 @@ class AIAgentController extends Controller
 
         return $this->successResponse(
             new AIAgentSessionResource($model),
-            'messages.ai_agent.session_show'
+            'AI agent session retrieved successfully.'
         );
     }
 
@@ -58,13 +58,13 @@ class AIAgentController extends Controller
     {
         $data = $actions->confirm($request->user(), $action);
 
-        return $this->successResponse($data, 'messages.ai_agent.action_executed');
+        return $this->successResponse($data, 'AI agent action executed successfully.');
     }
 
     public function cancelAction(Request $request, int $action, AIAgentActionService $actions)
     {
         $data = $actions->cancel($request->user(), $action);
 
-        return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
+        return $this->successResponse($data, 'AI agent action cancelled successfully.');
     }
 }
