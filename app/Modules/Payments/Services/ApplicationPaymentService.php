@@ -60,7 +60,7 @@ class ApplicationPaymentService
         $application = $this->requireOwnedApplication($citizen, $applicationId);
 
         if ($application->status !== ApplicationStatus::PaymentPending) {
-            throw new ApiException('Payments can only be initiated when the application is awaiting payment.', 422);
+            throw new ApiException('messages.payments.not_awaiting_payment', 422);
         }
 
         $fee = $this->resolveApplicationFee($application);
@@ -72,7 +72,7 @@ class ApplicationPaymentService
             ->exists();
 
         if ($existingCompleted) {
-            throw new ApiException('Payment already completed.', 422);
+            throw new ApiException('messages.payments.already_completed', 422);
         }
 
         $provider = $this->providerManager->isStripe() ? 'stripe' : 'mock';
@@ -139,7 +139,7 @@ class ApplicationPaymentService
     public function confirmMockPayment(User $citizen, int $applicationId, int $paymentId): Payment
     {
         if ($this->providerManager->isStripe()) {
-            throw new ApiException('Manual confirmation is disabled for Stripe payments.', 400);
+            throw new ApiException('messages.payments.manual_confirm_disabled', 400);
         }
 
         $this->requireOwnedApplication($citizen, $applicationId);
@@ -151,11 +151,11 @@ class ApplicationPaymentService
             ->first();
 
         if ($payment === null) {
-            throw new ApiException('Payment not found.', 404);
+            throw new ApiException('messages.payments.not_found', 404);
         }
 
         if ($payment->provider !== 'mock') {
-            throw new ApiException('Manual confirmation is disabled for Stripe payments.', 400);
+            throw new ApiException('messages.payments.manual_confirm_disabled', 400);
         }
 
         $application = LicenseApplication::query()
@@ -164,11 +164,11 @@ class ApplicationPaymentService
             ->first();
 
         if ($application === null || $application->status !== ApplicationStatus::PaymentPending) {
-            throw new ApiException('This application is not awaiting payment.', 422);
+            throw new ApiException('messages.payments.not_awaiting_payment', 422);
         }
 
         if ($payment->status !== PaymentStatus::Pending) {
-            throw new ApiException('This payment cannot be confirmed in its current state.', 422);
+            throw new ApiException('messages.payments.cannot_confirm_state', 422);
         }
 
         $mockRef = 'mock-'.Str::uuid()->toString();
@@ -194,7 +194,7 @@ class ApplicationPaymentService
             }
 
             if ($payment->status !== PaymentStatus::Pending) {
-                throw new ApiException('Payment cannot be completed in its current state.', 422);
+                throw new ApiException('messages.payments.cannot_complete_state', 422);
             }
 
             $application = LicenseApplication::query()
@@ -224,19 +224,19 @@ class ApplicationPaymentService
                     $application,
                     ApplicationStatus::PaymentCompleted,
                     $actor,
-                    'Application fee payment completed.'
+                    __('messages.payments.note_fee_completed')
                 );
 
                 $application = $application->fresh();
                 if ($application === null) {
-                    throw new ApiException('Application not found.', 404);
+                    throw new ApiException('messages.applications.not_found', 404);
                 }
 
                 $this->applications->transitionStatus(
                     $application,
                     ApplicationStatus::AppointmentPending,
                     $actor,
-                    'Payment cleared. Awaiting appointment booking.'
+                    __('messages.payments.note_payment_cleared')
                 );
             }
 
@@ -259,7 +259,7 @@ class ApplicationPaymentService
             ->first();
 
         if ($payment === null) {
-            throw new ApiException('Payment not found.', 404);
+            throw new ApiException('messages.payments.not_found', 404);
         }
 
         $stripePaymentStatus = null;
@@ -421,11 +421,11 @@ class ApplicationPaymentService
         $expectedCurrency = strtolower((string) config('payment.stripe.currency', 'usd'));
 
         if ($currency !== '' && $currency !== $expectedCurrency) {
-            throw new ApiException('Stripe currency mismatch.', 422);
+            throw new ApiException('messages.payments.stripe_currency_mismatch', 422);
         }
 
         if ($actual > 0 && $actual !== $expectedMinor) {
-            throw new ApiException('Stripe amount mismatch.', 422);
+            throw new ApiException('messages.payments.stripe_amount_mismatch', 422);
         }
     }
 
@@ -448,7 +448,7 @@ class ApplicationPaymentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return $application;
@@ -464,7 +464,7 @@ class ApplicationPaymentService
             ->first();
 
         if ($fee === null) {
-            throw new ApiException('No application fee is configured for this license and service type.', 422);
+            throw new ApiException('messages.payments.no_fee_configured', 422);
         }
 
         return $fee;

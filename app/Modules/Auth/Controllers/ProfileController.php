@@ -18,7 +18,7 @@ class ProfileController extends Controller
 
         return $this->successResponse(
             new UserResource($user),
-            'Profile retrieved successfully.'
+            'messages.auth.profile_retrieved'
         );
     }
 
@@ -28,7 +28,7 @@ class ProfileController extends Controller
 
         return $this->successResponse(
             new UserResource($user->load('role')),
-            'Profile completed successfully.'
+            'messages.auth.profile_completed'
         );
     }
 
@@ -38,7 +38,7 @@ class ProfileController extends Controller
 
         return $this->successResponse(
             new UserResource($user->load('role')),
-            'Profile updated successfully.'
+            'messages.auth.profile_updated'
         );
     }
 
@@ -46,6 +46,6 @@ class ProfileController extends Controller
     {
         $auth->changePassword($request->user(), $request->validated());
 
-        return $this->successResponse(null, 'Password changed successfully.');
+        return $this->successResponse(null, 'messages.auth.password_changed');
     }
 }

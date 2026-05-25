@@ -30,7 +30,7 @@ class NotificationController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'Notifications retrieved successfully.');
+        ], 'messages.notifications.list');
     }
 
     public function markRead(Request $request, int $notification, NotificationService $notifications)
@@ -39,7 +39,7 @@ class NotificationController extends Controller
 
         return $this->successResponse(
             new NotificationResource($model),
-            'Notification marked as read.'
+            'messages.notifications.read'
         );
     }
 }

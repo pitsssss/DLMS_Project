@@ -30,7 +30,7 @@ class ApplicationController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'Applications retrieved successfully.');
+        ], 'messages.applications.list_success');
     }
 
     public function store(StoreApplicationRequest $request, ApplicationService $applications)
@@ -45,7 +45,7 @@ class ApplicationController extends Controller
 
         return $this->successResponse(
             new ApplicationResource($application),
-            'Application draft created successfully.'
+            'messages.applications.created'
         );
     }
 
@@ -60,7 +60,7 @@ class ApplicationController extends Controller
 
         return $this->successResponse(
             new ApplicationResource($model),
-            'Application retrieved successfully.'
+            'messages.applications.retrieved'
         );
     }
 }

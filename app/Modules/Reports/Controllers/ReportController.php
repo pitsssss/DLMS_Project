@@ -11,7 +11,7 @@ class ReportController extends Controller
     {
         return $this->successResponse(
             $reports->overview(),
-            'Report overview retrieved successfully.'
+            'messages.reports.overview'
         );
     }
 }

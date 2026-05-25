@@ -13,7 +13,7 @@ class EnsureCitizen
         $user = $request->user();
 
         if (! $user || ! $user->isCitizen()) {
-            abort(403, 'Only citizens can access this resource.');
+            abort(403, __('messages.middleware.citizen_only'));
         }
 
         return $next($request);

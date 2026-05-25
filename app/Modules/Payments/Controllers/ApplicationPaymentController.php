@@ -29,7 +29,7 @@ class ApplicationPaymentController extends Controller
                 'amount' => $fee->amount,
                 'currency' => $fee->currency,
             ],
-        ], 'Application fee retrieved successfully.');
+        ], 'messages.payments.fee_retrieved');
     }
 
     public function index(Request $request, int $application, ApplicationPaymentService $payments)
@@ -38,7 +38,7 @@ class ApplicationPaymentController extends Controller
 
         return $this->successResponse(
             PaymentResource::collection($list)->resolve(),
-            'Payments retrieved successfully.'
+            'messages.payments.list'
         );
     }
 
@@ -46,7 +46,7 @@ class ApplicationPaymentController extends Controller
     {
         $data = $payments->getPaymentStatus($request->user(), $application, $payment);
 
-        return $this->successResponse($data, 'Payment status retrieved successfully.');
+        return $this->successResponse($data, 'messages.payments.status');
     }
 
     public function store(
@@ -71,12 +71,12 @@ class ApplicationPaymentController extends Controller
                 'provider' => 'stripe',
                 'checkout_url' => $result['checkout_url'] ?? null,
                 'publishable_key' => $result['publishable_key'] ?? config('payment.stripe.publishable_key'),
-            ], 'Stripe checkout session created successfully.');
+            ], 'messages.payments.stripe_session');
         }
 
         return $this->successResponse(
             new PaymentResource($payment),
-            'Payment initiated. Confirm when funds are transferred (mock).'
+            'messages.payments.initiated_mock'
         );
     }
 
@@ -97,7 +97,7 @@ class ApplicationPaymentController extends Controller
                     'status' => $model->application->status->value,
                 ],
             ],
-            'Payment confirmed successfully. You can book an appointment when slots are available.'
+            'messages.payments.confirmed'
         );
     }
 }

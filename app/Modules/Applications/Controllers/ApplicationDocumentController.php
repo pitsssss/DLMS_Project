@@ -14,7 +14,7 @@ class ApplicationDocumentController extends Controller
     {
         $checklist = $documents->requiredChecklist($request->user(), $application);
 
-        return $this->successResponse($checklist, 'Required documents retrieved successfully.');
+        return $this->successResponse($checklist, 'messages.documents.required_list');
     }
 
     public function index(Request $request, int $application, ApplicationDocumentService $documents)
@@ -23,7 +23,7 @@ class ApplicationDocumentController extends Controller
 
         return $this->successResponse(
             ApplicationDocumentResource::collection($list)->resolve(),
-            'Application documents retrieved successfully.'
+            'messages.documents.list'
         );
     }
 
@@ -43,7 +43,7 @@ class ApplicationDocumentController extends Controller
 
         return $this->successResponse(
             new ApplicationDocumentResource($model),
-            'Document uploaded successfully.'
+            'messages.documents.uploaded'
         );
     }
 
@@ -58,7 +58,7 @@ class ApplicationDocumentController extends Controller
                 'status' => $applicationModel->status->value,
                 'submitted_at' => $applicationModel->submitted_at?->toIso8601String(),
             ],
-            'Application submitted for document review.'
+            'messages.documents.submitted'
         );
     }
 }

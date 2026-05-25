@@ -10,9 +10,9 @@ class TestTypesSeeder extends Seeder
     public function run(): void
     {
         $tests = [
-            ['name' => 'Vision Test', 'code' => 'vision', 'sequence_order' => 1],
-            ['name' => 'Theory Test', 'code' => 'theory', 'sequence_order' => 2],
-            ['name' => 'Practical Test', 'code' => 'practical', 'sequence_order' => 3],
+            ['name' => 'اختبار النظر', 'code' => 'vision', 'sequence_order' => 1],
+            ['name' => 'الاختبار النظري', 'code' => 'theory', 'sequence_order' => 2],
+            ['name' => 'الاختبار العملي', 'code' => 'practical', 'sequence_order' => 3],
         ];
 
         foreach ($tests as $test) {

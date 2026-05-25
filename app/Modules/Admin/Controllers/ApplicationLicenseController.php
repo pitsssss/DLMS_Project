@@ -14,7 +14,7 @@ class ApplicationLicenseController extends Controller
 
         return $this->successResponse(
             new LicenseResource($license),
-            'License issued successfully.'
+            'messages.licenses.issued'
         );
     }
 }

@@ -68,7 +68,7 @@ class OtpService
     public function sendEmailOtp(string $email, OtpPurpose $purpose): void
     {
         if (config('otp.channel') !== 'email') {
-            throw new ApiException('OTP channel is not configured for email delivery.', 503);
+            throw new ApiException('messages.auth.otp_channel_not_configured', 503);
         }
 
         $this->cleanupPendingEmailOtps($email, $purpose);
@@ -89,7 +89,7 @@ class OtpService
             Log::error('Failed to send OTP email.', ['email' => $email, 'exception' => $e->getMessage()]);
             $otp->delete();
 
-            throw new ApiException('Unable to send verification email. Please try again later.', 503);
+            throw new ApiException('messages.auth.otp_send_failed', 503);
         }
     }
 
@@ -103,15 +103,15 @@ class OtpService
             ->first();
 
         if (! $otp) {
-            throw new ApiException('Invalid or expired verification code.', 422);
+            throw new ApiException('messages.auth.otp_invalid', 422);
         }
 
         if ($otp->expires_at->isPast()) {
-            throw new ApiException('Verification code has expired. Request a new code.', 422);
+            throw new ApiException('messages.auth.otp_expired', 422);
         }
 
         if (! Hash::check($code, $otp->code)) {
-            throw new ApiException('Invalid verification code.', 422);
+            throw new ApiException('messages.auth.otp_wrong', 422);
         }
 
         $otp->verified_at = Carbon::now();
@@ -151,15 +151,15 @@ class OtpService
             ->first();
 
         if (! $otp) {
-            throw new ApiException('Invalid or expired verification code.', 422);
+            throw new ApiException('messages.auth.otp_invalid', 422);
         }
 
         if ($otp->expires_at->isPast()) {
-            throw new ApiException('Verification code has expired. Request a new code.', 422);
+            throw new ApiException('messages.auth.otp_expired', 422);
         }
 
         if (! Hash::check($code, $otp->code)) {
-            throw new ApiException('Invalid verification code.', 422);
+            throw new ApiException('messages.auth.otp_wrong', 422);
         }
 
         $otp->verified_at = Carbon::now();

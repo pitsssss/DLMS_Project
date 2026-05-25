@@ -30,7 +30,7 @@ class DocumentReviewController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'Pending documents retrieved successfully.');
+        ], 'messages.documents.pending_list');
     }
 
     public function approve(Request $request, int $document, DocumentReviewService $reviews)
@@ -39,7 +39,7 @@ class DocumentReviewController extends Controller
 
         return $this->successResponse(
             new ApplicationDocumentResource($model),
-            'Document approved successfully.'
+            'messages.documents.approved'
         );
     }
 
@@ -56,7 +56,7 @@ class DocumentReviewController extends Controller
 
         return $this->successResponse(
             new ApplicationDocumentResource($model),
-            'Document rejected. The citizen must re-upload and resubmit.'
+            'messages.documents.rejected'
         );
     }
 }

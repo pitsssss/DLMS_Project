@@ -15,7 +15,7 @@ class ApplicationTestResultController extends Controller
 
         return $this->successResponse(
             TestResultResource::collection($results)->resolve(),
-            'Test results retrieved successfully.'
+            'messages.tests.list'
         );
     }
 }

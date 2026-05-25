@@ -17,7 +17,7 @@ class EmployeeUserSeeder extends Seeder
         User::firstOrCreate(
             ['phone' => '0988888888'],
             [
-                'name' => 'Sample Employee',
+                'name' => 'موظف تجريبي',
                 'email' => 'employee@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,

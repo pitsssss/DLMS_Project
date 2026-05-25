@@ -25,7 +25,7 @@ class LoginRequest extends FormRequest
     {
         $validator->after(function (Validator $v): void {
             if (! $this->filled('email') && ! $this->filled('identifier')) {
-                $v->errors()->add('email', 'Either email or identifier is required.');
+                $v->errors()->add('email', __('messages.auth.identifier_required'));
             }
         });
     }

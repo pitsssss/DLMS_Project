@@ -35,6 +35,6 @@ class AuditLogController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'Audit logs retrieved successfully.');
+        ], 'messages.audit.list');
     }
 }

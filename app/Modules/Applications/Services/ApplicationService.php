@@ -42,7 +42,7 @@ class ApplicationService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return $application;
@@ -51,7 +51,7 @@ class ApplicationService
     private function assertCitizen(User $citizen): void
     {
         if (! $citizen->isCitizen()) {
-            throw new ApiException('Only citizens can manage license applications.', 403);
+            throw new ApiException('messages.applications.citizen_only', 403);
         }
     }
 
@@ -60,11 +60,11 @@ class ApplicationService
         $this->assertCitizen($citizen);
 
         if ($citizen->email_verified_at === null) {
-            throw new ApiException('Verify your email before creating an application.', 403);
+            throw new ApiException('messages.applications.verify_email_first', 403);
         }
 
         if (! $citizen->profile_completed) {
-            throw new ApiException('Complete your profile before creating an application.', 403);
+            throw new ApiException('messages.applications.complete_profile_first', 403);
         }
     }
 }

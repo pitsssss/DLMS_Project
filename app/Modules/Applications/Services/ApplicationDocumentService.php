@@ -30,7 +30,7 @@ class ApplicationDocumentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return $this->requiredDocumentsForApplication($application)
@@ -61,7 +61,7 @@ class ApplicationDocumentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return ApplicationDocument::query()
@@ -76,7 +76,7 @@ class ApplicationDocumentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         $this->assertApplicationAllowsDocumentEdits($application);
@@ -84,7 +84,7 @@ class ApplicationDocumentService
         $required = RequiredDocument::query()->whereKey($requiredDocumentId)->where('is_active', true)->first();
 
         if ($required === null) {
-            throw new ApiException('Invalid required document.', 422);
+            throw new ApiException('messages.documents.invalid_required', 422);
         }
 
         $this->assertRequiredDocumentAppliesToApplication($application, $required);
@@ -103,7 +103,7 @@ class ApplicationDocumentService
             $storedPath = Storage::disk('local')->putFileAs($directory, $file, $filename);
 
             if ($storedPath === false) {
-                throw new ApiException('Could not store the uploaded file.', 500);
+                throw new ApiException('messages.documents.store_failed', 500);
             }
 
             return ApplicationDocument::query()->create([
@@ -126,11 +126,11 @@ class ApplicationDocumentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         if (! in_array($application->status, [ApplicationStatus::Draft, ApplicationStatus::DocumentsRejected], true)) {
-            throw new ApiException('This application cannot be submitted for document review in its current state.', 422);
+            throw new ApiException('messages.documents.cannot_submit_status', 422);
         }
 
         $required = $this->requiredDocumentsForApplication($application)->where('is_required', true);
@@ -139,11 +139,11 @@ class ApplicationDocumentService
             $latest = $this->latestDocument($application->id, $rd->id);
 
             if ($latest === null) {
-                throw new ApiException('All required documents must be uploaded before submission.', 422);
+                throw new ApiException('messages.documents.all_required_missing', 422);
             }
 
             if ($latest->status === DocumentStatus::Rejected) {
-                throw new ApiException('Replace rejected documents before submission.', 422);
+                throw new ApiException('messages.documents.replace_rejected', 422);
             }
         }
 
@@ -151,14 +151,14 @@ class ApplicationDocumentService
             $application,
             ApplicationStatus::DocumentsUnderReview,
             $citizen,
-            'Citizen submitted documents for review.'
+            __('messages.documents.note_submitted')
         );
     }
 
     private function assertApplicationAllowsDocumentEdits(LicenseApplication $application): void
     {
         if (! in_array($application->status, [ApplicationStatus::Draft, ApplicationStatus::DocumentsRejected], true)) {
-            throw new ApiException('Documents cannot be modified for this application in its current state.', 422);
+            throw new ApiException('messages.documents.cannot_modify', 422);
         }
     }
 
@@ -168,7 +168,7 @@ class ApplicationDocumentService
         $serviceOk = $required->service_type_id === null || (int) $required->service_type_id === (int) $application->service_type_id;
 
         if (! $licenseOk || ! $serviceOk) {
-            throw new ApiException('This document type does not apply to this application.', 422);
+            throw new ApiException('messages.documents.type_not_applicable', 422);
         }
     }
 
@@ -212,14 +212,14 @@ class ApplicationDocumentService
         $allowed = array_map('strtolower', $allowed);
 
         if ($extension === '' || ! in_array($extension, $allowed, true)) {
-            throw new ApiException('Invalid file type for this document.', 422);
+            throw new ApiException('messages.documents.invalid_file_type', 422);
         }
 
         $maxKb = $required->max_size_kb ?? 4096;
         $maxBytes = $maxKb * 1024;
 
         if ($file->getSize() > $maxBytes) {
-            throw new ApiException("File exceeds maximum size of {$maxKb} KB.", 422);
+            throw new ApiException(__('messages.documents.file_too_large', ['max_kb' => $maxKb]), 422);
         }
     }
 }

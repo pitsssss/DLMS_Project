@@ -14,6 +14,6 @@ class LicenseTypeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'minimum_age', 'validity_years']);
 
-        return $this->successResponse($types, 'License types retrieved successfully.');
+        return $this->successResponse($types, 'messages.applications.license_types');
     }
 }

@@ -16,7 +16,7 @@ class ForgotPasswordController extends Controller
 
         return $this->successResponse(
             null,
-            'If the email exists, a verification code has been sent.'
+            'messages.auth.forgot_sent'
         );
     }
 
@@ -29,7 +29,7 @@ class ForgotPasswordController extends Controller
 
         return $this->successResponse(
             $data,
-            'OTP verified successfully.'
+            'messages.auth.forgot_otp_verified'
         );
     }
 
@@ -45,7 +45,7 @@ class ForgotPasswordController extends Controller
 
         return $this->successResponse(
             null,
-            'Password reset successfully. Please login again.'
+            'messages.auth.password_reset'
         );
     }
 }

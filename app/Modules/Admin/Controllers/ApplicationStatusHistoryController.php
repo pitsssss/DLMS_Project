@@ -14,7 +14,7 @@ class ApplicationStatusHistoryController extends Controller
     {
         $exists = LicenseApplication::query()->whereKey($application)->exists();
         if (! $exists) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         $histories = ApplicationStatusHistory::query()
@@ -25,7 +25,7 @@ class ApplicationStatusHistoryController extends Controller
 
         return $this->successResponse(
             ApplicationStatusHistoryResource::collection($histories)->resolve(),
-            'Application status history retrieved successfully.'
+            'messages.audit.status_history'
         );
     }
 }

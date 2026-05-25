@@ -19,7 +19,7 @@ class LicenseManagementController extends Controller
 
         return $this->successResponse(
             new LicenseResource($model),
-            'License blocked successfully.'
+            'messages.licenses.blocked'
         );
     }
 
@@ -29,7 +29,7 @@ class LicenseManagementController extends Controller
 
         return $this->successResponse(
             new LicenseResource($model),
-            'License unblocked successfully.'
+            'messages.licenses.unblocked'
         );
     }
 }

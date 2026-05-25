@@ -17,7 +17,7 @@ class ApplicationAppointmentController extends Controller
         return $this->successResponse([
             'application_id' => $application,
             'tests' => $items,
-        ], 'Available tests retrieved successfully.');
+        ], 'messages.appointments.available_tests');
     }
 
     public function index(Request $request, int $application, AppointmentService $appointments)
@@ -26,7 +26,7 @@ class ApplicationAppointmentController extends Controller
 
         return $this->successResponse(
             TestAppointmentResource::collection($list)->resolve(),
-            'Application appointments retrieved successfully.'
+            'messages.appointments.list'
         );
     }
 
@@ -43,7 +43,7 @@ class ApplicationAppointmentController extends Controller
 
         return $this->successResponse(
             new TestAppointmentResource($appointment),
-            'Test appointment booked successfully.'
+            'messages.appointments.booked'
         );
     }
 }

@@ -57,7 +57,7 @@ class DocumentReviewService
                     $application,
                     ApplicationStatus::PaymentPending,
                     $reviewer,
-                    'All required documents approved.'
+                    __('messages.documents.note_all_approved')
                 );
             }
 
@@ -72,8 +72,8 @@ class DocumentReviewService
 
             $this->notifications->sendToUser(
                 $application->citizen_id,
-                'Document approved',
-                'A submitted document was approved.',
+                __('messages.notifications.document_approved_title'),
+                __('messages.notifications.document_approved_body'),
                 'document.approved',
                 ['document_id' => $document->id, 'application_id' => $application->id]
             );
@@ -99,7 +99,7 @@ class DocumentReviewService
                 $application,
                 ApplicationStatus::DocumentsRejected,
                 $reviewer,
-                'One or more documents were rejected.',
+                __('messages.documents.note_some_rejected'),
                 $rejectionReason
             );
 
@@ -124,15 +124,15 @@ class DocumentReviewService
             ->first();
 
         if ($document === null) {
-            throw new ApiException('Document not found.', 404);
+            throw new ApiException('messages.documents.review_not_found', 404);
         }
 
         if ($document->application->status !== ApplicationStatus::DocumentsUnderReview) {
-            throw new ApiException('This document is not awaiting review.', 422);
+            throw new ApiException('messages.documents.not_awaiting_review', 422);
         }
 
         if ($document->status !== DocumentStatus::PendingReview) {
-            throw new ApiException('This document has already been reviewed.', 422);
+            throw new ApiException('messages.documents.already_reviewed', 422);
         }
 
         return $document;

@@ -52,7 +52,7 @@ class ApplicationRepository
                 'new_status' => ApplicationStatus::Draft,
                 'changed_by' => $citizen->id,
                 'reason' => null,
-                'notes' => 'Application draft created.',
+                'notes' => __('messages.applications.note_draft_created'),
             ]);
 
             return $application->load(['licenseType', 'serviceType', 'currentTestType']);

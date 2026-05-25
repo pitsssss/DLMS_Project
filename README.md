@@ -461,6 +461,184 @@ Role: citizen
 
 ---
 
+<<<<<<< Updated upstream
+=======
+# AI Service Agent (Phase 9)
+
+Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. The backend owns safety rules, structured model output validation, session history, proposed actions, and audit-friendly evaluations.
+
+## Phase plan
+
+| Sub-phase | Scope |
+| --------- | ----- |
+| **9A (current)** | Foundation: Gemini integration, intent/slot handling, sessions/messages/actions/evaluations, **proposed actions only** (no execution). |
+| **9B (current — batch 1)** | Confirm/cancel endpoints; safe read/create actions via existing services. |
+| **9B (later)** | Payments, appointments, document submission via AI agent. |
+| **9C (future)** | Admin monitoring APIs and analytics reports. |
+
+## Phase 9A limitations
+
+* Citizen-only endpoints (`auth:sanctum` + `citizen` middleware).
+* No real system actions are executed (no applications, payments, appointments, document submission, etc.).
+* Proposed actions are stored as `pending` or `awaiting_confirmation` only.
+* Admin-only operations are rejected with a polite message.
+* Invalid or failed Gemini responses fall back to safe rule-based replies.
+
+## Environment variables
+
+Add to `.env` (see `.env.example`):
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+AI_AGENT_ENABLED=true
+AI_AGENT_REQUIRE_CONFIRMATION=true
+AI_AGENT_MAX_HISTORY_MESSAGES=10
+AI_AGENT_TEMPERATURE=0.2
+```
+
+Configuration is read from `config/ai.php`. **Never expose `GEMINI_API_KEY` to the Flutter/mobile client or Postman collection variables** — only the Laravel backend calls Gemini.
+
+## Citizen API routes
+
+| Method | Route | Description |
+| ------ | ----- | ----------- |
+| POST | `/api/ai-agent/message` | Send a message; creates or continues a session. |
+| GET | `/api/ai-agent/sessions` | List the citizen’s AI sessions. |
+| GET | `/api/ai-agent/sessions/{session}` | Show session messages and proposed actions. |
+
+Example `POST /api/ai-agent/message` response:
+
+```json
+{
+  "success": true,
+  "message": "AI agent response generated successfully.",
+  "data": {
+    "session_id": 1,
+    "reply": "ما نوع الرخصة التي تريدها؟",
+    "intent": "create_new_license_application",
+    "confidence": 0.91,
+    "missing_slots": ["license_type"],
+    "requires_confirmation": false,
+    "pending_action": null
+  }
+}
+```
+
+When slots are complete, `pending_action` may be returned with `status: awaiting_confirmation` — the action is **not executed** until the citizen confirms it (Phase 9B).
+
+## Phase 9B — Controlled action execution (first batch)
+
+Citizens can confirm or cancel their own pending actions:
+
+| Method | Route | Description |
+| ------ | ----- | ----------- |
+| POST | `/api/ai-agent/actions/{action}/confirm` | Confirm and execute an action in `awaiting_confirmation`. |
+| POST | `/api/ai-agent/actions/{action}/cancel` | Cancel a pending action. |
+
+**Executable in this batch:** `create_application`, `get_application_status`, `get_required_documents`, `get_fines`, `get_licenses`.
+
+**Not yet executable via AI agent:** payments, appointments, document submission, reschedule/cancel appointment.
+
+Execution uses existing services only (`ApplicationService`, `ApplicationDocumentService`, `FineService`, `LicenseService`). Admin-only actions are rejected with **403** and marked `failed`.
+
+### End-to-end citizen flow
+
+1. `POST /api/ai-agent/message` — e.g. `بدي رخصة جديدة`
+2. `POST /api/ai-agent/message` with `session_id` — e.g. `رخصة خاصة` → `pending_action` created
+3. `POST /api/ai-agent/actions/{id}/confirm` → application created (draft)
+4. Or `POST /api/ai-agent/actions/{id}/cancel` to abort
+
+## Postman (Phase 9A + 9B)
+
+Import `DLMS_API_Postman_Collection.json`. After citizen login:
+
+**Phase 9A - AI Agent**
+
+1. **Send AI Agent Message** — saves `ai_agent_session_id` (and `ai_agent_action_id` when present).
+2. **Continue AI Agent Session** — send `session_id` with a follow-up message (e.g. license type).
+3. **List / Show AI Agent Sessions**.
+
+**Phase 9B - AI Agent Actions**
+
+4. **Confirm AI Agent Action** — executes the pending action; may save `application_id`.
+5. **Cancel AI Agent Action** — cancels instead of executing.
+
+## Testing the AI agent
+
+```bash
+php artisan test --filter=AIAgent
+```
+
+Tests mock `GeminiAgentClient` and do not call the real Gemini API.
+
+---
+
+# Developer Testing Dashboard
+
+**Internal developer tool only — not the production admin dashboard.**
+
+| Item | Detail |
+|------|--------|
+| URL | `GET /dev-dashboard` |
+| Allowed environments | `local`, `staging`, `testing` only |
+| Production | Returns **404** (middleware `EnsureDevDashboardAllowed`) |
+
+## Purpose
+
+- Exercise DLMS API flows without Postman
+- Run citizen, employee, admin, and AI agent steps from one Blade UI
+- Store tokens and entity IDs in the Laravel **session**
+- View raw JSON responses, HTTP status, and saved variables after each action
+
+## Usage
+
+1. Start the app locally (`php artisan serve` or Docker).
+2. Open `/dev-dashboard` in the browser.
+3. Use section buttons (Auth → Applications → Documents → …) or **One-click Scenarios**.
+4. Watch the **Status Panel** and **Raw API Response** at the top.
+5. Click **Clear Session** or **Reset Dashboard Session** to wipe stored tokens/IDs.
+
+## Session variables
+
+Examples: `citizen_token`, `employee_token`, `admin_token`, `application_id`, `payment_id`, `appointment_id`, `license_id`, `ai_agent_session_id`, `ai_agent_action_id`, and related IDs. Tokens are shown shortened in the UI; full values stay in session server-side.
+
+## Flows covered
+
+Auth (register/OTP/login/profile), applications, documents (upload/review), payments (mock confirm), appointments & test results, licenses & fines, notifications, reports, audit logs, AI agent (message/confirm/cancel), and chained scenarios.
+
+## Limitations
+
+- Does **not** replace Postman for every edge case or Stripe webhooks (use Stripe CLI).
+- Calls real `/api/*` routes via Laravel HTTP client (no direct service bypass).
+- Document upload scenarios may still need a real file where required.
+- **Never deploy or expose `/dev-dashboard` in production.**
+
+---
+
+# Arabic localization
+
+User-facing API text is Arabic by default.
+
+| Setting | Value |
+|---------|--------|
+| `APP_LOCALE` | `ar` (see `.env.example`) |
+| Language files | `resources/lang/ar/messages.php`, `resources/lang/ar/validation.php` |
+
+API responses use translation keys (for example `messages.auth.login_success`) resolved at runtime. Internal codes (`draft`, `private`, `review_documents`, etc.) stay in English.
+
+After pulling these changes, re-seed display names if your database still has English labels:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+Or run individual seeders (for example `LicenseTypesSeeder`) on a dev database.
+
+---
+
+>>>>>>> Stashed changes
 # Testing
 
 Run all tests:
@@ -468,6 +646,8 @@ Run all tests:
 ```bash
 php artisan test
 ```
+
+PHPUnit sets `APP_LOCALE=ar`. See `tests/Feature/ArabicLocalizationTest.php` for localization checks.
 
 ---
 

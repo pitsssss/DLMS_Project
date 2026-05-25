@@ -15,7 +15,7 @@ class FineController extends Controller
 
         return $this->successResponse(
             FineResource::collection($list)->resolve(),
-            'Fines retrieved successfully.'
+            'messages.fines.list'
         );
     }
 }

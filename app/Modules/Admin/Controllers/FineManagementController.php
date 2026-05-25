@@ -33,7 +33,7 @@ class FineManagementController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-        ], 'Fines retrieved successfully.');
+        ], 'messages.fines.list');
     }
 
     public function store(StoreFineRequest $request, FineService $fines)
@@ -50,7 +50,7 @@ class FineManagementController extends Controller
 
         return $this->successResponse(
             new FineResource($fine->load(['citizen', 'license'])),
-            'Fine created successfully.',
+            'messages.fines.created',
             201
         );
     }
@@ -61,7 +61,7 @@ class FineManagementController extends Controller
 
         return $this->successResponse(
             new FineResource($model),
-            'Fine updated successfully.'
+            'messages.fines.updated'
         );
     }
 }

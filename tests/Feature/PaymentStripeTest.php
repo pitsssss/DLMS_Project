@@ -169,7 +169,7 @@ class PaymentStripeTest extends TestCase
 
         $this->postJson("/api/applications/{$application->id}/payments/{$paymentId}/confirm", [])
             ->assertStatus(400)
-            ->assertJsonPath('message', 'Manual confirmation is disabled for Stripe payments.');
+            ->assertJsonPath('message', __('messages.payments.manual_confirm_disabled'));
     }
 
     public function test_payment_status_endpoint_completes_when_stripe_reports_paid(): void
@@ -351,7 +351,7 @@ class PaymentStripeTest extends TestCase
 
         $this->postJson("/api/applications/{$application->id}/payments", [])
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Payment already completed.');
+            ->assertJsonPath('message', __('messages.payments.already_completed'));
     }
 
     public function test_cannot_create_second_stripe_payment_after_successful_flow(): void

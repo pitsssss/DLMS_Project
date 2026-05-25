@@ -10,10 +10,10 @@ class LicenseTypesSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['name' => 'Private License', 'code' => 'private', 'minimum_age' => 18, 'validity_years' => 5],
-            ['name' => 'Public License', 'code' => 'public', 'minimum_age' => 21, 'validity_years' => 5],
-            ['name' => 'Truck License', 'code' => 'truck', 'minimum_age' => 21, 'validity_years' => 5],
-            ['name' => 'Bus License', 'code' => 'bus', 'minimum_age' => 21, 'validity_years' => 5],
+            ['name' => 'رخصة قيادة خاصة', 'code' => 'private', 'minimum_age' => 18, 'validity_years' => 5],
+            ['name' => 'رخصة قيادة عامة', 'code' => 'public', 'minimum_age' => 21, 'validity_years' => 5],
+            ['name' => 'رخصة قيادة شاحنة', 'code' => 'truck', 'minimum_age' => 21, 'validity_years' => 5],
+            ['name' => 'رخصة قيادة حافلة', 'code' => 'bus', 'minimum_age' => 21, 'validity_years' => 5],
         ];
 
         foreach ($types as $type) {

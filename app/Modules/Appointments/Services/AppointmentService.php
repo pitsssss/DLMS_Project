@@ -43,7 +43,7 @@ class AppointmentService
     {
         $testType = TestType::query()->whereKey($testTypeId)->where('is_active', true)->first();
         if ($testType === null) {
-            throw new ApiException('Test type not found.', 404);
+            throw new ApiException('messages.appointments.test_type_not_found', 404);
         }
 
         return $this->slots->listAvailable($testTypeId, $fromDate, $toDate);
@@ -68,14 +68,14 @@ class AppointmentService
 
             $bookable = $this->progression->resolveBookableTestType($application);
             if ($bookable === null) {
-                throw new ApiException('No test is available to book for this application.', 422);
+                throw new ApiException('messages.appointments.no_test_available', 422);
             }
 
             $this->progression->assertCanBook($application, $bookable);
 
             $slot = $this->slots->findAvailableForBooking($appointmentSlotId, $bookable->id);
             if ($slot === null) {
-                throw new ApiException('This appointment slot is not available.', 422);
+                throw new ApiException('messages.appointments.slot_unavailable', 422);
             }
 
             $scheduledAt = Carbon::parse($slot->date->format('Y-m-d').' '.$slot->start_time);
@@ -100,7 +100,7 @@ class AppointmentService
                     $application,
                     ApplicationStatus::InTesting,
                     $citizen,
-                    'Test appointment booked. Application is now in testing.'
+                    __('messages.appointments.note_booked')
                 );
             } else {
                 $application->save();
@@ -120,16 +120,16 @@ class AppointmentService
                 ->first();
 
             if ($appointment === null) {
-                throw new ApiException('Appointment not found.', 404);
+                throw new ApiException('messages.appointments.not_found', 404);
             }
 
             if ($appointment->status !== AppointmentStatus::Booked) {
-                throw new ApiException('Only booked appointments can be rescheduled.', 422);
+                throw new ApiException('messages.appointments.only_booked_reschedule', 422);
             }
 
             $newSlot = $this->slots->findAvailableForBooking($newAppointmentSlotId, $appointment->test_type_id);
             if ($newSlot === null) {
-                throw new ApiException('The selected appointment slot is not available.', 422);
+                throw new ApiException('messages.appointments.slot_not_available', 422);
             }
 
             if ($newSlot->id === $appointment->appointment_slot_id) {
@@ -163,11 +163,11 @@ class AppointmentService
                 ->first();
 
             if ($appointment === null) {
-                throw new ApiException('Appointment not found.', 404);
+                throw new ApiException('messages.appointments.not_found', 404);
             }
 
             if ($appointment->status !== AppointmentStatus::Booked) {
-                throw new ApiException('Only booked appointments can be cancelled.', 422);
+                throw new ApiException('messages.appointments.only_booked_cancel', 422);
             }
 
             $slot = AppointmentSlot::query()->whereKey($appointment->appointment_slot_id)->lockForUpdate()->firstOrFail();
@@ -189,7 +189,7 @@ class AppointmentService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return $application;

@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/ping', function () {
     return response()->json([
         'success' => true,
-        'message' => 'DLMS API is running.',
+        'message' => __('messages.ping.running'),
         'data' => [
             'phase' => 8,
         ],

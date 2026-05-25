@@ -16,7 +16,7 @@ class LicenseController extends Controller
 
         return $this->successResponse(
             LicenseResource::collection($list)->resolve(),
-            'Licenses retrieved successfully.'
+            'messages.licenses.list'
         );
     }
 
@@ -26,7 +26,7 @@ class LicenseController extends Controller
 
         return $this->successResponse(
             new LicenseResource($model),
-            'License retrieved successfully.'
+            'messages.licenses.retrieved'
         );
     }
 
@@ -36,7 +36,7 @@ class LicenseController extends Controller
 
         return $this->successResponse(
             new LicenseResource($model),
-            'License renewed successfully.'
+            'messages.licenses.renewed'
         );
     }
 
@@ -53,7 +53,7 @@ class LicenseController extends Controller
 
         return $this->successResponse(
             new LicenseResource($model),
-            'License replacement issued successfully.'
+            'messages.licenses.replacement'
         );
     }
 
@@ -61,6 +61,6 @@ class LicenseController extends Controller
     {
         $data = $licenses->requestUnblock($request->user(), $license);
 
-        return $this->successResponse($data, 'Unblock request submitted successfully.');
+        return $this->successResponse($data, 'messages.licenses.unblock_submitted');
     }
 }

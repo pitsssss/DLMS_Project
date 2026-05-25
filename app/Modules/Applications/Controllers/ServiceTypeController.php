@@ -14,6 +14,6 @@ class ServiceTypeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'description']);
 
-        return $this->successResponse($types, 'Service types retrieved successfully.');
+        return $this->successResponse($types, 'messages.applications.service_types');
     }
 }

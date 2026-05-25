@@ -10,11 +10,11 @@ class ServiceTypesSeeder extends Seeder
     public function run(): void
     {
         $services = [
-            ['name' => 'New License', 'code' => 'new_license'],
-            ['name' => 'Renew License', 'code' => 'renew_license'],
-            ['name' => 'Lost Replacement', 'code' => 'lost_replacement'],
-            ['name' => 'Damaged Replacement', 'code' => 'damaged_replacement'],
-            ['name' => 'License Unblock', 'code' => 'license_unblock'],
+            ['name' => 'إصدار رخصة جديدة', 'code' => 'new_license'],
+            ['name' => 'تجديد رخصة', 'code' => 'renew_license'],
+            ['name' => 'بدل فاقد', 'code' => 'lost_replacement'],
+            ['name' => 'بدل تالف', 'code' => 'damaged_replacement'],
+            ['name' => 'فك حظر رخصة', 'code' => 'license_unblock'],
         ];
 
         foreach ($services as $service) {

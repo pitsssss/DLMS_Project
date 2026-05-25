@@ -139,13 +139,13 @@ class TestProgressionService
     public function assertCanBook(LicenseApplication $application, TestType $testType): void
     {
         if (! $this->applicationAllowsBooking($application)) {
-            throw new ApiException('Appointments cannot be booked for this application in its current status.', 422);
+            throw new ApiException('messages.appointments.cannot_book_status', 422);
         }
 
         $bookable = $this->resolveBookableTestType($application);
 
         if ($bookable === null || $bookable->id !== $testType->id) {
-            throw new ApiException('This test cannot be booked yet. Complete prior tests or finish an existing booking first.', 422);
+            throw new ApiException('messages.appointments.test_not_ready', 422);
         }
 
         foreach ($this->requiredTestTypes() as $required) {
@@ -154,7 +154,7 @@ class TestProgressionService
             }
 
             if (! in_array($required->id, $this->passedTestTypeIds($application), true)) {
-                throw new ApiException('Earlier tests must be passed before booking this test.', 422);
+                throw new ApiException('messages.appointments.prior_tests_required', 422);
             }
         }
     }

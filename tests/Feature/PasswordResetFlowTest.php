@@ -32,7 +32,7 @@ class PasswordResetFlowTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'If the email exists, a verification code has been sent.');
+            ->assertJsonPath('message', __('messages.auth.forgot_sent'));
 
         $this->assertDatabaseHas('otps', [
             'email' => $user->email,
@@ -63,7 +63,7 @@ class PasswordResetFlowTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'OTP verified successfully.')
+            ->assertJsonPath('message', __('messages.auth.forgot_otp_verified'))
             ->assertJsonStructure(['data' => ['reset_token']]);
 
         $this->assertNotEmpty($response->json('data.reset_token'));
@@ -96,7 +96,7 @@ class PasswordResetFlowTest extends TestCase
         ]);
 
         $reset->assertOk()
-            ->assertJsonPath('message', 'Password reset successfully. Please login again.');
+            ->assertJsonPath('message', __('messages.auth.password_reset'));
 
         $user->refresh();
         $this->assertTrue(Hash::check('newpassword123', $user->password));

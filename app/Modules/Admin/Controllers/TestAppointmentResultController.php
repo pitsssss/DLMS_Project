@@ -26,7 +26,7 @@ class TestAppointmentResultController extends Controller
 
         return $this->successResponse(
             new TestResultResource($model),
-            'Test result recorded successfully.'
+            'messages.tests.recorded'
         );
     }
 }

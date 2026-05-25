@@ -13,7 +13,7 @@ class ApiException extends Exception
         protected int $statusCode = 400,
         public array $errors = []
     ) {
-        parent::__construct($message);
+        parent::__construct(__($message));
     }
 
     public function render(Request $request): ?JsonResponse

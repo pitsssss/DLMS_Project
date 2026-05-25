@@ -20,7 +20,7 @@ class RegisterController extends Controller
 
         return $this->successResponse(
             $payload,
-            'Registration successful. Verification code sent to email.',
+            'messages.auth.register_success',
             201
         );
     }
@@ -32,6 +32,6 @@ class RegisterController extends Controller
         return $this->successResponse([
             'user' => new UserResource($result['user']),
             'token' => $result['token'],
-        ], 'Email verified successfully.');
+        ], 'messages.auth.verify_success');
     }
 }

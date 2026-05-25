@@ -35,7 +35,7 @@ class TestResultService
         $application = $this->applications->findOwnedByCitizen($citizen, $applicationId);
 
         if ($application === null) {
-            throw new ApiException('Application not found.', 404);
+            throw new ApiException('messages.applications.not_found', 404);
         }
 
         return TestResult::query()
@@ -54,15 +54,15 @@ class TestResultService
                 ->first();
 
             if ($appointment === null) {
-                throw new ApiException('Test appointment not found.', 404);
+                throw new ApiException('messages.tests.appointment_not_found', 404);
             }
 
             if ($appointment->status !== AppointmentStatus::Booked) {
-                throw new ApiException('A result can only be recorded for a booked appointment.', 422);
+                throw new ApiException('messages.tests.only_booked_result', 422);
             }
 
             if ($appointment->testResult()->exists()) {
-                throw new ApiException('A result has already been recorded for this appointment.', 422);
+                throw new ApiException('messages.tests.already_recorded', 422);
             }
 
             $application = LicenseApplication::query()
@@ -71,7 +71,7 @@ class TestResultService
                 ->firstOrFail();
 
             if (! in_array($application->status, [ApplicationStatus::InTesting, ApplicationStatus::WaitingRetest], true)) {
-                throw new ApiException('The application is not in a testable status.', 422);
+                throw new ApiException('messages.tests.not_testable_status', 422);
             }
 
             $attemptNumber = TestResult::query()
@@ -101,7 +101,7 @@ class TestResultService
                 TestResultStatus::Passed => $this->handlePassed($application, $testType, $employee),
                 TestResultStatus::Failed => $this->handleFailed($application, $testType, $employee),
                 TestResultStatus::NoShow => $this->handleNoShow($application, $testType, $employee),
-                default => throw new ApiException('Invalid test result.', 422),
+                default => throw new ApiException('messages.tests.invalid_result', 422),
             };
 
             $this->auditLogs->log(
@@ -115,8 +115,11 @@ class TestResultService
 
             $this->notifications->sendToUser(
                 $application->citizen_id,
-                'Test result recorded',
-                'Your '.$testType->name.' result has been recorded: '.$result->value.'.',
+                __('messages.notifications.test_result_title'),
+                __('messages.notifications.test_result_body', [
+                    'test_name' => $testType->name,
+                    'result' => __('messages.tests.result_'.$result->value),
+                ]),
                 'test_result.'.$result->value,
                 ['application_id' => $application->id, 'test_result_id' => $testResult->id]
             );
@@ -132,7 +135,7 @@ class TestResultService
                 $application,
                 ApplicationStatus::Approved,
                 $employee,
-                'All required tests passed. Application approved for license issuance.'
+                __('messages.tests.note_all_passed')
             );
 
             return;
@@ -147,7 +150,7 @@ class TestResultService
                 $application,
                 ApplicationStatus::InTesting,
                 $employee,
-                'Test passed. Continue with remaining tests.'
+                __('messages.tests.note_passed_continue')
             );
         }
     }
@@ -164,7 +167,7 @@ class TestResultService
                 $application,
                 ApplicationStatus::AdministrativeReview,
                 $employee,
-                'Maximum test attempts reached. Sent to administrative review.'
+                __('messages.tests.note_max_attempts')
             );
 
             return;
@@ -177,7 +180,7 @@ class TestResultService
             $application,
             ApplicationStatus::WaitingRetest,
             $employee,
-            'Test failed. Citizen may book a retake.'
+            __('messages.tests.note_failed_retest')
         );
     }
 

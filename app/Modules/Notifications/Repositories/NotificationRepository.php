@@ -44,7 +44,7 @@ class NotificationRepository
             ->first();
 
         if ($notification === null) {
-            throw new ApiException('Notification not found.', 404);
+            throw new ApiException('messages.notifications.not_found', 404);
         }
 
         if ($notification->read_at === null) {

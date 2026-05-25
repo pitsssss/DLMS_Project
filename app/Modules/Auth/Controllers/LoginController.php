@@ -16,6 +16,6 @@ class LoginController extends Controller
         return $this->successResponse([
             'user' => new UserResource($result['user']),
             'token' => $result['token'],
-        ], 'Logged in successfully.');
+        ], 'messages.auth.login_success');
     }
 }

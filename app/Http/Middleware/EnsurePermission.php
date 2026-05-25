@@ -13,7 +13,7 @@ class EnsurePermission
         $user = $request->user();
 
         if (! $user || ! $user->hasPermission($permission)) {
-            abort(403, 'You do not have permission to perform this action.');
+            abort(403, __('messages.middleware.permission_denied'));
         }
 
         return $next($request);

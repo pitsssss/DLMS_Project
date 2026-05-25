@@ -31,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('validation.failed'),
                 'errors' => $e->errors(),
             ], 422);
         });
@@ -43,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated.',
+                'message' => __('messages.http.unauthenticated'),
                 'errors' => (object) [],
             ], 401);
         });
@@ -55,7 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage() ?: 'Forbidden.',
+                'message' => $e->getMessage() ?: __('messages.http.forbidden'),
                 'errors' => (object) [],
             ], 403);
         });
@@ -67,7 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => 'Resource not found.',
+                'message' => __('messages.http.not_found'),
                 'errors' => (object) [],
             ], 404);
         });
@@ -95,7 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => 'Server error.',
+                'message' => __('messages.http.server_error'),
                 'errors' => (object) [],
             ], 500);
         });

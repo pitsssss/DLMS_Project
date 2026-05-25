@@ -17,7 +17,7 @@ class AdminUserSeeder extends Seeder
         User::firstOrCreate(
             ['phone' => '0999999999'],
             [
-                'name' => 'System Administrator',
+                'name' => 'مدير النظام',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,

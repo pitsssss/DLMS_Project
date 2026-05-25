@@ -17,7 +17,7 @@ class CitizenUserSeeder extends Seeder
         User::firstOrCreate(
             ['phone' => '0977777777'],
             [
-                'name' => 'Sample Citizen',
+                'name' => 'مواطن تجريبي',
                 'email' => 'citizen@example.com',
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,

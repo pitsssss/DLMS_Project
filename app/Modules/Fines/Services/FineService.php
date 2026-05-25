@@ -41,18 +41,18 @@ class FineService
     public function create(User $actor, int $citizenId, float $amount, string $reason, ?int $licenseId = null): Fine
     {
         if ($amount <= 0) {
-            throw new ApiException('Fine amount must be greater than zero.', 422);
+            throw new ApiException('messages.fines.amount_invalid', 422);
         }
 
         $citizen = User::query()->whereKey($citizenId)->first();
         if ($citizen === null || ! $citizen->isCitizen()) {
-            throw new ApiException('Citizen not found.', 404);
+            throw new ApiException('messages.fines.citizen_not_found', 404);
         }
 
         if ($licenseId !== null) {
             $license = License::query()->whereKey($licenseId)->where('citizen_id', $citizenId)->first();
             if ($license === null) {
-                throw new ApiException('License not found for this citizen.', 404);
+                throw new ApiException('messages.fines.license_not_found', 404);
             }
         }
 
@@ -76,8 +76,8 @@ class FineService
 
         $this->notifications->sendToUser(
             $citizenId,
-            'New fine issued',
-            'A fine of '.$amount.' has been issued: '.$reason,
+            __('messages.notifications.fine_issued_title'),
+            __('messages.notifications.fine_issued_body', ['amount' => $amount, 'reason' => $reason]),
             'fine.created',
             ['fine_id' => $fine->id]
         );
@@ -91,12 +91,12 @@ class FineService
             $fine = Fine::query()->whereKey($fineId)->lockForUpdate()->first();
 
             if ($fine === null) {
-                throw new ApiException('Fine not found.', 404);
+                throw new ApiException('messages.fines.not_found', 404);
             }
 
             if (isset($data['amount'])) {
                 if ((float) $data['amount'] <= 0) {
-                    throw new ApiException('Fine amount must be greater than zero.', 422);
+                    throw new ApiException('messages.fines.amount_invalid', 422);
                 }
                 $fine->amount = $data['amount'];
             }
@@ -113,7 +113,7 @@ class FineService
                     $fine->paid_at = now();
                 } elseif ($status === FineStatus::Cancelled) {
                     if ($fine->status === FineStatus::Paid) {
-                        throw new ApiException('Paid fines cannot be cancelled.', 422);
+                        throw new ApiException('messages.fines.paid_cannot_cancel', 422);
                     }
                     $fine->status = FineStatus::Cancelled;
                 } elseif ($status === FineStatus::Unpaid && $fine->status !== FineStatus::Paid) {
@@ -127,8 +127,8 @@ class FineService
             if (isset($data['status']) && FineStatus::from($data['status']) === FineStatus::Paid) {
                 $this->notifications->sendToUser(
                     $fine->citizen_id,
-                    'Fine paid',
-                    'Your fine has been marked as paid.',
+                    __('messages.notifications.fine_paid_title'),
+                    __('messages.notifications.fine_paid_body'),
                     'fine.paid',
                     ['fine_id' => $fine->id]
                 );

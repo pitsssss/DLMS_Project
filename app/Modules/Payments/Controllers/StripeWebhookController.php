@@ -19,13 +19,13 @@ class StripeWebhookController extends Controller
         $secret = (string) config('payment.stripe.webhook_secret');
 
         if ($secret === '') {
-            return response('Webhook not configured.', 503);
+            return response(__('messages.payments.webhook_not_configured'), 503);
         }
 
         try {
             $event = Webhook::constructEvent($payload, $signatureHeader, $secret);
         } catch (SignatureVerificationException|\UnexpectedValueException) {
-            return response('Invalid signature.', 400);
+            return response(__('messages.payments.webhook_invalid_signature'), 400);
         }
 
         $session = $event->data->object;

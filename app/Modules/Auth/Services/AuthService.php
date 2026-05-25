@@ -22,7 +22,7 @@ class AuthService
     public function register(array $data): array
     {
         if ($this->users->findByEmail($data['email'])) {
-            throw new ApiException('This email is already registered.', 422);
+            throw new ApiException('messages.auth.email_registered', 422);
         }
 
         return DB::transaction(function () use ($data) {
@@ -50,18 +50,18 @@ class AuthService
         $purpose = OtpPurpose::from($data['purpose']);
 
         if ($purpose !== OtpPurpose::Register) {
-            throw new ApiException('Invalid verification purpose for this endpoint.', 422);
+            throw new ApiException('messages.auth.invalid_verification_purpose', 422);
         }
 
         $this->otps->verifyEmailOtp($data['email'], $data['code'], $purpose);
 
         $user = $this->users->findByEmail($data['email']);
         if (! $user) {
-            throw new ApiException('User not found.', 404);
+            throw new ApiException('messages.auth.user_not_found', 404);
         }
 
         if (! $user->isCitizen()) {
-            throw new ApiException('Invalid account type for this verification.', 403);
+            throw new ApiException('messages.auth.invalid_account_type', 403);
         }
 
         $user = $this->users->updateUser($user, [
@@ -84,7 +84,7 @@ class AuthService
 
             $user = $this->users->findByEmail($email);
             if (! $user) {
-                throw new ApiException('User not found.', 404);
+                throw new ApiException('messages.auth.user_not_found', 404);
             }
 
             $this->passwordResetTokens->invalidateAllPendingForEmail($email);
@@ -102,12 +102,12 @@ class AuthService
         DB::transaction(function () use ($email, $plainResetToken, $newPassword) {
             $user = $this->users->findByEmail($email);
             if (! $user) {
-                throw new ApiException('User not found.', 404);
+                throw new ApiException('messages.auth.user_not_found', 404);
             }
 
             $row = $this->passwordResetTokens->findMatchingValidToken($email, $plainResetToken);
             if (! $row) {
-                throw new ApiException('Invalid or expired reset token.', 422);
+                throw new ApiException('messages.auth.invalid_reset_token', 422);
             }
 
             $this->passwordResetTokens->markUsed($row);
@@ -129,16 +129,16 @@ class AuthService
         );
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            throw new ApiException('Invalid credentials.', 401);
+            throw new ApiException('messages.auth.invalid_credentials', 401);
         }
 
         if (! $user->is_active) {
-            throw new ApiException('This account is inactive.', 403);
+            throw new ApiException('messages.auth.account_inactive', 403);
         }
 
         if ($user->isCitizen()) {
             if (! $user->email_verified_at) {
-                throw new ApiException('Please verify your email before logging in.', 403);
+                throw new ApiException('messages.auth.email_not_verified', 403);
             }
         }
 
@@ -161,7 +161,7 @@ class AuthService
     public function completeProfile(User $user, array $data): User
     {
         if (! $user->isCitizen()) {
-            throw new ApiException('Only citizens can complete this profile.', 403);
+            throw new ApiException('messages.auth.citizen_profile_only', 403);
         }
 
         $data['profile_completed'] = true;
@@ -182,7 +182,7 @@ class AuthService
     public function changePassword(User $user, array $data): void
     {
         if (! Hash::check($data['current_password'], $user->password)) {
-            throw new ApiException('Current password is incorrect.', 422);
+            throw new ApiException('messages.auth.current_password_wrong', 422);
         }
 
         $this->users->updateUser($user, [

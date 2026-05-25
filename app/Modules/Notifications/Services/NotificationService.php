@@ -37,38 +37,38 @@ class NotificationService
     {
         $messages = [
             ApplicationStatus::PaymentPending->value => [
-                'title' => 'Payment required',
-                'body' => 'Your documents were approved. Please pay the application fee to continue.',
+                'title' => __('messages.notifications.payment_required_title'),
+                'body' => __('messages.notifications.payment_required_body'),
                 'type' => 'application.payment_pending',
             ],
             ApplicationStatus::DocumentsRejected->value => [
-                'title' => 'Documents rejected',
-                'body' => 'One or more documents were rejected. Please review and resubmit.',
+                'title' => __('messages.notifications.documents_rejected_title'),
+                'body' => __('messages.notifications.documents_rejected_body'),
                 'type' => 'application.documents_rejected',
             ],
             ApplicationStatus::AppointmentPending->value => [
-                'title' => 'Book your test appointment',
-                'body' => 'Payment received. You can now book your driving test appointments.',
+                'title' => __('messages.notifications.appointment_pending_title'),
+                'body' => __('messages.notifications.appointment_pending_body'),
                 'type' => 'application.appointment_pending',
             ],
             ApplicationStatus::Approved->value => [
-                'title' => 'Application approved',
-                'body' => 'Congratulations! All required tests passed. Your application is approved.',
+                'title' => __('messages.notifications.approved_title'),
+                'body' => __('messages.notifications.approved_body'),
                 'type' => 'application.approved',
             ],
             ApplicationStatus::LicenseIssued->value => [
-                'title' => 'License issued',
-                'body' => 'Your driving license has been issued. You can view it in the app.',
+                'title' => __('messages.notifications.license_issued_title'),
+                'body' => __('messages.notifications.license_issued_body'),
                 'type' => 'application.license_issued',
             ],
             ApplicationStatus::WaitingRetest->value => [
-                'title' => 'Retest required',
-                'body' => 'A test was not passed. Please book a retest appointment.',
+                'title' => __('messages.notifications.retest_title'),
+                'body' => __('messages.notifications.retest_body'),
                 'type' => 'application.waiting_retest',
             ],
             ApplicationStatus::AdministrativeReview->value => [
-                'title' => 'Administrative review',
-                'body' => 'Your application requires administrative review. You will be contacted.',
+                'title' => __('messages.notifications.admin_review_title'),
+                'body' => __('messages.notifications.admin_review_body'),
                 'type' => 'application.administrative_review',
             ],
         ];

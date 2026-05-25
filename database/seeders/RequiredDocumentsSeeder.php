@@ -14,19 +14,19 @@ class RequiredDocumentsSeeder extends Seeder
 
         $documents = [
             [
-                'name' => 'National ID Copy',
+                'name' => 'صورة عن الهوية الشخصية',
                 'code' => 'national_id_copy',
             ],
             [
-                'name' => 'Personal Photo',
+                'name' => 'صورة شخصية',
                 'code' => 'personal_photo',
             ],
             [
-                'name' => 'Blood Donation Certificate',
+                'name' => 'شهادة تبرع بالدم',
                 'code' => 'blood_donation_certificate',
             ],
             [
-                'name' => 'Medical Report',
+                'name' => 'تقرير طبي',
                 'code' => 'medical_report',
             ],
         ];

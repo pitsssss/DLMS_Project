@@ -45,7 +45,7 @@ class LicenseService
         $license = $this->licenses->findOwnedByCitizen($citizen, $licenseId);
 
         if ($license === null) {
-            throw new ApiException('License not found.', 404);
+            throw new ApiException('messages.licenses.not_found', 404);
         }
 
         return $license;
@@ -61,13 +61,13 @@ class LicenseService
                 ->first();
 
             if ($application === null) {
-                throw new ApiException('Application not found.', 404);
+                throw new ApiException('messages.applications.not_found', 404);
             }
 
             $this->assertApplicationReadyForIssuance($application);
 
             if ($this->licenses->existsForApplication($application->id)) {
-                throw new ApiException('A license has already been issued for this application.', 422);
+                throw new ApiException('messages.licenses.already_issued', 422);
             }
 
             $issueDate = now()->toDateString();
@@ -91,7 +91,7 @@ class LicenseService
                 $application,
                 ApplicationStatus::LicenseIssued,
                 $employee,
-                'Driving license issued.'
+                __('messages.licenses.note_issued')
             );
 
             $this->auditLogs->log(
@@ -135,22 +135,22 @@ class LicenseService
     public function replace(User $citizen, int $licenseId, string $replacementType): License
     {
         if (! in_array($replacementType, ['lost', 'damaged'], true)) {
-            throw new ApiException('Replacement type must be lost or damaged.', 422);
+            throw new ApiException('messages.licenses.replacement_type_invalid', 422);
         }
 
         return DB::transaction(function () use ($citizen, $licenseId) {
             $old = $this->licenses->findOwnedByCitizen($citizen, $licenseId);
 
             if ($old === null) {
-                throw new ApiException('License not found.', 404);
+                throw new ApiException('messages.licenses.not_found', 404);
             }
 
             if ($old->status === LicenseStatus::Blocked) {
-                throw new ApiException('Blocked licenses cannot be replaced.', 422);
+                throw new ApiException('messages.licenses.blocked_cannot_replace', 422);
             }
 
             if (! in_array($old->status, [LicenseStatus::Active, LicenseStatus::Expired], true)) {
-                throw new ApiException('This license cannot be replaced in its current status.', 422);
+                throw new ApiException('messages.licenses.cannot_replace_status', 422);
             }
 
             $this->assertCitizenHasNoUnpaidFines($citizen->id);
@@ -180,22 +180,22 @@ class LicenseService
         $license = $this->licenses->findOwnedByCitizen($citizen, $licenseId);
 
         if ($license === null) {
-            throw new ApiException('License not found.', 404);
+            throw new ApiException('messages.licenses.not_found', 404);
         }
 
         if ($license->status !== LicenseStatus::Blocked) {
-            throw new ApiException('Only blocked licenses can request unblock.', 422);
+            throw new ApiException('messages.licenses.only_blocked_unblock', 422);
         }
 
         if ($this->citizenHasUnpaidFines($citizen->id)) {
-            throw new ApiException('All related fines must be paid before requesting unblock.', 422);
+            throw new ApiException('messages.licenses.fines_before_unblock', 422);
         }
 
         return [
             'license_id' => $license->id,
             'license_number' => $license->license_number,
             'status' => $license->status->value,
-            'message' => 'Unblock request registered. An employee will review and process your request.',
+            'message' => __('messages.licenses.unblock_registered'),
         ];
     }
 
@@ -205,7 +205,7 @@ class LicenseService
             $license = License::query()->whereKey($licenseId)->lockForUpdate()->first();
 
             if ($license === null) {
-                throw new ApiException('License not found.', 404);
+                throw new ApiException('messages.licenses.not_found', 404);
             }
 
             if ($license->status === LicenseStatus::Blocked) {
@@ -213,7 +213,7 @@ class LicenseService
             }
 
             if (! in_array($license->status, [LicenseStatus::Active, LicenseStatus::Expired], true)) {
-                throw new ApiException('This license cannot be blocked in its current status.', 422);
+                throw new ApiException('messages.licenses.cannot_block_status', 422);
             }
 
             $previousStatus = $license->status;
@@ -231,8 +231,8 @@ class LicenseService
 
             $this->notifications->sendToUser(
                 $license->citizen_id,
-                'License blocked',
-                'Your driving license has been blocked. Contact the traffic department for details.',
+                __('messages.notifications.license_blocked_title'),
+                __('messages.notifications.license_blocked_body'),
                 'license.blocked',
                 ['license_id' => $license->id, 'license_number' => $license->license_number]
             );
@@ -247,15 +247,15 @@ class LicenseService
             $license = License::query()->whereKey($licenseId)->lockForUpdate()->first();
 
             if ($license === null) {
-                throw new ApiException('License not found.', 404);
+                throw new ApiException('messages.licenses.not_found', 404);
             }
 
             if ($license->status !== LicenseStatus::Blocked) {
-                throw new ApiException('Only blocked licenses can be unblocked.', 422);
+                throw new ApiException('messages.licenses.only_blocked_can_unblock', 422);
             }
 
             if ($this->citizenHasUnpaidFines($license->citizen_id)) {
-                throw new ApiException('Citizen has unpaid fines. Fines must be settled before unblock.', 422);
+                throw new ApiException('messages.licenses.unpaid_fines_unblock', 422);
             }
 
             $license->status = $license->expiry_date->isPast()
@@ -274,8 +274,8 @@ class LicenseService
 
             $this->notifications->sendToUser(
                 $license->citizen_id,
-                'License unblocked',
-                'Your driving license has been unblocked and is active again.',
+                __('messages.notifications.license_unblocked_title'),
+                __('messages.notifications.license_unblocked_body'),
                 'license.unblocked',
                 ['license_id' => $license->id]
             );
@@ -287,23 +287,23 @@ class LicenseService
     private function assertApplicationReadyForIssuance(LicenseApplication $application): void
     {
         if ($application->status !== ApplicationStatus::Approved) {
-            throw new ApiException('Application must be approved before a license can be issued.', 422);
+            throw new ApiException('messages.licenses.must_be_approved', 422);
         }
 
         if (! $this->progression->allRequiredTestsPassed($application)) {
-            throw new ApiException('All required tests must be passed before issuing a license.', 422);
+            throw new ApiException('messages.licenses.tests_required', 422);
         }
 
         if (! $this->applicationFeePaid($application)) {
-            throw new ApiException('Application fee payment must be completed before issuing a license.', 422);
+            throw new ApiException('messages.licenses.payment_required', 422);
         }
 
         if (! $this->allRequiredDocumentsApproved($application)) {
-            throw new ApiException('All required documents must be approved before issuing a license.', 422);
+            throw new ApiException('messages.licenses.documents_required', 422);
         }
 
         if ($this->citizenHasUnpaidFines($application->citizen_id)) {
-            throw new ApiException('Citizen has unpaid fines. Fines must be settled before license issuance.', 422);
+            throw new ApiException('messages.licenses.unpaid_fines_issue', 422);
         }
     }
 
@@ -351,18 +351,18 @@ class LicenseService
         $license = $this->licenses->findOwnedByCitizen($citizen, $licenseId);
 
         if ($license === null) {
-            throw new ApiException('License not found.', 404);
+            throw new ApiException('messages.licenses.not_found', 404);
         }
 
         if (! in_array($license->status, [LicenseStatus::Active, LicenseStatus::Expired], true)) {
-            throw new ApiException('This license cannot be renewed in its current status.', 422);
+            throw new ApiException('messages.licenses.cannot_renew_status', 422);
         }
 
         $graceDays = (int) config('license.renewal_grace_days', 90);
         $renewableFrom = $license->expiry_date->copy()->subDays($graceDays);
 
         if (now()->toDateString() < $renewableFrom->toDateString() && $license->status === LicenseStatus::Active) {
-            throw new ApiException('License is not yet eligible for renewal.', 422);
+            throw new ApiException('messages.licenses.not_eligible_renewal', 422);
         }
 
         $this->assertCitizenHasNoUnpaidFines($citizen->id);
@@ -373,7 +373,7 @@ class LicenseService
     private function assertCitizenHasNoUnpaidFines(int $citizenId): void
     {
         if ($this->citizenHasUnpaidFines($citizenId)) {
-            throw new ApiException('Unpaid fines must be settled before continuing.', 422);
+            throw new ApiException('messages.licenses.unpaid_fines_continue', 422);
         }
     }
 

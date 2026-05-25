@@ -23,7 +23,7 @@ class AppointmentController extends Controller
 
         return $this->successResponse(
             new TestAppointmentResource($model),
-            'Appointment rescheduled successfully.'
+            'messages.appointments.rescheduled'
         );
     }
 
@@ -40,7 +40,7 @@ class AppointmentController extends Controller
 
         return $this->successResponse(
             new TestAppointmentResource($model),
-            'Appointment cancelled successfully.'
+            'messages.appointments.cancelled'
         );
     }
 }

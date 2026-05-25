@@ -25,7 +25,7 @@ class AppointmentSlotController extends Controller
 
         return $this->successResponse(
             AppointmentSlotResource::collection($slots)->resolve(),
-            'Available appointment slots retrieved successfully.'
+            'messages.appointments.slots'
         );
     }
 }
