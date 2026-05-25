@@ -49,7 +49,9 @@ class AgentIntentDetector
                     'intent' => AgentIntent::CreateNewLicenseApplication->value,
                     'confidence' => 0.72,
                     'language' => $language,
-                    'reply' => __('messages.ai_agent.new_license_prompt'),
+                    'reply' => $language === 'ar'
+                        ? 'يمكنني مساعدتك في إنشاء طلب رخصة جديدة. ما نوع الرخصة التي تريدها؟ خاصة، عامة، شاحنة، أم حافلة؟'
+                        : 'I can help you prepare a new license application. Which license type do you need: private, public, truck, or bus?',
                     'missing_slots' => ['license_type'],
                     'proposed_action' => null,
                     'requires_confirmation' => false,
@@ -78,7 +80,9 @@ class AgentIntentDetector
             'intent' => AgentIntent::GeneralHelp->value,
             'confidence' => 0.45,
             'language' => $language,
-            'reply' => __('messages.ai_agent.general_help'),
+            'reply' => $language === 'ar'
+                ? 'أنا مساعد خدمات رخص القيادة. يمكنني مساعدتك في طلب رخصة جديدة، متابعة الطلب، المستندات، الدفع، المواعيد، النتائج، الرخص، والمخالفات. كيف يمكنني مساعدتك؟'
+                : 'I assist with driving license services only. I can help with new applications, status, documents, payments, appointments, results, licenses, and fines. How can I help?',
             'missing_slots' => [],
             'proposed_action' => null,
             'requires_confirmation' => false,
@@ -138,7 +142,9 @@ class AgentIntentDetector
             'intent' => AgentIntent::AdminActionDenied->value,
             'confidence' => 0.95,
             'language' => $language,
-            'reply' => __('messages.ai_agent.admin_denied'),
+            'reply' => $language === 'ar'
+                ? 'هذا الإجراء يتطلب موظفاً مخولاً. لا يمكنني تنفيذه نيابة عنك.'
+                : 'This action requires an authorized employee. I cannot perform it for you.',
             'missing_slots' => [],
             'proposed_action' => null,
             'requires_confirmation' => false,
@@ -156,7 +162,9 @@ class AgentIntentDetector
             'intent' => AgentIntent::OutOfScope->value,
             'confidence' => 0.9,
             'language' => $language,
-            'reply' => __('messages.ai_agent.out_of_scope'),
+            'reply' => $language === 'ar'
+                ? 'أنا مساعد خدمات رخص القيادة فقط. يرجى طرح سؤال متعلق بالرخصة أو الطلب أو المواعيد أو المستندات.'
+                : 'I only support driving license services. Please ask about licenses, applications, appointments, or documents.',
             'missing_slots' => [],
             'proposed_action' => null,
             'requires_confirmation' => false,

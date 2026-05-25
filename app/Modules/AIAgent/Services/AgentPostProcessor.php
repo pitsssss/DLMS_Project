@@ -43,7 +43,9 @@ class AgentPostProcessor
                 'intent' => AgentIntent::AdminActionDenied->value,
                 'confidence' => max($confidence, 0.9),
                 'language' => $language,
-                'reply' => __('messages.ai_agent.admin_denied'),
+                'reply' => $language === 'ar'
+                    ? 'هذا الإجراء يتطلب موظفاً مخولاً. لا يمكنني تنفيذه نيابة عنك.'
+                    : 'This action requires an authorized employee. I cannot perform it for you.',
                 'missing_slots' => [],
                 'proposed_action' => null,
                 'requires_confirmation' => false,
@@ -164,7 +166,9 @@ class AgentPostProcessor
             return $payload;
         }
 
-        $payload['reply'] = __('messages.ai_agent.confirm_action');
+        $payload['reply'] = $language === 'ar'
+            ? 'سيتم تجهيز الإجراء المطلوب. هل تؤكد المتابعة؟'
+            : 'I will prepare the requested action. Do you want to continue?';
 
         return $payload;
     }

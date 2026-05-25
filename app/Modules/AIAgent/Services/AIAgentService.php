@@ -32,12 +32,12 @@ class AIAgentService
     public function handleMessage(User $user, string $message, ?int $sessionId = null): array
     {
         if (! config('ai.enabled')) {
-            throw new ApiException('messages.ai_agent.disabled', 503);
+            throw new ApiException('AI agent is currently disabled.', 503);
         }
 
         $prepared = $this->preProcessor->process($message);
         if ($prepared['flags']['empty']) {
-            throw new ApiException('messages.ai_agent.message_empty', 422, ['message' => [__('messages.ai_agent.message_required')]]);
+            throw new ApiException('Message cannot be empty.', 422, ['message' => ['Message is required.']]);
         }
 
         return DB::transaction(function () use ($user, $prepared, $sessionId) {
@@ -144,11 +144,11 @@ class AIAgentService
                 ->first();
 
             if ($session === null) {
-                throw new ApiException('messages.ai_agent.session_not_found', 404);
+                throw new ApiException('AI agent session not found.', 404);
             }
 
             if ($session->status === AgentSessionStatus::Closed) {
-                throw new ApiException('messages.ai_agent.session_closed', 422);
+                throw new ApiException('This AI agent session is closed.', 422);
             }
 
             return $session;

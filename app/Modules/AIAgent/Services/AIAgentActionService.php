@@ -28,15 +28,15 @@ class AIAgentActionService
         $action = $this->resolveOwnedAction($user, $actionId);
 
         if (AgentSafetyRules::isAdminOnlyAction($action->action_name)) {
-            $this->markFailed($action, 'messages.ai_agent.employee_required');
+            $this->markFailed($action, 'This action requires an authorized employee.');
 
-            throw new ApiException('messages.ai_agent.employee_required', 403);
+            throw new ApiException('This action requires an authorized employee.', 403);
         }
 
         $this->assertAwaitingConfirmation($action);
 
         if (! AgentSafetyRules::isPhase9bExecutable($action->action_name)) {
-            throw new ApiException('messages.ai_agent.cannot_execute_yet', 422);
+            throw new ApiException('This action cannot be executed yet. Please use the standard API endpoints.', 422);
         }
 
         $action->status = AgentActionStatus::Confirmed;
@@ -112,7 +112,7 @@ class AIAgentActionService
             ->first();
 
         if ($action === null) {
-            throw new ApiException('messages.ai_agent.action_not_found', 404);
+            throw new ApiException('AI agent action not found.', 404);
         }
 
         return $action;
@@ -125,11 +125,11 @@ class AIAgentActionService
         }
 
         $message = match ($action->status) {
-            AgentActionStatus::Executed => 'messages.ai_agent.status_executed',
-            AgentActionStatus::Cancelled => 'messages.ai_agent.status_cancelled',
-            AgentActionStatus::Failed => 'messages.ai_agent.status_failed',
-            AgentActionStatus::Confirmed => 'messages.ai_agent.status_processing',
-            default => 'messages.ai_agent.not_awaiting_confirmation',
+            AgentActionStatus::Executed => 'This action has already been executed.',
+            AgentActionStatus::Cancelled => 'This action has been cancelled.',
+            AgentActionStatus::Failed => 'This action has failed and cannot be confirmed.',
+            AgentActionStatus::Confirmed => 'This action is already being processed.',
+            default => 'This action is not awaiting confirmation.',
         };
 
         throw new ApiException($message, 422);
@@ -144,7 +144,7 @@ class AIAgentActionService
             return;
         }
 
-        throw new ApiException('messages.ai_agent.cannot_cancel', 422);
+        throw new ApiException('This action cannot be cancelled.', 422);
     }
 
     private function markFailed(AIAgentAction $action, string $errorMessage): void

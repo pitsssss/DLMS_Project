@@ -31,11 +31,11 @@ class AgentActionExecutor
     public function execute(User $user, AIAgentAction $action): array
     {
         if (AgentSafetyRules::isAdminOnlyAction($action->action_name)) {
-            throw new ApiException('messages.ai_agent.employee_required', 403);
+            throw new ApiException('This action requires an authorized employee.', 403);
         }
 
         if (! AgentSafetyRules::isPhase9bExecutable($action->action_name)) {
-            throw new ApiException('messages.ai_agent.cannot_execute_yet', 422);
+            throw new ApiException('This action cannot be executed yet. Please use the standard API endpoints.', 422);
         }
 
         $arguments = is_array($action->arguments) ? $action->arguments : [];
@@ -46,7 +46,7 @@ class AgentActionExecutor
             'get_required_documents' => $this->executeGetRequiredDocuments($user, $arguments),
             'get_fines' => $this->executeGetFines($user),
             'get_licenses' => $this->executeGetLicenses($user),
-            default => throw new ApiException('messages.ai_agent.unsupported_action', 422),
+            default => throw new ApiException('Unsupported AI agent action.', 422),
         };
     }
 
@@ -131,8 +131,8 @@ class AgentActionExecutor
         $applicationId = $arguments['application_id'] ?? null;
 
         if (! is_numeric($applicationId) || (int) $applicationId < 1) {
-            throw new ApiException('messages.ai_agent.application_id_required', 422, [
-                'application_id' => [__('messages.ai_agent.application_id_arg_required')],
+            throw new ApiException('Application ID is required for this action.', 422, [
+                'application_id' => ['The application_id argument is required.'],
             ]);
         }
 
@@ -147,8 +147,8 @@ class AgentActionExecutor
         $code = trim((string) ($arguments['license_type_code'] ?? ''));
 
         if ($code === '') {
-            throw new ApiException('messages.ai_agent.license_type_required', 422, [
-                'license_type_code' => [__('messages.ai_agent.license_type_arg_required')],
+            throw new ApiException('License type is required.', 422, [
+                'license_type_code' => ['The license_type_code argument is required.'],
             ]);
         }
 
@@ -158,8 +158,8 @@ class AgentActionExecutor
             ->first();
 
         if ($licenseType === null) {
-            throw new ApiException('messages.ai_agent.license_type_invalid', 422, [
-                'license_type_code' => [__('messages.ai_agent.license_type_arg_invalid')],
+            throw new ApiException('Invalid or inactive license type.', 422, [
+                'license_type_code' => ['The selected license type is invalid.'],
             ]);
         }
 
@@ -179,8 +179,8 @@ class AgentActionExecutor
             ->first();
 
         if ($serviceType === null) {
-            throw new ApiException('messages.ai_agent.service_type_invalid', 422, [
-                'service_type_code' => [__('messages.ai_agent.service_type_arg_invalid')],
+            throw new ApiException('Invalid or inactive service type.', 422, [
+                'service_type_code' => ['The selected service type is invalid.'],
             ]);
         }
 

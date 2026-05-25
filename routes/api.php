@@ -25,7 +25,7 @@ Route::get('/ping', function () {
         'success' => true,
         'message' => __('messages.ping.running'),
         'data' => [
-            'phase' => 8,
+            'phase' => 9,
         ],
     ]);
 });

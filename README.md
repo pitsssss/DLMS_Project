@@ -2,7 +2,7 @@
 
 **DLMS** is a Laravel 11 RESTful API backend for a government-style digital driving license management platform.
 
-The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a simple chatbot assistant.
+The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a controlled AI service agent for citizens (Phase 9A).
 
 ---
 
@@ -26,7 +26,9 @@ The system manages the full lifecycle of driving license services: citizen regis
 * Default Seeded Users
 * API Routes Summary
 * Testing
+* Developer Testing Dashboard
 * Postman Collection
+* AI Service Agent (Phase 9)
 * Project Structure
 * Docker & Ghaymah Cloud Deployment
 * Development Guidelines
@@ -96,7 +98,7 @@ The system aims to:
 * Request lost/damaged license replacement.
 * Request license unblock.
 * View notifications.
-* Use a simple chatbot assistant.
+* Use the controlled AI service agent (Phase 9A) to navigate license services step by step.
 
 ---
 
@@ -461,8 +463,6 @@ Role: citizen
 
 ---
 
-<<<<<<< Updated upstream
-=======
 # AI Service Agent (Phase 9)
 
 Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. The backend owns safety rules, structured model output validation, session history, proposed actions, and audit-friendly evaluations.
@@ -617,28 +617,6 @@ Auth (register/OTP/login/profile), applications, documents (upload/review), paym
 
 ---
 
-# Arabic localization
-
-User-facing API text is Arabic by default.
-
-| Setting | Value |
-|---------|--------|
-| `APP_LOCALE` | `ar` (see `.env.example`) |
-| Language files | `resources/lang/ar/messages.php`, `resources/lang/ar/validation.php` |
-
-API responses use translation keys (for example `messages.auth.login_success`) resolved at runtime. Internal codes (`draft`, `private`, `review_documents`, etc.) stay in English.
-
-After pulling these changes, re-seed display names if your database still has English labels:
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-Or run individual seeders (for example `LicenseTypesSeeder`) on a dev database.
-
----
-
->>>>>>> Stashed changes
 # Testing
 
 Run all tests:
@@ -646,8 +624,6 @@ Run all tests:
 ```bash
 php artisan test
 ```
-
-PHPUnit sets `APP_LOCALE=ar`. See `tests/Feature/ArabicLocalizationTest.php` for localization checks.
 
 ---
 
@@ -668,7 +644,7 @@ app/
     Licenses/
     Settings/
     Reports/
-    Chatbot/
+    AIAgent/
     Notifications/
     AuditLogs/
 
@@ -1015,7 +991,8 @@ Possible future improvements:
 
 * Real SMS gateway integration.
 * Push notifications.
-* Advanced chatbot integration.
+* Phase 9B extension: payments and appointments via AI agent confirm flow.
+* Phase 9C: AI agent admin logs and analytics.
 * PDF license generation.
 * QR code verification for licenses.
 * Advanced reporting dashboard.
@@ -1047,4 +1024,5 @@ Recommended implementation phases:
 6. Appointments and tests.
 7. Licenses and fines.
 8. Notifications, audit logs, reports.
-9. Testing and documentation.
+9. AI service agent (9A foundation; 9B execution; 9C admin reports).
+10. Testing and documentation.

@@ -202,7 +202,7 @@ class AIAgentActionExecutionTest extends TestCase
 
         $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")
             ->assertStatus(422)
-            ->assertJsonPath('message', __('messages.ai_agent.status_executed'));
+            ->assertJsonPath('message', 'This action has already been executed.');
     }
 
     public function test_forbidden_admin_action_cannot_be_executed(): void
@@ -233,13 +233,15 @@ class AIAgentActionExecutionTest extends TestCase
 
         $action = $this->awaitingAction($citizen);
 
+        $message = __('messages.applications.complete_profile_first');
+
         $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")
             ->assertStatus(403)
-            ->assertJsonPath('message', __('messages.applications.complete_profile_first'));
+            ->assertJsonPath('message', $message);
 
         $action->refresh();
         $this->assertSame(AgentActionStatus::Failed, $action->status);
-        $this->assertSame(__('messages.applications.complete_profile_first'), $action->error_message);
+        $this->assertSame($message, $action->error_message);
         $this->assertEquals(0, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
     }
 

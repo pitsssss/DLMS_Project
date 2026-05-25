@@ -93,7 +93,7 @@ class AppointmentFlowTest extends TestCase
     {
         $this->getJson('/api/ping')
             ->assertOk()
-            ->assertJsonPath('data.phase', 8);
+            ->assertJsonPath('data.phase', 9);
     }
 
     public function test_citizen_can_list_available_tests_and_book_vision_appointment(): void
