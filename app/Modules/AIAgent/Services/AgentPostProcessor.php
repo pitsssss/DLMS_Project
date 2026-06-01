@@ -2,11 +2,16 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
 
 class AgentPostProcessor
 {
+    public function __construct(
+        private readonly AgentDuplicateApplicationGuard $duplicateGuard,
+    ) {}
+
     /**
      * @param  array<string, mixed>|null  $raw
      * @return array<string, mixed>|null
@@ -141,6 +146,35 @@ class AgentPostProcessor
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function enforceDuplicateApplicationRules(User $citizen, array $payload): array
+    {
+        $proposed = $payload['proposed_action'] ?? null;
+
+        if (! is_array($proposed) || ($proposed['name'] ?? '') !== 'create_application') {
+            return $payload;
+        }
+
+        $arguments = is_array($proposed['arguments'] ?? null) ? $proposed['arguments'] : [];
+        $licenseTypeCode = trim((string) ($arguments['license_type_code'] ?? ''));
+
+        if ($licenseTypeCode === '') {
+            return $payload;
+        }
+
+        $serviceTypeCode = trim((string) ($arguments['service_type_code'] ?? 'new_license'));
+
+        return $this->duplicateGuard->blockCreateApplicationIfDuplicate(
+            $citizen,
+            $payload,
+            $licenseTypeCode,
+            $serviceTypeCode
+        );
+    }
+
     public function applyConfirmationReply(array $payload): array
     {
         if (! ($payload['requires_confirmation'] ?? false)) {
@@ -166,11 +200,34 @@ class AgentPostProcessor
             return $payload;
         }
 
+        $existingReply = trim((string) ($payload['reply'] ?? ''));
+        if ($existingReply !== '' && ! $this->isGenericConfirmationPlaceholder($existingReply)) {
+            return $payload;
+        }
+
         $payload['reply'] = $language === 'ar'
             ? 'سيتم تجهيز الإجراء المطلوب. هل تؤكد المتابعة؟'
             : 'I will prepare the requested action. Do you want to continue?';
 
         return $payload;
+    }
+
+    private function isGenericConfirmationPlaceholder(string $reply): bool
+    {
+        $placeholders = [
+            'هل تؤكد؟',
+            'هل تؤكد المتابعة؟',
+            'Do you confirm?',
+            'Do you want to continue?',
+        ];
+
+        foreach ($placeholders as $placeholder) {
+            if (mb_strtolower($reply) === mb_strtolower($placeholder)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function createApplicationConfirmationReply(string $licenseTypeCode, string $language): string

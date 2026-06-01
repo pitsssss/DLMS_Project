@@ -10,6 +10,7 @@ use App\Modules\AIAgent\Enums\AgentSessionStatus;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentUserConfirmationDetector;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,7 @@ class AIAgentService
         private readonly AgentSlotFiller $slotFiller,
         private readonly AgentEvaluationService $evaluationService,
         private readonly AgentSessionContextService $sessionContext,
+        private readonly AIAgentActionService $actionService,
     ) {}
 
     /**
@@ -48,6 +50,25 @@ class AIAgentService
 
             $this->storeMessage($session, AgentMessageRole::User, $userMessage);
 
+            $awaitingAction = $this->findAwaitingConfirmationAction($session);
+
+            if ($awaitingAction !== null) {
+                if (AgentUserConfirmationDetector::isAffirmative($userMessage)) {
+                    return $this->formatMessageResponseFromActionResult(
+                        $session,
+                        $this->actionService->confirm($user, $awaitingAction->id)
+                    );
+                }
+
+                if (AgentUserConfirmationDetector::isNegative($userMessage)) {
+                    return $this->formatMessageResponseFromActionResult(
+                        $session,
+                        $this->actionService->cancel($user, $awaitingAction->id),
+                        cancelled: true
+                    );
+                }
+            }
+
             $startedAt = hrtime(true);
             $wasFallback = false;
             $payload = null;
@@ -55,7 +76,7 @@ class AIAgentService
             try {
                 $contents = $this->contextBuilder->buildGeminiContents($session);
                 $raw = $this->geminiClient->generateStructuredResponse(
-                    $this->contextBuilder->buildSystemInstruction($session),
+                    $this->contextBuilder->buildSystemInstruction($session, $user),
                     $contents
                 );
                 $payload = $this->postProcessor->normalize(
@@ -70,13 +91,15 @@ class AIAgentService
             if ($payload === null) {
                 $wasFallback = true;
                 $payload = $this->intentDetector->detectFallback(
+                    $user,
                     $userMessage,
                     $session,
                     $prepared['language_hint']
                 );
             }
 
-            $payload = $this->slotFiller->apply($session, $payload, $userMessage, $state);
+            $payload = $this->slotFiller->apply($user, $session, $payload, $userMessage, $state);
+            $payload = $this->postProcessor->enforceDuplicateApplicationRules($user, $payload);
             $payload = $this->postProcessor->applyConfirmationReply($payload);
             $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);
 
@@ -178,16 +201,62 @@ class AIAgentService
     /**
      * @param  array<string, mixed>  $payload
      */
+    private function findAwaitingConfirmationAction(AIAgentSession $session): ?AIAgentAction
+    {
+        return AIAgentAction::query()
+            ->where('session_id', $session->id)
+            ->where('status', AgentActionStatus::AwaitingConfirmation)
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * @param  array<string, mixed>  $actionResult
+     * @return array<string, mixed>
+     */
+    private function formatMessageResponseFromActionResult(
+        AIAgentSession $session,
+        array $actionResult,
+        bool $cancelled = false,
+    ): array {
+        $action = $actionResult['action'] ?? [];
+        $session->refresh();
+
+        $response = [
+            'session_id' => $session->id,
+            'reply' => (string) ($actionResult['reply'] ?? ''),
+            'intent' => $session->current_intent ?? 'create_new_license_application',
+            'confidence' => 1.0,
+            'missing_slots' => [],
+            'requires_confirmation' => false,
+            'pending_action' => null,
+            'action_confirmed' => ! $cancelled,
+            'action_cancelled' => $cancelled,
+            'executed_action' => $cancelled ? null : $action,
+        ];
+
+        if (! $cancelled && isset($actionResult['result'])) {
+            $response['result'] = $actionResult['result'];
+        }
+
+        return $response;
+    }
+
     private function persistProposedAction(User $user, AIAgentSession $session, array $payload): ?AIAgentAction
     {
         $proposed = $payload['proposed_action'] ?? null;
 
         if (! is_array($proposed) || empty($proposed['name'])) {
-            return null;
+            return $this->findAwaitingConfirmationAction($session);
         }
 
         if (! empty($payload['missing_slots'])) {
-            return null;
+            return $this->findAwaitingConfirmationAction($session);
+        }
+
+        $existing = $this->findAwaitingConfirmationAction($session);
+        if ($existing !== null) {
+            return $existing;
         }
 
         $requiresConfirmation = (bool) ($payload['requires_confirmation'] ?? config('ai.require_confirmation'));

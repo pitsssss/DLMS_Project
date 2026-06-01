@@ -85,6 +85,58 @@ class ApplicationFlowTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_citizen_cannot_create_duplicate_active_draft_application(): void
+    {
+        [$licenseType, $serviceType] = $this->makeLicenseAndService();
+        $citizen = $this->readyCitizen();
+
+        Sanctum::actingAs($citizen);
+
+        $this->postJson('/api/applications', [
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+        ])->assertOk();
+
+        $this->postJson('/api/applications', [
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath(
+                'message',
+                'يوجد لديك طلب فعال مسبقاً لنفس نوع الرخصة والخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.'
+            );
+
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
+    public function test_citizen_can_create_application_after_cancelled_terminal_status(): void
+    {
+        [$licenseType, $serviceType] = $this->makeLicenseAndService();
+        $citizen = $this->readyCitizen();
+
+        Sanctum::actingAs($citizen);
+
+        $first = $this->postJson('/api/applications', [
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+        ])->assertOk();
+
+        $applicationId = (int) $first->json('data.id');
+
+        LicenseApplication::query()->whereKey($applicationId)->update([
+            'status' => ApplicationStatus::Cancelled,
+        ]);
+
+        $this->postJson('/api/applications', [
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+        ])->assertOk();
+
+        $this->assertEquals(2, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
     public function test_citizen_can_create_list_and_show_draft_application(): void
     {
         [$licenseType, $serviceType] = $this->makeLicenseAndService();

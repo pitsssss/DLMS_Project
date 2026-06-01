@@ -2,7 +2,10 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Enums\ApplicationStatus;
+use App\Models\LicenseApplication;
 use App\Models\LicenseType;
+use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
@@ -13,7 +16,7 @@ class AgentContextBuilder
         private readonly AgentSessionContextService $sessionContext,
     ) {}
 
-    public function buildSystemInstruction(AIAgentSession $session): string
+    public function buildSystemInstruction(AIAgentSession $session, User $citizen): string
     {
         $licenseTypes = LicenseType::query()
             ->where('is_active', true)
@@ -26,11 +29,14 @@ class AgentContextBuilder
         $adminActions = implode(', ', AgentSafetyRules::ADMIN_ONLY_ACTIONS);
 
         $state = $this->sessionContext->resolveState($session);
+        $activeApplicationsJson = $this->buildActiveApplicationsContext($citizen);
+
         $sessionContextJson = json_encode([
             'previous_intent' => $state['intent'],
             'missing_slots' => $state['missing_slots'],
             'collected_slots' => $state['collected_slots'],
             'service_type_code' => $state['service_type_code'],
+            'citizen_active_applications' => json_decode($activeApplicationsJson, true),
         ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return <<<PROMPT
@@ -46,9 +52,10 @@ Rules:
 - Phase 9A: NEVER execute actions. Only propose actions for later confirmation.
 - Allowed proposed action names: {$allowedActions}.
 - For new license applications use intent "create_new_license_application" and collect license_type (private, public, truck, bus).
-- When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license).
+- When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
+- If a duplicate active application exists, do NOT propose create_application. Explain in Arabic that an active application already exists and propose get_application_status with the existing application_id.
 - If previous_intent is create_new_license_application and missing_slots includes license_type, treat short answers like "رخصة خاصة", "خاصة", "private", "عامة", "شاحنة", "حافلة" as the license_type answer. Keep the same intent; do not switch to general_help.
-- If collected_slots already contains license_type_code, clear missing_slots and propose create_application with requires_confirmation true.
+- If collected_slots already contains license_type_code, clear missing_slots and propose create_application with requires_confirmation true unless a duplicate active application exists.
 - If confidence is low or message unclear, ask a clarification question in the citizen's language.
 - If out of driving-license scope, set intent "out_of_scope".
 - Use Arabic for Arabic messages and English for English messages.
@@ -64,7 +71,7 @@ JSON schema:
   "missing_slots": ["string"],
   "proposed_action": null | {"name": "string", "arguments": {}},
   "requires_confirmation": false,
-  "safety_status": "safe|blocked",
+  "safety_status": "safe",
   "requires_human_support": false
 }
 PROMPT;
@@ -102,5 +109,26 @@ PROMPT;
         }
 
         return $contents;
+    }
+
+    private function buildActiveApplicationsContext(User $citizen): string
+    {
+        $applications = LicenseApplication::query()
+            ->where('citizen_id', $citizen->id)
+            ->whereIn('status', ApplicationStatus::activeValues())
+            ->with(['licenseType', 'serviceType'])
+            ->orderByDesc('id')
+            ->get()
+            ->map(static fn (LicenseApplication $application) => [
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'status' => $application->status->value,
+                'license_type_code' => $application->licenseType?->code,
+                'service_type_code' => $application->serviceType?->code,
+            ])
+            ->values()
+            ->all();
+
+        return json_encode($applications, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?: '[]';
     }
 }

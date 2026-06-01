@@ -68,6 +68,18 @@ class ApplicationRepository
             ->first();
     }
 
+    public function findActiveForCitizen(User $citizen, int $licenseTypeId, int $serviceTypeId): ?LicenseApplication
+    {
+        return LicenseApplication::query()
+            ->where('citizen_id', $citizen->id)
+            ->where('license_type_id', $licenseTypeId)
+            ->where('service_type_id', $serviceTypeId)
+            ->whereIn('status', ApplicationStatus::activeValues())
+            ->with(['licenseType', 'serviceType', 'currentTestType'])
+            ->orderByDesc('id')
+            ->first();
+    }
+
     public function findById(int $applicationId): ?LicenseApplication
     {
         return LicenseApplication::query()

@@ -2,6 +2,7 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
@@ -18,7 +19,7 @@ class AgentIntentDetector
      *
      * @return array<string, mixed>
      */
-    public function detectFallback(string $message, AIAgentSession $session, ?string $languageHint = null): array
+    public function detectFallback(User $citizen, string $message, AIAgentSession $session, ?string $languageHint = null): array
     {
         $language = $languageHint ?? 'ar';
         $normalized = mb_strtolower(trim($message));
@@ -34,6 +35,7 @@ class AgentIntentDetector
 
         if ($this->sessionContext->isNewLicenseContinuation($state, $state['extracted_license_type'] ?? null)) {
             return $this->sessionContext->applyContinuity(
+                $citizen,
                 $session,
                 $this->generalHelpShape($language),
                 $state,
@@ -61,6 +63,7 @@ class AgentIntentDetector
             }
 
             return $this->sessionContext->applyContinuity(
+                $citizen,
                 $session,
                 $this->generalHelpShape($language),
                 $state,

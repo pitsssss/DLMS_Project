@@ -2,6 +2,7 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
@@ -11,6 +12,7 @@ class AgentSlotFiller
 {
     public function __construct(
         private readonly AgentSessionContextService $sessionContext,
+        private readonly AgentDuplicateApplicationGuard $duplicateGuard,
     ) {}
 
     /**
@@ -19,9 +21,9 @@ class AgentSlotFiller
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    public function apply(AIAgentSession $session, array $payload, string $userMessage, array $state): array
+    public function apply(User $citizen, AIAgentSession $session, array $payload, string $userMessage, array $state): array
     {
-        $payload = $this->sessionContext->applyContinuity($session, $payload, $state, $userMessage);
+        $payload = $this->sessionContext->applyContinuity($citizen, $session, $payload, $state, $userMessage);
 
         $licenseType = $state['collected_slots']['license_type_code']
             ?? LicenseTypeSlotExtractor::extract($userMessage);
@@ -44,6 +46,13 @@ class AgentSlotFiller
                     ],
                 ];
                 $payload['requires_confirmation'] = true;
+
+                $payload = $this->duplicateGuard->blockCreateApplicationIfDuplicate(
+                    $citizen,
+                    $payload,
+                    $licenseType,
+                    (string) ($state['service_type_code'] ?? 'new_license')
+                );
             }
         }
 

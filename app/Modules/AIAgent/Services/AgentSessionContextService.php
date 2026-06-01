@@ -3,12 +3,17 @@
 namespace App\Modules\AIAgent\Services;
 
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSessionContextService
 {
+    public function __construct(
+        private readonly AgentDuplicateApplicationGuard $duplicateGuard,
+    ) {}
+
     /**
      * @return array{
      *   intent: string|null,
@@ -117,8 +122,13 @@ class AgentSessionContextService
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    public function applyContinuity(AIAgentSession $session, array $payload, array $state, string $userMessage): array
-    {
+    public function applyContinuity(
+        User $citizen,
+        AIAgentSession $session,
+        array $payload,
+        array $state,
+        string $userMessage,
+    ): array {
         $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
             ? $payload['language']
             : 'ar';
@@ -163,7 +173,17 @@ class AgentSessionContextService
         $payload['requires_human_support'] = false;
         $payload['safety_status'] = 'safe';
 
-        if ($this->shouldReplaceReply($payload)) {
+        $payload = $this->duplicateGuard->blockCreateApplicationIfDuplicate(
+            $citizen,
+            $payload,
+            $licenseType,
+            $serviceTypeCode
+        );
+
+        if (
+            ($payload['proposed_action']['name'] ?? null) === 'create_application'
+            && $this->shouldReplaceReply($payload)
+        ) {
             $label = LicenseTypeSlotExtractor::labelAr($licenseType);
             $payload['reply'] = $language === 'ar'
                 ? "سيتم تجهيز طلب إصدار رخصة قيادة {$label}. هل تؤكد المتابعة؟"

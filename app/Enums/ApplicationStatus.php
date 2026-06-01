@@ -17,4 +17,39 @@ enum ApplicationStatus: string
     case Rejected = 'rejected';
     case Cancelled = 'cancelled';
     case AdministrativeReview = 'administrative_review';
+
+    /**
+     * @return list<self>
+     */
+    public static function activeCases(): array
+    {
+        return [
+            self::Draft,
+            self::DocumentsUnderReview,
+            self::DocumentsRejected,
+            self::PaymentPending,
+            self::PaymentCompleted,
+            self::AppointmentPending,
+            self::InTesting,
+            self::WaitingRetest,
+            self::Approved,
+            self::AdministrativeReview,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function activeValues(): array
+    {
+        return array_map(
+            static fn (self $status) => $status->value,
+            self::activeCases()
+        );
+    }
+
+    public function isActive(): bool
+    {
+        return in_array($this, self::activeCases(), true);
+    }
 }

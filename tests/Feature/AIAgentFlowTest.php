@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\LicenseApplication;
+use App\Models\LicenseType;
 use App\Models\Role;
+use App\Models\ServiceType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentEvaluation;
@@ -482,6 +484,173 @@ class AIAgentFlowTest extends TestCase
             'truck word' => ['شاحنة', 'truck'],
             'bus word' => ['حافلة', 'bus'],
         ];
+    }
+
+    public function test_ai_agent_blocks_duplicate_create_application_when_draft_exists(): void
+    {
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        LicenseApplication::query()->create([
+            'application_number' => 'APP-EXISTING-DRAFT',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => 'draft',
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini([
+            'intent' => 'create_new_license_application',
+            'confidence' => 0.91,
+            'language' => 'ar',
+            'reply' => 'ما نوع الرخصة؟',
+            'missing_slots' => ['license_type'],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $first = $this->postJson('/api/ai-agent/message', [
+            'message' => 'بدي رخصة جديدة',
+        ])->assertOk();
+
+        $sessionId = (int) $first->json('data.session_id');
+
+        $this->mockGemini([
+            'intent' => 'create_new_license_application',
+            'confidence' => 0.94,
+            'language' => 'ar',
+            'reply' => 'هل تؤكد؟',
+            'missing_slots' => [],
+            'proposed_action' => [
+                'name' => 'create_application',
+                'arguments' => [
+                    'license_type_code' => 'private',
+                    'service_type_code' => 'new_license',
+                ],
+            ],
+            'requires_confirmation' => true,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $second = $this->postJson('/api/ai-agent/message', [
+            'message' => 'رخصة خاصة',
+            'session_id' => $sessionId,
+        ])->assertOk();
+
+        $this->assertNotEquals('create_application', $second->json('data.pending_action.name'));
+        $this->assertEquals('get_application_status', $second->json('data.pending_action.name'));
+        $this->assertStringContainsString('قيد المتابعة', (string) $second->json('data.reply'));
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
+    public function test_ai_agent_allows_different_license_type_when_private_draft_exists(): void
+    {
+        $citizen = $this->citizen();
+        $private = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $truck = LicenseType::query()->where('code', 'truck')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        LicenseApplication::query()->create([
+            'application_number' => 'APP-PRIVATE-ONLY',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $private->id,
+            'service_type_id' => $serviceType->id,
+            'status' => 'draft',
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini(null);
+
+        $session = AIAgentSession::query()->create([
+            'user_id' => $citizen->id,
+            'status' => 'active',
+            'context' => [
+                'intent' => 'create_new_license_application',
+                'collected_slots' => ['license_type_code' => 'truck'],
+                'service_type_code' => 'new_license',
+            ],
+        ]);
+
+        $response = $this->postJson('/api/ai-agent/message', [
+            'message' => 'شاحنة',
+            'session_id' => $session->id,
+        ])->assertOk();
+
+        $this->assertEquals('create_application', $response->json('data.pending_action.name'));
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
+    public function test_affirmative_message_confirms_awaiting_action_via_chat(): void
+    {
+        $citizen = $this->citizen();
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini([
+            'intent' => 'create_new_license_application',
+            'confidence' => 0.91,
+            'language' => 'ar',
+            'reply' => 'ما نوع الرخصة؟',
+            'missing_slots' => ['license_type'],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $first = $this->postJson('/api/ai-agent/message', [
+            'message' => 'بدي رخصة جديدة',
+        ])->assertOk();
+
+        $sessionId = (int) $first->json('data.session_id');
+
+        $this->mockGemini([
+            'intent' => 'general_help',
+            'confidence' => 0.45,
+            'language' => 'ar',
+            'reply' => 'كيف يمكنني مساعدتك؟',
+            'missing_slots' => [],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $second = $this->postJson('/api/ai-agent/message', [
+            'message' => 'رخصة خاصة',
+            'session_id' => $sessionId,
+        ])->assertOk();
+
+        $actionId = (int) $second->json('data.pending_action.id');
+        $this->assertEquals(0, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+
+        $third = $this->postJson('/api/ai-agent/message', [
+            'message' => 'نعم اؤكد',
+            'session_id' => $sessionId,
+        ])->assertOk()
+            ->assertJsonPath('data.action_confirmed', true)
+            ->assertJsonPath('data.executed_action.status', 'executed')
+            ->assertJsonPath('data.pending_action', null)
+            ->assertJsonPath('data.result.status', 'draft');
+
+        $this->assertStringContainsString('تم إنشاء طلب', (string) $third->json('data.reply'));
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+
+        $this->assertDatabaseHas('ai_agent_actions', [
+            'id' => $actionId,
+            'status' => 'executed',
+        ]);
+
+        $this->assertEquals(0, AIAgentAction::query()
+            ->where('session_id', $sessionId)
+            ->where('status', 'awaiting_confirmation')
+            ->count());
     }
 
     public function test_citizen_can_list_and_show_sessions(): void

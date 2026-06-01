@@ -389,6 +389,65 @@ class AIAgentActionExecutionTest extends TestCase
             ->assertJsonStructure(['data' => ['result' => ['items']]]);
     }
 
+    public function test_confirm_create_application_fails_when_duplicate_active_application_exists(): void
+    {
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        LicenseApplication::query()->create([
+            'application_number' => 'APP-DUP-TEST-1',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::Draft,
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $action = $this->awaitingAction($citizen);
+
+        $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")
+            ->assertStatus(422)
+            ->assertJsonPath(
+                'message',
+                'يوجد لديك طلب فعال مسبقاً لنفس نوع الرخصة والخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.'
+            );
+
+        $action->refresh();
+        $this->assertSame(AgentActionStatus::Failed, $action->status);
+        $this->assertSame(
+            'يوجد لديك طلب فعال مسبقاً لنفس نوع الرخصة والخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.',
+            $action->error_message
+        );
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizen->id)->count());
+    }
+
+    public function test_citizen_b_not_blocked_by_citizen_a_active_application_on_confirm(): void
+    {
+        $citizenA = $this->citizen();
+        $citizenB = $this->citizen();
+
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        LicenseApplication::query()->create([
+            'application_number' => 'APP-A-ONLY',
+            'citizen_id' => $citizenA->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::Draft,
+        ]);
+
+        Sanctum::actingAs($citizenB);
+        $action = $this->awaitingAction($citizenB);
+
+        $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")->assertOk();
+
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizenB->id)->count());
+        $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizenA->id)->count());
+    }
+
     public function test_get_application_status_requires_owned_application(): void
     {
         $citizen = $this->citizen();
