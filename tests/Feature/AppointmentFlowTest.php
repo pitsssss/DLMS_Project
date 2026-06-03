@@ -71,9 +71,7 @@ class AppointmentFlowTest extends TestCase
 
     private function employeeUser(): User
     {
-        $role = Role::query()->where('name', 'employee')->firstOrFail();
-
-        return User::factory()->create(['role_id' => $role->id]);
+        return User::factory()->dashboardEmployee('employee')->create();
     }
 
     private function visionSlot(): AppointmentSlot

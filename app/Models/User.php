@@ -100,9 +100,14 @@ class User extends Authenticatable
         return $this->hasRole('admin');
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin') || $this->hasRole('admin');
+    }
+
     public function isEmployee(): bool
     {
-        return $this->hasRole('employee');
+        return $this->user_type === UserType::Employee;
     }
 
     public function isCitizen(): bool
@@ -110,9 +115,28 @@ class User extends Authenticatable
         return $this->hasRole('citizen');
     }
 
+    public function isDashboardUser(): bool
+    {
+        return in_array($this->user_type, [UserType::Admin, UserType::Employee], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function permissionNames(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return ['*'];
+        }
+
+        $this->loadMissing('role.permissions');
+
+        return $this->role?->permissions->pluck('name')->values()->all() ?? [];
+    }
+
     public function hasPermission(string $permission): bool
     {
-        if ($this->isAdmin()) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 

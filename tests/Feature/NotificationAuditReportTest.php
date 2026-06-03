@@ -120,9 +120,7 @@ class NotificationAuditReportTest extends TestCase
             'user_agent' => 'PHPUnit',
         ]);
 
-        $admin = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'admin')->value('id'),
-        ]);
+        $admin = User::factory()->dashboardAdmin('admin')->create();
         Sanctum::actingAs($admin);
 
         $this->getJson('/api/admin/audit-logs')
@@ -166,9 +164,7 @@ class NotificationAuditReportTest extends TestCase
             'issued_at' => null,
         ]);
 
-        $admin = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'admin')->value('id'),
-        ]);
+        $admin = User::factory()->dashboardAdmin('admin')->create();
         Sanctum::actingAs($admin);
 
         $this->getJson("/api/admin/application-status-histories/{$application->id}")

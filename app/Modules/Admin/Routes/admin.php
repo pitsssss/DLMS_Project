@@ -12,7 +12,7 @@ use App\Modules\Reports\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:review_profiles'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:review_profiles'])
     ->group(function (): void {
         Route::get('/profile-reviews', [ProfileReviewController::class, 'index']);
         Route::get('/profile-reviews/{user}', [ProfileReviewController::class, 'show'])
@@ -26,7 +26,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:review_documents'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:review_documents'])
     ->group(function (): void {
         Route::get('/documents/pending-review', [DocumentReviewController::class, 'pending']);
         Route::post('/documents/{document}/approve', [DocumentReviewController::class, 'approve'])
@@ -38,7 +38,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:record_test_result'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:record_test_result'])
     ->group(function (): void {
         Route::post('/test-appointments/{appointment}/record-result', [TestAppointmentResultController::class, 'store'])
             ->whereNumber('appointment')
@@ -46,7 +46,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:issue_license'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:issue_license'])
     ->group(function (): void {
         Route::post('/applications/{application}/issue-license', [ApplicationLicenseController::class, 'issue'])
             ->whereNumber('application')
@@ -54,7 +54,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:manage_licenses'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:manage_licenses'])
     ->group(function (): void {
         Route::post('/licenses/{license}/block', [LicenseManagementController::class, 'block'])
             ->whereNumber('license')
@@ -65,7 +65,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:manage_fines'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:manage_fines'])
     ->group(function (): void {
         Route::get('/fines', [FineManagementController::class, 'index']);
         Route::post('/fines', [FineManagementController::class, 'store'])
@@ -76,7 +76,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:view_audit_logs'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:view_audit_logs'])
     ->group(function (): void {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
         Route::get('/application-status-histories/{application}', [ApplicationStatusHistoryController::class, 'index'])
@@ -84,7 +84,7 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'permission:view_reports'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:view_reports'])
     ->group(function (): void {
         Route::get('/reports/overview', [ReportController::class, 'overview']);
     });

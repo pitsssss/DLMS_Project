@@ -1,0 +1,1299 @@
+{
+  "info": {
+    "_postman_id": "dlms-dashboard-admin-employee",
+    "name": "DLMS Dashboard Admin & Employee API",
+    "description": "SYRTAK / DLMS official dashboard authentication, RBAC, and employee management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "super_admin_email",
+      "value": "superadmin@syrtak.gov.sy"
+    },
+    {
+      "key": "super_admin_password",
+      "value": "password123"
+    },
+    {
+      "key": "super_admin_token",
+      "value": ""
+    },
+    {
+      "key": "employee_email",
+      "value": "fines.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "employee_password",
+      "value": "password123"
+    },
+    {
+      "key": "employee_token",
+      "value": ""
+    },
+    {
+      "key": "profile_reviewer_email",
+      "value": "profile_document_reviewer@syrtak.gov.sy"
+    },
+    {
+      "key": "fines_employee_email",
+      "value": "fines.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "audit_employee_email",
+      "value": "audit.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "reports_employee_email",
+      "value": "reports.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "settings_employee_email",
+      "value": "settings.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "application_manager_email",
+      "value": "application.manager@syrtak.gov.sy"
+    },
+    {
+      "key": "test_employee_email",
+      "value": "test.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "license_employee_email",
+      "value": "license.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "payment_employee_email",
+      "value": "payment.employee@syrtak.gov.sy"
+    },
+    {
+      "key": "employee_id",
+      "value": ""
+    },
+    {
+      "key": "role_id",
+      "value": ""
+    },
+    {
+      "key": "role_name",
+      "value": ""
+    },
+    {
+      "key": "permission_id",
+      "value": ""
+    },
+    {
+      "key": "profile_review_user_id",
+      "value": ""
+    },
+    {
+      "key": "document_id",
+      "value": ""
+    },
+    {
+      "key": "application_id",
+      "value": ""
+    },
+    {
+      "key": "fine_id",
+      "value": ""
+    },
+    {
+      "key": "license_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - System",
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/ping"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Dashboard Auth",
+      "item": [
+        {
+          "name": "Dashboard login super admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{super_admin_email}}\", \"password\": \"{{super_admin_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dashboard me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/me"
+          }
+        },
+        {
+          "name": "Dashboard logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/logout"
+          }
+        },
+        {
+          "name": "Dashboard login super admin (restore token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{super_admin_email}}\", \"password\": \"{{super_admin_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Forgot Password",
+      "item": [
+        {
+          "name": "Dashboard forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/forgot-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{employee_email}}\"}"
+            }
+          }
+        },
+        {
+          "name": "Verify forgot password OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/verify-forgot-password-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{employee_email}}\", \"code\": \"123456\"}"
+            }
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{employee_email}}\", \"reset_token\": \"PASTE_RESET_TOKEN\", \"password\": \"password123\", \"password_confirmation\": \"password123\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Super Admin",
+      "item": [
+        {
+          "name": "List employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees"
+          }
+        },
+        {
+          "name": "List roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/roles"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.items && j.data.items[0]) {",
+                  "    pm.collectionVariables.set('role_id', String(j.data.items[0].id));",
+                  "    pm.collectionVariables.set('role_name', j.data.items[0].name);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/permissions"
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/audit-logs"
+          }
+        },
+        {
+          "name": "Reports overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/reports/overview"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Employee Management",
+      "item": [
+        {
+          "name": "Create employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"موظف الغرامات\", \"email\": \"new.fines@syrtak.gov.sy\", \"password\": \"password123\", \"password_confirmation\": \"password123\", \"role\": \"fines_employee\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('employee_id', String(j.data.id));",
+                  "  if (j.data && j.data.user && j.data.user.id) pm.collectionVariables.set('employee_id', String(j.data.user.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"موظف محدث\", \"role\": \"fines_employee\", \"is_active\": true}"
+            }
+          }
+        },
+        {
+          "name": "Toggle active",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/toggle-active"
+          }
+        },
+        {
+          "name": "Reset employee password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"password\": \"password123\", \"password_confirmation\": \"password123\"}"
+            }
+          }
+        },
+        {
+          "name": "Assign role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/assign-role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\": \"fines_employee\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Roles & Permissions",
+      "item": [
+        {
+          "name": "Get roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/roles"
+          }
+        },
+        {
+          "name": "Get role by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/roles/{{role_id}}"
+          }
+        },
+        {
+          "name": "Get permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/permissions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Profile Reviewer Flow",
+      "item": [
+        {
+          "name": "Login profile reviewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{profile_reviewer_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List profile reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/profile-reviews"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Document Reviewer Flow",
+      "item": [
+        {
+          "name": "Pending documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/documents/pending-review"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Fines Employee Flow",
+      "item": [
+        {
+          "name": "Login fines employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{fines_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List fines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/fines"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Audit Employee Flow",
+      "item": [
+        {
+          "name": "Login audit employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{audit_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/audit-logs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Reports Employee Flow",
+      "item": [
+        {
+          "name": "Login reports employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{reports_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reports overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/reports/overview"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - License Employee Flow",
+      "item": [
+        {
+          "name": "Login license employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{license_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 - Payment Employee Flow",
+      "item": [
+        {
+          "name": "Login payment employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{payment_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 - Negative Permission Tests",
+      "item": [
+        {
+          "name": "Citizen cannot login dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"citizen@example.com\", \"password\": \"password\"}"
+            }
+          }
+        },
+        {
+          "name": "Login fines employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{fines_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fines employee cannot access audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/audit-logs"
+          }
+        },
+        {
+          "name": "Login audit employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{audit_employee_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Audit employee cannot manage fines",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/admin/fines",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"citizen_id\": 1, \"amount\": 100, \"reason\": \"test\"}"
+            }
+          }
+        },
+        {
+          "name": "Login profile reviewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{profile_reviewer_email}}\", \"password\": \"{{employee_password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('employee_token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Profile reviewer cannot manage employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees"
+          }
+        }
+      ]
+    }
+  ]
+}

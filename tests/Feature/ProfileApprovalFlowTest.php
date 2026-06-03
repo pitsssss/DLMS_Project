@@ -55,12 +55,7 @@ class ProfileApprovalFlowTest extends TestCase
 
     private function reviewer(): User
     {
-        return User::factory()->create([
-            'role_id' => Role::query()->where('name', 'employee')->value('id'),
-            'email_verified_at' => now(),
-            'profile_completed' => true,
-            'profile_status' => ProfileStatus::Approved,
-        ]);
+        return User::factory()->dashboardEmployee('employee')->create();
     }
 
     private function profilePayload(): array
@@ -245,11 +240,8 @@ class ProfileApprovalFlowTest extends TestCase
         $permission = Permission::query()->where('name', 'review_documents')->firstOrFail();
         $role->permissions()->sync([$permission->id]);
 
-        $employee = User::factory()->create([
+        $employee = User::factory()->dashboardEmployee()->create([
             'role_id' => $role->id,
-            'email_verified_at' => now(),
-            'profile_completed' => true,
-            'profile_status' => ProfileStatus::Approved,
         ]);
 
         Sanctum::actingAs($employee);
@@ -260,12 +252,7 @@ class ProfileApprovalFlowTest extends TestCase
 
     public function test_non_citizen_profile_cannot_be_reviewed(): void
     {
-        $admin = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'admin')->value('id'),
-            'email_verified_at' => now(),
-            'profile_completed' => true,
-            'profile_status' => ProfileStatus::Approved,
-        ]);
+        $admin = User::factory()->dashboardAdmin('admin')->create();
 
         $reviewer = $this->reviewer();
         Sanctum::actingAs($reviewer);

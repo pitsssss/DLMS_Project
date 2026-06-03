@@ -204,10 +204,7 @@ class AIAgentFlowTest extends TestCase
 
     public function test_employee_cannot_use_citizen_ai_endpoint(): void
     {
-        $employee = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'employee')->value('id'),
-            'email_verified_at' => now(),
-        ]);
+        $employee = User::factory()->dashboardEmployee('employee')->create();
 
         Sanctum::actingAs($employee);
 

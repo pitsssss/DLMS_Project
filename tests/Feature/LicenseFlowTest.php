@@ -60,9 +60,7 @@ class LicenseFlowTest extends TestCase
 
     private function employeeUser(): User
     {
-        return User::factory()->create([
-            'role_id' => Role::query()->where('name', 'employee')->value('id'),
-        ]);
+        return User::factory()->dashboardEmployee('employee')->create();
     }
 
     /**
@@ -220,9 +218,7 @@ class LicenseFlowTest extends TestCase
     {
         [$citizen] = $this->approvedApplicationReadyForIssuance();
 
-        $admin = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'admin')->value('id'),
-        ]);
+        $admin = User::factory()->dashboardAdmin('admin')->create();
         Sanctum::actingAs($admin);
 
         $fineId = (int) $this->postJson('/api/admin/fines', [

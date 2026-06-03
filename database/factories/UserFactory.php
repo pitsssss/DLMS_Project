@@ -81,4 +81,30 @@ class UserFactory extends Factory
             'profile_reviewed_at' => now()->subHours(12),
         ]);
     }
+
+    public function dashboardAdmin(string $roleName = 'super_admin'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type' => UserType::Admin,
+            'role_id' => Role::query()->where('name', $roleName)->value('id')
+                ?? Role::query()->where('name', 'admin')->value('id'),
+            'profile_completed' => true,
+            'profile_status' => ProfileStatus::Approved,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    public function dashboardEmployee(string $roleName = 'employee'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type' => UserType::Employee,
+            'role_id' => Role::query()->where('name', $roleName)->value('id')
+                ?? Role::query()->where('name', 'employee')->value('id'),
+            'profile_completed' => true,
+            'profile_status' => ProfileStatus::Approved,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+    }
 }

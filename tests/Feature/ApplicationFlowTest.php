@@ -54,7 +54,7 @@ class ApplicationFlowTest extends TestCase
     {
         [$licenseType, $serviceType] = $this->makeLicenseAndService();
         $employeeRole = Role::query()->where('name', 'employee')->firstOrFail();
-        $employee = User::factory()->create(['role_id' => $employeeRole->id]);
+        $employee = User::factory()->dashboardEmployee('employee')->create();
 
         Sanctum::actingAs($employee);
 

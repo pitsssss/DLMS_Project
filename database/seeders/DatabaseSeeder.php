@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             RequiredDocumentsSeeder::class,
             FeesSeeder::class,
             AppointmentSlotsSeeder::class,
+            SuperAdminUserSeeder::class,
+            DashboardEmployeesSeeder::class,
             AdminUserSeeder::class,
             EmployeeUserSeeder::class,
             CitizenUserSeeder::class,

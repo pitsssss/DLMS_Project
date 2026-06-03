@@ -165,10 +165,7 @@ class AIAgentActionExecutionTest extends TestCase
         $citizen = $this->citizen();
         $action = $this->awaitingAction($citizen);
 
-        $employee = User::factory()->create([
-            'role_id' => Role::query()->where('name', 'employee')->value('id'),
-            'email_verified_at' => now(),
-        ]);
+        $employee = User::factory()->dashboardEmployee('employee')->create();
 
         Sanctum::actingAs($employee);
 

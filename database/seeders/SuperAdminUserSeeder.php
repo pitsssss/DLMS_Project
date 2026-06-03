@@ -9,21 +9,20 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class EmployeeUserSeeder extends Seeder
+class SuperAdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $role = Role::where('name', 'profile_document_reviewer')->first()
-            ?? Role::where('name', 'employee')->firstOrFail();
+        $role = Role::query()->where('name', 'super_admin')->firstOrFail();
 
-        User::firstOrCreate(
-            ['phone' => '0988888888'],
+        User::updateOrCreate(
+            ['email' => 'superadmin@syrtak.gov.sy'],
             [
-                'name' => 'موظف تجريبي',
-                'email' => 'employee@example.com',
-                'password' => Hash::make('password'),
+                'name' => 'مدير النظام العام',
+                'phone' => '0999999998',
+                'password' => Hash::make('password123'),
                 'role_id' => $role->id,
-                'user_type' => UserType::Employee,
+                'user_type' => UserType::Admin,
                 'profile_completed' => true,
                 'profile_status' => ProfileStatus::Approved,
                 'is_active' => true,
