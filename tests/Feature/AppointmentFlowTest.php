@@ -46,8 +46,7 @@ class AppointmentFlowTest extends TestCase
 
     private function citizenInAppointmentPending(): array
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 

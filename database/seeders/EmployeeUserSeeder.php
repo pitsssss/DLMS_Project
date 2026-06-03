@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ProfileStatus;
 use App\Enums\UserType;
 use App\Models\Role;
 use App\Models\User;
@@ -23,6 +24,7 @@ class EmployeeUserSeeder extends Seeder
                 'role_id' => $role->id,
                 'user_type' => UserType::Employee,
                 'profile_completed' => true,
+                'profile_status' => ProfileStatus::Approved,
                 'is_active' => true,
                 'email_verified_at' => now(),
                 'phone_verified_at' => now(),

@@ -62,8 +62,7 @@ class PaymentStripeTest extends TestCase
 
     private function stripeCitizenApplication(): array
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 
@@ -383,8 +382,7 @@ class PaymentStripeTest extends TestCase
         Sanctum::actingAs($citizenA);
         $paymentId = (int) $this->postJson("/api/applications/{$applicationA->id}/payments", [])->json('data.payment.id');
 
-        $citizenB = User::factory()->create([
-            'profile_completed' => true,
+        $citizenB = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
         Sanctum::actingAs($citizenB);

@@ -20,6 +20,12 @@ class UserResource extends JsonResource
             'governorate' => $this->governorate,
             'address' => $this->address,
             'profile_completed' => (bool) $this->profile_completed,
+            'profile_status' => $this->profile_status instanceof \App\Enums\ProfileStatus
+                ? $this->profile_status->value
+                : (string) ($this->profile_status ?? 'incomplete'),
+            'profile_rejection_reason' => $this->profile_rejection_reason,
+            'profile_submitted_at' => $this->profile_submitted_at?->toIso8601String(),
+            'profile_reviewed_at' => $this->profile_reviewed_at?->toIso8601String(),
             'is_active' => (bool) $this->is_active,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'phone_verified_at' => $this->phone_verified_at?->toIso8601String(),

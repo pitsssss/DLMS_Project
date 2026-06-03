@@ -44,8 +44,7 @@ class NotificationAuditReportTest extends TestCase
 
     public function test_citizen_can_list_and_mark_notifications_read(): void
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 
@@ -69,8 +68,7 @@ class NotificationAuditReportTest extends TestCase
 
     public function test_document_approval_creates_audit_log_and_notification(): void
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 
@@ -148,8 +146,7 @@ class NotificationAuditReportTest extends TestCase
 
     public function test_admin_can_view_application_status_history(): void
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 

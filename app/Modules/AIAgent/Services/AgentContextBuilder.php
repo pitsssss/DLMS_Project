@@ -36,6 +36,8 @@ class AgentContextBuilder
             'missing_slots' => $state['missing_slots'],
             'collected_slots' => $state['collected_slots'],
             'service_type_code' => $state['service_type_code'],
+            'profile_completed' => (bool) $citizen->profile_completed,
+            'profile_status' => $citizen->profileStatus()->value,
             'citizen_active_applications' => json_decode($activeApplicationsJson, true),
         ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
@@ -52,7 +54,8 @@ Rules:
 - Phase 9A: NEVER execute actions. Only propose actions for later confirmation.
 - Allowed proposed action names: {$allowedActions}.
 - For new license applications use intent "create_new_license_application" and collect license_type (private, public, truck, bus).
-- When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
+- Do NOT propose create_application unless profile_completed is true and profile_status is approved.
+- When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if profile_status is approved AND citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
 - If a duplicate active application exists, do NOT propose create_application. Explain in Arabic that an active application already exists and propose get_application_status with the existing application_id.
 - If previous_intent is create_new_license_application and missing_slots includes license_type, treat short answers like "رخصة خاصة", "خاصة", "private", "عامة", "شاحنة", "حافلة" as the license_type answer. Keep the same intent; do not switch to general_help.
 - If collected_slots already contains license_type_code, clear missing_slots and propose create_application with requires_confirmation true unless a duplicate active application exists.

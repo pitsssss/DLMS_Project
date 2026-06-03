@@ -99,6 +99,7 @@ class AIAgentService
             }
 
             $payload = $this->slotFiller->apply($user, $session, $payload, $userMessage, $state);
+            $payload = $this->postProcessor->enforceProfileApprovalRules($user, $payload);
             $payload = $this->postProcessor->enforceDuplicateApplicationRules($user, $payload);
             $payload = $this->postProcessor->applyConfirmationReply($payload);
             $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);

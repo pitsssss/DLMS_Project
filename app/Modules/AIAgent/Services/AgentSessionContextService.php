@@ -12,6 +12,7 @@ class AgentSessionContextService
 {
     public function __construct(
         private readonly AgentDuplicateApplicationGuard $duplicateGuard,
+        private readonly AgentProfileApprovalGuard $profileGuard,
     ) {}
 
     /**
@@ -173,6 +174,7 @@ class AgentSessionContextService
         $payload['requires_human_support'] = false;
         $payload['safety_status'] = 'safe';
 
+        $payload = $this->profileGuard->blockCreateApplicationIfProfileNotApproved($citizen, $payload);
         $payload = $this->duplicateGuard->blockCreateApplicationIfDuplicate(
             $citizen,
             $payload,

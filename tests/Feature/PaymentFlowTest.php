@@ -38,8 +38,7 @@ class PaymentFlowTest extends TestCase
 
     private function citizenInPaymentPending(): array
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 
@@ -116,8 +115,7 @@ class PaymentFlowTest extends TestCase
 
     public function test_cannot_create_payment_when_not_payment_pending(): void
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 

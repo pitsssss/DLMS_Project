@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'citizen' => \App\Http\Middleware\EnsureCitizen::class,
+            'profile.approved' => \App\Http\Middleware\EnsureProfileApproved::class,
             'permission' => \App\Http\Middleware\EnsurePermission::class,
             'dev.dashboard' => \App\Http\Middleware\EnsureDevDashboardAllowed::class,
         ]);

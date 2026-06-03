@@ -33,7 +33,13 @@
                     <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="complete_citizen_profile">
-                        <button type="submit" class="btn btn-sm btn-outline-syrtak w-100">Complete Citizen Profile</button>
+                        <button type="submit" class="btn btn-sm btn-outline-syrtak w-100">Complete / Submit Profile for Review</button>
+                    </form>
+
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
+                        @csrf
+                        <input type="hidden" name="action" value="citizen_profile_status">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary w-100 font-en">GET /profile/status</button>
                     </form>
 
                     <form method="POST" action="{{ $devRoutes['action'] }}">
@@ -57,10 +63,27 @@
                         <input type="password" name="employee_password" class="form-control form-control-sm mb-2" value="{{ $defaults['employee_password'] }}">
                         <button type="submit" class="btn btn-sm btn-syrtak w-100 mb-3">Login Employee</button>
                     </form>
-                    <form method="POST" action="{{ $devRoutes['action'] }}">
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-3">
                         @csrf
                         <input type="hidden" name="action" value="employee_me">
                         <button type="submit" class="btn btn-sm btn-secondary w-100 font-en">GET /auth/me</button>
+                    </form>
+
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-2">
+                        @csrf
+                        <input type="hidden" name="action" value="list_pending_profile_reviews">
+                        <button type="submit" class="btn btn-sm btn-outline-syrtak w-100 font-en">GET /admin/profile-reviews</button>
+                    </form>
+                    <form method="POST" action="{{ $devRoutes['action'] }}" class="mb-2">
+                        @csrf
+                        <input type="hidden" name="action" value="approve_citizen_profile">
+                        <button type="submit" class="btn btn-sm btn-syrtak w-100">Approve Current Citizen Profile</button>
+                    </form>
+                    <form method="POST" action="{{ $devRoutes['action'] }}">
+                        @csrf
+                        <input type="hidden" name="action" value="reject_citizen_profile">
+                        <input type="text" name="profile_rejection_reason" class="form-control form-control-sm mb-2" placeholder="سبب الرفض">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Reject Current Citizen Profile</button>
                     </form>
                     <p class="small text-muted mt-2 mb-0 font-en">Seeded: 0988888888 or employee@example.com / password</p>
                 </div>

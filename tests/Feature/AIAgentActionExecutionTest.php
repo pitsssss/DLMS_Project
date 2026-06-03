@@ -48,8 +48,7 @@ class AIAgentActionExecutionTest extends TestCase
 
     private function citizen(): User
     {
-        return User::factory()->create([
-            'profile_completed' => true,
+        return User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
     }
@@ -233,7 +232,7 @@ class AIAgentActionExecutionTest extends TestCase
 
         $action = $this->awaitingAction($citizen);
 
-        $message = __('messages.applications.complete_profile_first');
+        $message = __('messages.profile.must_complete');
 
         $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")
             ->assertStatus(403)

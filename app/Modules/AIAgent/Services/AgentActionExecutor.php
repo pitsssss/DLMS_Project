@@ -11,6 +11,7 @@ use App\Modules\AIAgent\Support\AgentSafetyRules;
 use App\Modules\Applications\Resources\ApplicationResource;
 use App\Modules\Applications\Services\ApplicationDocumentService;
 use App\Modules\Applications\Services\ApplicationService;
+use App\Modules\Auth\Services\ProfileService;
 use App\Modules\Fines\Resources\FineResource;
 use App\Modules\Fines\Services\FineService;
 use App\Modules\Licenses\Resources\LicenseResource;
@@ -23,6 +24,7 @@ class AgentActionExecutor
         private readonly ApplicationDocumentService $documents,
         private readonly FineService $fines,
         private readonly LicenseService $licenses,
+        private readonly ProfileService $profiles,
     ) {}
 
     /**
@@ -36,6 +38,10 @@ class AgentActionExecutor
 
         if (! AgentSafetyRules::isPhase9bExecutable($action->action_name)) {
             throw new ApiException('This action cannot be executed yet. Please use the standard API endpoints.', 422);
+        }
+
+        if ($this->requiresApprovedProfile($action->action_name)) {
+            $this->profiles->assertCanUseCitizenServices($user);
         }
 
         $arguments = is_array($action->arguments) ? $action->arguments : [];
@@ -185,5 +191,10 @@ class AgentActionExecutor
         }
 
         return $serviceType;
+    }
+
+    private function requiresApprovedProfile(string $actionName): bool
+    {
+        return $actionName === 'create_application';
     }
 }

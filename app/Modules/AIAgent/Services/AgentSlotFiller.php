@@ -13,6 +13,7 @@ class AgentSlotFiller
     public function __construct(
         private readonly AgentSessionContextService $sessionContext,
         private readonly AgentDuplicateApplicationGuard $duplicateGuard,
+        private readonly AgentProfileApprovalGuard $profileGuard,
     ) {}
 
     /**
@@ -47,6 +48,7 @@ class AgentSlotFiller
                 ];
                 $payload['requires_confirmation'] = true;
 
+                $payload = $this->profileGuard->blockCreateApplicationIfProfileNotApproved($citizen, $payload);
                 $payload = $this->duplicateGuard->blockCreateApplicationIfDuplicate(
                     $citizen,
                     $payload,

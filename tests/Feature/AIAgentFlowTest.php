@@ -46,8 +46,7 @@ class AIAgentFlowTest extends TestCase
 
     private function citizen(): User
     {
-        return User::factory()->create([
-            'profile_completed' => true,
+        return User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
     }

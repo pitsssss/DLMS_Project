@@ -11,6 +11,7 @@ class PermissionsSeeder extends Seeder
     public function run(): void
     {
         $names = [
+            'review_profiles',
             'review_documents',
             'record_test_result',
             'issue_license',
@@ -34,6 +35,7 @@ class PermissionsSeeder extends Seeder
 
         $employee = Role::where('name', 'employee')->firstOrFail();
         $employeePermissionNames = [
+            'review_profiles',
             'review_documents',
             'record_test_result',
             'issue_license',

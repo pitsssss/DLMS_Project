@@ -45,8 +45,7 @@ class ApplicationFlowTest extends TestCase
 
     private function readyCitizen(): User
     {
-        return User::factory()->create([
-            'profile_completed' => true,
+        return User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
     }
@@ -82,7 +81,8 @@ class ApplicationFlowTest extends TestCase
             'service_type_id' => $serviceType->id,
         ])
             ->assertStatus(403)
-            ->assertJsonPath('success', false);
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', __('messages.profile.must_complete'));
     }
 
     public function test_citizen_cannot_create_duplicate_active_draft_application(): void

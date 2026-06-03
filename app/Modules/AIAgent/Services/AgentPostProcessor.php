@@ -10,6 +10,7 @@ class AgentPostProcessor
 {
     public function __construct(
         private readonly AgentDuplicateApplicationGuard $duplicateGuard,
+        private readonly AgentProfileApprovalGuard $profileGuard,
     ) {}
 
     /**
@@ -150,6 +151,11 @@ class AgentPostProcessor
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
+    public function enforceProfileApprovalRules(User $citizen, array $payload): array
+    {
+        return $this->profileGuard->blockCreateApplicationIfProfileNotApproved($citizen, $payload);
+    }
+
     public function enforceDuplicateApplicationRules(User $citizen, array $payload): array
     {
         $proposed = $payload['proposed_action'] ?? null;

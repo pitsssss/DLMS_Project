@@ -80,6 +80,10 @@ class DlmsTestingDashboardController extends Controller
             'verify_citizen_otp' => $this->verifyCitizenOtp($request),
             'login_citizen' => $this->loginCitizen($request),
             'complete_citizen_profile' => $this->completeCitizenProfile($request),
+            'citizen_profile_status' => $this->citizenProfileStatus(),
+            'list_pending_profile_reviews' => $this->listPendingProfileReviews(),
+            'approve_citizen_profile' => $this->approveCitizenProfile(),
+            'reject_citizen_profile' => $this->rejectCitizenProfile($request),
             'citizen_me' => $this->citizenMe(),
             'login_employee' => $this->loginEmployee($request),
             'employee_me' => $this->employeeMe(),
@@ -163,6 +167,15 @@ class DlmsTestingDashboardController extends Controller
                 ['verify_citizen_otp', fn () => $this->verifyCitizenOtp($request)],
                 ['login_citizen', fn () => $this->loginCitizen($request)],
                 ['complete_citizen_profile', fn () => $this->completeCitizenProfile($request)],
+            ],
+            'prepare_approved_citizen' => [
+                ['register_citizen', fn () => $this->registerCitizen($request)],
+                ['verify_citizen_otp', fn () => $this->verifyCitizenOtp($request)],
+                ['login_citizen', fn () => $this->loginCitizen($request)],
+                ['complete_citizen_profile', fn () => $this->completeCitizenProfile($request)],
+                ['login_employee', fn () => $this->loginEmployee($request)],
+                ['approve_citizen_profile', fn () => $this->approveCitizenProfile()],
+                ['login_citizen', fn () => $this->loginCitizen($request)],
             ],
             'prepare_new_application' => [
                 ['license_types', fn () => $this->licenseTypes()],
@@ -319,7 +332,56 @@ class DlmsTestingDashboardController extends Controller
             'address' => $request->input('address', 'Test Address'),
         ], 'citizen');
 
+        $data = $this->jsonData($result);
+        if (is_array($data) && ! empty($data['profile_status'])) {
+            Session::put('citizen_profile_status', $data['profile_status']);
+        }
+
         return $result;
+    }
+
+    private function citizenProfileStatus(): array
+    {
+        return $this->apiGet('/profile/status', 'citizen');
+    }
+
+    private function listPendingProfileReviews(): array
+    {
+        return $this->apiGet('/admin/profile-reviews?status=pending_review', 'employee');
+    }
+
+    private function approveCitizenProfile(): array
+    {
+        $citizenId = session('citizen_user_id');
+        if (! $citizenId) {
+            return $this->recordResult('approve_citizen_profile', 'POST', '/admin/profile-reviews/{user}/approve', 400, [
+                'success' => false,
+                'message' => 'citizen_user_id is required. Login or complete citizen profile first.',
+            ], false);
+        }
+
+        $result = $this->apiPost("/admin/profile-reviews/{$citizenId}/approve", [], 'employee');
+        $data = $this->jsonData($result);
+        if (is_array($data) && ($data['profile_status'] ?? null) === 'approved') {
+            Session::put('citizen_profile_status', 'approved');
+        }
+
+        return $result;
+    }
+
+    private function rejectCitizenProfile(Request $request): array
+    {
+        $citizenId = session('citizen_user_id');
+        if (! $citizenId) {
+            return $this->recordResult('reject_citizen_profile', 'POST', '/admin/profile-reviews/{user}/reject', 400, [
+                'success' => false,
+                'message' => 'citizen_user_id is required. Login or complete citizen profile first.',
+            ], false);
+        }
+
+        return $this->apiPost("/admin/profile-reviews/{$citizenId}/reject", [
+            'rejection_reason' => $request->input('profile_rejection_reason', 'بيانات غير مكتملة للاختبار'),
+        ], 'employee');
     }
 
     private function citizenMe(): array

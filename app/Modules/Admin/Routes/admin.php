@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Admin\Controllers\ApplicationLicenseController;
+use App\Modules\Admin\Controllers\ProfileReviewController;
 use App\Modules\Admin\Controllers\ApplicationStatusHistoryController;
 use App\Modules\Admin\Controllers\AuditLogController;
 use App\Modules\Admin\Controllers\DocumentReviewController;
@@ -9,6 +10,20 @@ use App\Modules\Admin\Controllers\LicenseManagementController;
 use App\Modules\Admin\Controllers\TestAppointmentResultController;
 use App\Modules\Reports\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('admin')
+    ->middleware(['auth:sanctum', 'permission:review_profiles'])
+    ->group(function (): void {
+        Route::get('/profile-reviews', [ProfileReviewController::class, 'index']);
+        Route::get('/profile-reviews/{user}', [ProfileReviewController::class, 'show'])
+            ->whereNumber('user');
+        Route::post('/profile-reviews/{user}/approve', [ProfileReviewController::class, 'approve'])
+            ->whereNumber('user')
+            ->middleware('throttle:60,1');
+        Route::post('/profile-reviews/{user}/reject', [ProfileReviewController::class, 'reject'])
+            ->whereNumber('user')
+            ->middleware('throttle:60,1');
+    });
 
 Route::prefix('admin')
     ->middleware(['auth:sanctum', 'permission:review_documents'])

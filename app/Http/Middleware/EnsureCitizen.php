@@ -13,7 +13,11 @@ class EnsureCitizen
         $user = $request->user();
 
         if (! $user || ! $user->isCitizen()) {
-            abort(403, __('messages.middleware.citizen_only'));
+            return response()->json([
+                'success' => false,
+                'message' => __('messages.middleware.citizen_only'),
+                'errors' => (object) [],
+            ], 403);
         }
 
         return $next($request);

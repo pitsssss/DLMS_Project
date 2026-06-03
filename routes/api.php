@@ -52,9 +52,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
 Route::get('/license-types', [LicenseTypeController::class, 'index']);
 Route::get('/service-types', [ServiceTypeController::class, 'index']);
 
+Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
+    Route::get('/profile/status', [ProfileController::class, 'status']);
+});
+
 Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(function (): void {
     Route::get('/', [ApplicationController::class, 'index']);
-    Route::post('/', [ApplicationController::class, 'store']);
     Route::get('/{application}/required-documents', [ApplicationDocumentController::class, 'requiredDocuments'])
         ->whereNumber('application');
     Route::get('/{application}/documents', [ApplicationDocumentController::class, 'index'])
@@ -63,56 +66,62 @@ Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(fu
         ->whereNumber('application');
     Route::get('/{application}/payments', [ApplicationPaymentController::class, 'index'])
         ->whereNumber('application');
-    Route::post('/{application}/payments', [ApplicationPaymentController::class, 'store'])
-        ->whereNumber('application')
-        ->middleware('throttle:15,1');
     Route::get('/{application}/payments/{payment}/status', [ApplicationPaymentController::class, 'status'])
         ->whereNumber('application')
         ->whereNumber('payment');
-    Route::post('/{application}/payments/{payment}/confirm', [ApplicationPaymentController::class, 'confirm'])
-        ->whereNumber('application')
-        ->whereNumber('payment')
-        ->middleware('throttle:15,1');
     Route::get('/{application}/available-tests', [ApplicationAppointmentController::class, 'availableTests'])
         ->whereNumber('application');
     Route::get('/{application}/appointments', [ApplicationAppointmentController::class, 'index'])
         ->whereNumber('application');
-    Route::post('/{application}/appointments', [ApplicationAppointmentController::class, 'store'])
-        ->whereNumber('application')
-        ->middleware('throttle:15,1');
     Route::get('/{application}/test-results', [ApplicationTestResultController::class, 'index'])
         ->whereNumber('application');
-    Route::post('/{application}/documents', [ApplicationDocumentController::class, 'store'])
-        ->whereNumber('application')
-        ->middleware('throttle:30,1');
-    Route::post('/{application}/submit-documents', [ApplicationDocumentController::class, 'submit'])
-        ->whereNumber('application')
-        ->middleware('throttle:10,1');
     Route::get('/{application}', [ApplicationController::class, 'show'])->whereNumber('application');
+
+    Route::middleware('profile.approved')->group(function (): void {
+        Route::post('/', [ApplicationController::class, 'store']);
+        Route::post('/{application}/payments', [ApplicationPaymentController::class, 'store'])
+            ->whereNumber('application')
+            ->middleware('throttle:15,1');
+        Route::post('/{application}/payments/{payment}/confirm', [ApplicationPaymentController::class, 'confirm'])
+            ->whereNumber('application')
+            ->whereNumber('payment')
+            ->middleware('throttle:15,1');
+        Route::post('/{application}/appointments', [ApplicationAppointmentController::class, 'store'])
+            ->whereNumber('application')
+            ->middleware('throttle:15,1');
+        Route::post('/{application}/documents', [ApplicationDocumentController::class, 'store'])
+            ->whereNumber('application')
+            ->middleware('throttle:30,1');
+        Route::post('/{application}/submit-documents', [ApplicationDocumentController::class, 'submit'])
+            ->whereNumber('application')
+            ->middleware('throttle:10,1');
+    });
 });
 
 Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index']);
-    Route::put('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])
-        ->whereNumber('appointment')
-        ->middleware('throttle:15,1');
-    Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
-        ->whereNumber('appointment')
-        ->middleware('throttle:15,1');
 
-        
+    Route::middleware('profile.approved')->group(function (): void {
+        Route::put('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])
+            ->whereNumber('appointment')
+            ->middleware('throttle:15,1');
+        Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
+            ->whereNumber('appointment')
+            ->middleware('throttle:15,1');
+
+        Route::post('/licenses/{license}/renew', [LicenseController::class, 'renew'])
+            ->whereNumber('license')
+            ->middleware('throttle:10,1');
+        Route::post('/licenses/{license}/replacement', [LicenseController::class, 'replacement'])
+            ->whereNumber('license')
+            ->middleware('throttle:10,1');
+        Route::post('/licenses/{license}/unblock-request', [LicenseController::class, 'unblockRequest'])
+            ->whereNumber('license')
+            ->middleware('throttle:10,1');
+    });
 
     Route::get('/licenses', [LicenseController::class, 'index']);
     Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
-    Route::post('/licenses/{license}/renew', [LicenseController::class, 'renew'])
-        ->whereNumber('license')
-        ->middleware('throttle:10,1');
-    Route::post('/licenses/{license}/replacement', [LicenseController::class, 'replacement'])
-        ->whereNumber('license')
-        ->middleware('throttle:10,1');
-    Route::post('/licenses/{license}/unblock-request', [LicenseController::class, 'unblockRequest'])
-        ->whereNumber('license')
-        ->middleware('throttle:10,1');
 
     Route::get('/fines', [FineController::class, 'index']);
 

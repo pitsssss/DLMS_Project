@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ProfileStatus;
 use App\Enums\UserType;
 use App\Models\Role;
 use App\Models\User;
@@ -22,7 +23,10 @@ class CitizenUserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role_id' => $role->id,
                 'user_type' => UserType::Citizen,
-                'profile_completed' => false,
+                'profile_completed' => true,
+                'profile_status' => ProfileStatus::Approved,
+                'profile_submitted_at' => now(),
+                'profile_reviewed_at' => now(),
                 'is_active' => true,
                 'email_verified_at' => now(),
                 'phone_verified_at' => now(),

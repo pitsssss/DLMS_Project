@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProfileStatus;
 use App\Enums\UserType;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,11 @@ class User extends Authenticatable
         'governorate',
         'address',
         'profile_completed',
+        'profile_status',
+        'profile_rejection_reason',
+        'profile_reviewed_by',
+        'profile_reviewed_at',
+        'profile_submitted_at',
         'is_active',
         'phone_verified_at',
         'email_verified_at',
@@ -44,6 +50,9 @@ class User extends Authenticatable
             'user_type' => UserType::class,
             'birth_date' => 'date',
             'profile_completed' => 'boolean',
+            'profile_status' => ProfileStatus::class,
+            'profile_reviewed_at' => 'datetime',
+            'profile_submitted_at' => 'datetime',
             'is_active' => 'boolean',
             'phone_verified_at' => 'datetime',
             'email_verified_at' => 'datetime',
@@ -110,5 +119,42 @@ class User extends Authenticatable
         $this->loadMissing('role.permissions');
 
         return $this->role?->permissions->contains('name', $permission) ?? false;
+    }
+
+    public function hasCompletedProfile(): bool
+    {
+        return (bool) $this->profile_completed;
+    }
+
+    public function isProfilePendingReview(): bool
+    {
+        return $this->profileStatus() === ProfileStatus::PendingReview;
+    }
+
+    public function isProfileApproved(): bool
+    {
+        return $this->profileStatus() === ProfileStatus::Approved;
+    }
+
+    public function isProfileRejected(): bool
+    {
+        return $this->profileStatus() === ProfileStatus::Rejected;
+    }
+
+    public function canUseCitizenServices(): bool
+    {
+        return $this->isCitizen()
+            && $this->hasCompletedProfile()
+            && $this->isProfileApproved()
+            && $this->is_active;
+    }
+
+    public function profileStatus(): ProfileStatus
+    {
+        if ($this->profile_status instanceof ProfileStatus) {
+            return $this->profile_status;
+        }
+
+        return ProfileStatus::tryFrom((string) $this->profile_status) ?? ProfileStatus::Incomplete;
     }
 }

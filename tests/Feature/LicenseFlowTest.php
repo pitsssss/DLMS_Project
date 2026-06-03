@@ -70,8 +70,7 @@ class LicenseFlowTest extends TestCase
      */
     private function approvedApplicationReadyForIssuance(): array
     {
-        $citizen = User::factory()->create([
-            'profile_completed' => true,
+        $citizen = User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 

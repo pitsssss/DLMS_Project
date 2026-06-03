@@ -8,12 +8,14 @@ use App\Models\LicenseType;
 use App\Models\ServiceType;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Auth\Services\ProfileService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ApplicationService
 {
     public function __construct(
-        private readonly ApplicationRepository $applications
+        private readonly ApplicationRepository $applications,
+        private readonly ProfileService $profiles,
     ) {}
 
     public function createDraft(User $citizen, int $licenseTypeId, int $serviceTypeId): LicenseApplication
@@ -101,8 +103,10 @@ class ApplicationService
         }
 
         if (! $citizen->profile_completed) {
-            throw new ApiException('messages.applications.complete_profile_first', 403);
+            throw new ApiException('messages.profile.must_complete', 403);
         }
+
+        $this->profiles->assertCanUseCitizenServices($citizen);
     }
 
     private function assertNoDuplicateActiveApplication(

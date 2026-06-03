@@ -48,8 +48,7 @@ class ArabicLocalizationTest extends TestCase
 
     public function test_ai_agent_cancel_reply_is_arabic(): void
     {
-        $citizen = \App\Models\User::factory()->create([
-            'profile_completed' => true,
+        $citizen = \App\Models\User::factory()->withApprovedProfile()->create([
             'email_verified_at' => now(),
         ]);
 

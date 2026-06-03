@@ -16,7 +16,8 @@ class AuthService
     public function __construct(
         protected AuthRepository $users,
         protected OtpService $otps,
-        protected PasswordResetTokenRepository $passwordResetTokens
+        protected PasswordResetTokenRepository $passwordResetTokens,
+        protected ProfileService $profiles,
     ) {}
 
     public function register(array $data): array
@@ -160,23 +161,15 @@ class AuthService
 
     public function completeProfile(User $user, array $data): User
     {
-        if (! $user->isCitizen()) {
-            throw new ApiException('messages.auth.citizen_profile_only', 403);
-        }
-
-        $data['profile_completed'] = true;
-
-        return $this->users->updateUser($user, $data);
+        return $this->profiles->completeProfile($user, $data);
     }
 
-    public function updateProfile(User $user, array $data): User
+    /**
+     * @return array{user: User, submitted_for_review: bool}
+     */
+    public function updateProfile(User $user, array $data): array
     {
-        $payload = array_filter(
-            $data,
-            static fn ($v) => $v !== null && $v !== ''
-        );
-
-        return $this->users->updateUser($user, $payload);
+        return $this->profiles->updateProfile($user, $data);
     }
 
     public function changePassword(User $user, array $data): void
