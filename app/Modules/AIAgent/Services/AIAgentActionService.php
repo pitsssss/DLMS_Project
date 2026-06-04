@@ -76,6 +76,59 @@ class AIAgentActionService
     }
 
     /**
+     * Execute a read-only action that was created without requiring confirmation.
+     *
+     * @return array<string, mixed>
+     */
+    public function executeReadOnlyNow(User $user, int $actionId): array
+    {
+        $action = $this->resolveOwnedAction($user, $actionId);
+
+        if ($action->requires_confirmation) {
+            throw new ApiException('This action requires confirmation before execution.', 422);
+        }
+
+        if (! AgentSafetyRules::isReadOnlyAction($action->action_name)) {
+            throw new ApiException('This action cannot be executed without confirmation.', 422);
+        }
+
+        if ($action->status === AgentActionStatus::Executed) {
+            throw new ApiException('This action has already been executed.', 422);
+        }
+
+        try {
+            $result = $this->executor->execute($user, $action);
+
+            $action->status = AgentActionStatus::Executed;
+            $action->executed_at = now();
+            $action->result = $result;
+            $action->error_message = null;
+            $action->save();
+
+            $reply = $this->replyBuilder->success($action, $result);
+            $message = $this->storeAssistantMessage($action, $reply, [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => 'executed',
+            ]);
+
+            $this->recordActionEvaluation($action, $message, true);
+
+            return $this->formatConfirmResponse($action, $result, $reply);
+        } catch (ApiException $e) {
+            $this->markFailed($action, $e->getMessage());
+            $this->storeAssistantMessage($action, $this->replyBuilder->failure($e->getMessage()), [
+                'action_id' => $action->id,
+                'action_name' => $action->action_name,
+                'outcome' => 'failed',
+            ]);
+            $this->recordActionEvaluation($action, null, false, $e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function cancel(User $user, int $actionId): array

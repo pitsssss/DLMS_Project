@@ -3,10 +3,17 @@
 namespace App\Modules\AIAgent\Services;
 
 use App\Modules\AIAgent\Models\AIAgentAction;
+use App\Modules\AIAgent\Support\AgentTranslator;
+use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
+use App\Enums\ApplicationStatus;
 
 class AgentActionReplyBuilder
 {
+    public function __construct(
+        private readonly AgentRequiredDocumentsHandler $requiredDocumentsHandler,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $result
      */
@@ -15,7 +22,8 @@ class AgentActionReplyBuilder
         return match ($action->action_name) {
             'create_application' => $this->createApplicationSuccessReply($action, $result),
             'get_application_status' => $this->applicationStatusReply($result),
-            'get_required_documents' => 'تم جلب قائمة الوثائق المطلوبة للطلب.',
+            'get_application_next_step' => (string) ($result['next_step_message'] ?? $this->applicationStatusReply($result)),
+            'get_required_documents' => $this->requiredDocumentsHandler->replyFromActionResult($result),
             'get_fines' => 'تم جلب مخالفاتك.',
             'get_licenses' => 'تم جلب رخص القيادة الخاصة بك.',
             default => 'تم تنفيذ العملية بنجاح.',
@@ -51,8 +59,22 @@ class AgentActionReplyBuilder
     private function applicationStatusReply(array $result): string
     {
         $number = (string) ($result['application_number'] ?? '');
-        $status = (string) ($result['status'] ?? '');
+        $statusLabel = (string) ($result['status_label_ar'] ?? '');
+        if ($statusLabel === '') {
+            $statusLabel = ApplicationStatusLabelMapper::labelAr(
+                ApplicationStatus::tryFrom((string) ($result['status'] ?? ''))
+            );
+        }
 
-        return "حالة الطلب {$number} هي: {$status}.";
+        $nextStep = (string) ($result['next_step_message'] ?? '');
+        if ($nextStep !== '') {
+            return AgentTranslator::message('ai_agent.application_status.with_next_step', [
+                'number' => $number,
+                'status' => $statusLabel,
+                'next_step' => $nextStep,
+            ]);
+        }
+
+        return "حالة الطلب {$number} هي: {$statusLabel}.";
     }
 }

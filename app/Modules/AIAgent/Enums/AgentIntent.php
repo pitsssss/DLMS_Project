@@ -6,6 +6,7 @@ enum AgentIntent: string
 {
     case CreateNewLicenseApplication = 'create_new_license_application';
     case GetApplicationStatus = 'get_application_status';
+    case GetApplicationNextStep = 'get_application_next_step';
     case GetRequiredDocuments = 'get_required_documents';
     case SubmitDocumentsForReview = 'submit_documents_for_review';
     case StartPayment = 'start_payment';

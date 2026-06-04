@@ -25,6 +25,7 @@ class AgentActionExecutor
         private readonly FineService $fines,
         private readonly LicenseService $licenses,
         private readonly ProfileService $profiles,
+        private readonly AgentApplicationNextStepService $nextStepService,
     ) {}
 
     /**
@@ -49,6 +50,7 @@ class AgentActionExecutor
         return match ($action->action_name) {
             'create_application' => $this->executeCreateApplication($user, $arguments),
             'get_application_status' => $this->executeGetApplicationStatus($user, $arguments),
+            'get_application_next_step' => $this->executeGetApplicationNextStep($user, $arguments),
             'get_required_documents' => $this->executeGetRequiredDocuments($user, $arguments),
             'get_fines' => $this->executeGetFines($user),
             'get_licenses' => $this->executeGetLicenses($user),
@@ -86,8 +88,41 @@ class AgentActionExecutor
     {
         $applicationId = $this->requireApplicationId($arguments);
         $application = $this->applications->getForCitizen($user, $applicationId);
+        $application->loadMissing(['licenseType', 'serviceType']);
 
-        return (new ApplicationResource($application))->resolve();
+        $step = $this->nextStepService->nextStepForApplication($application);
+
+        return array_merge(
+            (new ApplicationResource($application))->resolve(),
+            [
+                'status_label_ar' => $step['status_label_ar'],
+                'next_step_key' => $step['next_step_key'],
+                'next_step_message' => $step['next_step_message'],
+            ]
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetApplicationNextStep(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $application->loadMissing(['licenseType', 'serviceType']);
+
+        $step = $this->nextStepService->nextStepForApplication($application);
+
+        return [
+            'application_id' => $application->id,
+            'application_number' => $application->application_number,
+            'status' => $step['status'],
+            'status_label_ar' => $step['status_label_ar'],
+            'next_step_key' => $step['next_step_key'],
+            'next_step_message' => $step['next_step_message'],
+            'suggested_action' => $step['suggested_action'],
+        ];
     }
 
     /**
@@ -97,10 +132,13 @@ class AgentActionExecutor
     private function executeGetRequiredDocuments(User $user, array $arguments): array
     {
         $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
         $checklist = $this->documents->requiredChecklist($user, $applicationId);
 
         return [
             'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'status' => $application->status->value,
             'required_documents' => $checklist,
         ];
     }

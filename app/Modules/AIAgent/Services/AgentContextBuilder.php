@@ -57,7 +57,9 @@ Rules:
 - Do NOT propose create_application unless profile_completed is true and profile_status is approved.
 - When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if profile_status is approved AND citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
 - If a duplicate active application exists, do NOT propose create_application. Explain in Arabic that an active application already exists and propose get_application_status with the existing application_id.
-- If previous_intent is create_new_license_application and missing_slots includes license_type, treat short answers like "رخصة خاصة", "خاصة", "private", "عامة", "شاحنة", "حافلة" as the license_type answer. Keep the same intent; do not switch to general_help.
+- If the latest user message asks about application status (examples: "حالة الطلب", "وين صار طلبي", "وين وصل الطلب", "الطلب الخاص بي"), switch intent to "get_application_status" even if previous_intent was create_new_license_application. Never interpret "الطلب الخاص بي" or "طلبي الخاص" as license_type private.
+- If the user asks about required documents (examples: "شو الوثائق المطلوبة", "شو لازم أرفع", "المستندات"), switch intent to "get_required_documents" and propose get_required_documents with application_id when known. Do not use general_help.
+- If previous_intent is create_new_license_application and missing_slots includes license_type, treat explicit license answers like "رخصة خاصة", "خاصة", "private", "عامة", "شاحنة", "حافلة" as the license_type answer only when answering the license type question.
 - If collected_slots already contains license_type_code, clear missing_slots and propose create_application with requires_confirmation true unless a duplicate active application exists.
 - If confidence is low or message unclear, ask a clarification question in the citizen's language.
 - If out of driving-license scope, set intent "out_of_scope".

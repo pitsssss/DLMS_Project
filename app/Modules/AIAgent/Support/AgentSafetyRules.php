@@ -10,6 +10,16 @@ class AgentSafetyRules
     public const PHASE_9B_EXECUTABLE_ACTIONS = [
         'create_application',
         'get_application_status',
+        'get_application_next_step',
+        'get_required_documents',
+        'get_fines',
+        'get_licenses',
+    ];
+
+    /** @var list<string> Read-only actions that may run without explicit confirmation. */
+    public const READ_ONLY_ACTIONS = [
+        'get_application_status',
+        'get_application_next_step',
         'get_required_documents',
         'get_fines',
         'get_licenses',
@@ -19,6 +29,7 @@ class AgentSafetyRules
     public const ALLOWED_PROPOSED_ACTIONS = [
         'create_application',
         'get_application_status',
+        'get_application_next_step',
         'get_required_documents',
         'submit_documents_for_review',
         'start_payment',
@@ -87,6 +98,11 @@ class AgentSafetyRules
     public static function isPhase9bExecutable(string $actionName): bool
     {
         return in_array($actionName, self::PHASE_9B_EXECUTABLE_ACTIONS, true);
+    }
+
+    public static function isReadOnlyAction(string $actionName): bool
+    {
+        return in_array($actionName, self::READ_ONLY_ACTIONS, true);
     }
 
     public static function messageLooksAdminRelated(string $message): bool

@@ -444,6 +444,38 @@ class AIAgentActionExecutionTest extends TestCase
         $this->assertEquals(1, LicenseApplication::query()->where('citizen_id', $citizenA->id)->count());
     }
 
+    public function test_get_application_next_step_returns_arabic_message_not_translation_key(): void
+    {
+        app()->setLocale('en');
+
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        $application = LicenseApplication::query()->create([
+            'application_number' => 'APP-NEXT-EXEC',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::Draft,
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $action = $this->awaitingAction($citizen, 'get_application_next_step', [
+            'application_id' => $application->id,
+        ]);
+        $action->requires_confirmation = false;
+        $action->save();
+
+        $response = $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")->assertOk();
+
+        $this->assertStringContainsString('رفع الوثائق', (string) $response->json('data.reply'));
+        $this->assertStringNotContainsString('messages.', (string) $response->json('data.reply'));
+        $this->assertEquals('draft', $response->json('data.result.next_step_key'));
+        $this->assertStringNotContainsString('messages.', (string) $response->json('data.result.next_step_message'));
+    }
+
     public function test_get_application_status_requires_owned_application(): void
     {
         $citizen = $this->citizen();

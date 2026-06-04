@@ -5,13 +5,18 @@ namespace App\Modules\AIAgent\Services;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentIntentDetector
 {
     public function __construct(
         private readonly AgentSessionContextService $sessionContext,
+        private readonly AgentApplicationStatusHandler $applicationStatusHandler,
+        private readonly AgentApplicationNextStepService $applicationNextStepService,
+        private readonly AgentRequiredDocumentsHandler $requiredDocumentsHandler,
     ) {}
 
     /**
@@ -31,6 +36,22 @@ class AgentIntentDetector
 
         if ($this->isOutOfScope($normalized)) {
             return $this->outOfScopeResponse($language);
+        }
+
+        if (AgentMessageIntentMatcher::isApplicationStatusQuery($message)) {
+            return $this->applicationStatusHandler->buildPayload($citizen, $language);
+        }
+
+        if (AgentMessageIntentMatcher::isApplicationNextStepQuery(
+            $message,
+            $session->current_intent,
+            $this->sessionContext->resolveLastDiscussedApplicationId($session)
+        )) {
+            return $this->applicationNextStepService->buildPayload($citizen, $session, $language);
+        }
+
+        if (AgentMessageIntentMatcher::isRequiredDocumentsQuery($message)) {
+            return $this->requiredDocumentsHandler->buildPayload($citizen, $session, $language);
         }
 
         if ($this->sessionContext->isNewLicenseContinuation($state, $state['extracted_license_type'] ?? null)) {
@@ -72,6 +93,45 @@ class AgentIntentDetector
         }
 
         return $this->generalHelpShape($language);
+    }
+
+    /**
+     * Deterministic overrides after Gemini normalization (intent switch, translation keys).
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $state
+     * @return array<string, mixed>
+     */
+    public function applyDeterministicOverrides(
+        User $citizen,
+        AIAgentSession $session,
+        string $userMessage,
+        array $payload,
+        array $state,
+    ): array {
+        $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
+            ? $payload['language']
+            : 'ar';
+
+        if (AgentMessageIntentMatcher::isApplicationStatusQuery($userMessage)) {
+            return $this->applicationStatusHandler->buildPayload($citizen, $language);
+        }
+
+        if (AgentMessageIntentMatcher::isApplicationNextStepQuery(
+            $userMessage,
+            $state['intent'] ?? $session->current_intent,
+            $this->sessionContext->resolveLastDiscussedApplicationId($session)
+        )) {
+            return $this->applicationNextStepService->buildPayload($citizen, $session, $language);
+        }
+
+        if (AgentMessageIntentMatcher::isRequiredDocumentsQuery($userMessage)) {
+            return $this->requiredDocumentsHandler->buildPayload($citizen, $session, $language);
+        }
+
+        $payload = AgentTranslator::localizePayload($payload);
+
+        return $payload;
     }
 
     /**

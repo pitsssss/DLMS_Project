@@ -5,6 +5,7 @@ namespace App\Modules\AIAgent\Services;
 use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Modules\Applications\Services\ApplicationService;
 
@@ -52,7 +53,7 @@ class AgentDuplicateApplicationGuard
             $existing->licenseType?->code ?? $licenseTypeCode
         );
 
-        $payload['intent'] = AgentIntent::CreateNewLicenseApplication->value;
+        $payload['intent'] = AgentIntent::GetApplicationStatus->value;
         $payload['missing_slots'] = [];
         $payload['proposed_action'] = [
             'name' => 'get_application_status',
@@ -61,11 +62,12 @@ class AgentDuplicateApplicationGuard
             ],
         ];
         $payload['requires_confirmation'] = true;
+        $payload['execute_immediately'] = false;
         $payload['confidence'] = max((float) ($payload['confidence'] ?? 0), 0.9);
         $payload['requires_human_support'] = false;
         $payload['safety_status'] = 'safe';
         $payload['reply'] = $language === 'ar'
-            ? __('messages.ai_agent.existing_active_application', ['label' => $label])
+            ? AgentTranslator::message('ai_agent.existing_active_application', ['label' => $label])
             : 'You already have an active '.$licenseTypeCode.' license application. You can continue the existing application instead of creating a new one.';
 
         return $payload;

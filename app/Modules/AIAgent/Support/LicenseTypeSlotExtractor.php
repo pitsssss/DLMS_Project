@@ -32,8 +32,36 @@ class LicenseTypeSlotExtractor
         'bus' => 'bus',
     ];
 
-    public static function extract(string $message): ?string
+    /** @var list<string> */
+    private const EXPLICIT_ANSWER_PHRASES = [
+        'رخصة خاصة',
+        'رخصه خاصه',
+        'رخصة عامة',
+        'رخصه عامه',
+        'رخصة شاحنة',
+        'رخصه شاحنه',
+        'رخصة حافلة',
+        'رخصه حافله',
+        'private',
+        'public',
+        'truck',
+        'bus',
+        'خاصة',
+        'خاصه',
+        'عامة',
+        'عامه',
+        'شاحنة',
+        'حافلة',
+        'حافله',
+        'باص',
+    ];
+
+    public static function extract(string $message, bool $allowed = true): ?string
     {
+        if (! $allowed || AgentMessageIntentMatcher::blocksLicenseTypeExtraction($message)) {
+            return null;
+        }
+
         $normalized = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $message) ?? $message));
 
         if ($normalized === '') {
@@ -50,6 +78,23 @@ class LicenseTypeSlotExtractor
         }
 
         return null;
+    }
+
+    public static function looksLikeExplicitLicenseTypeAnswer(string $message): bool
+    {
+        if (AgentMessageIntentMatcher::blocksLicenseTypeExtraction($message)) {
+            return false;
+        }
+
+        $normalized = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $message) ?? $message));
+
+        foreach (self::EXPLICIT_ANSWER_PHRASES as $phrase) {
+            if ($normalized === $phrase || str_contains($normalized, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function labelAr(string $code): string
