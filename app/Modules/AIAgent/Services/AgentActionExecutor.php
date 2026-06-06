@@ -8,6 +8,7 @@ use App\Models\ServiceType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Applications\Resources\ApplicationResource;
 use App\Modules\Applications\Services\ApplicationDocumentService;
 use App\Modules\Applications\Services\ApplicationService;
@@ -26,6 +27,7 @@ class AgentActionExecutor
         private readonly LicenseService $licenses,
         private readonly ProfileService $profiles,
         private readonly AgentApplicationNextStepService $nextStepService,
+        private readonly ApplicationPaymentService $payments,
     ) {}
 
     /**
@@ -52,6 +54,9 @@ class AgentActionExecutor
             'get_application_status' => $this->executeGetApplicationStatus($user, $arguments),
             'get_application_next_step' => $this->executeGetApplicationNextStep($user, $arguments),
             'get_required_documents' => $this->executeGetRequiredDocuments($user, $arguments),
+            'get_application_fee' => $this->executeGetApplicationFee($user, $arguments),
+            'get_profile_status' => $this->executeGetProfileStatus($user),
+            'start_payment' => $this->executeStartPayment($user, $arguments),
             'get_fines' => $this->executeGetFines($user),
             'get_licenses' => $this->executeGetLicenses($user),
             default => throw new ApiException('Unsupported AI agent action.', 422),
@@ -140,6 +145,57 @@ class AgentActionExecutor
             'application_number' => $application->application_number,
             'status' => $application->status->value,
             'required_documents' => $checklist,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetApplicationFee(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $feeData = $this->payments->getFeeForApplication($user, $applicationId);
+        $fee = $feeData['fee'];
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'status' => $application->status->value,
+            'fee' => [
+                'id' => $fee->id,
+                'code' => $fee->code,
+                'amount' => $fee->amount,
+                'currency' => $fee->currency,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function executeGetProfileStatus(User $user): array
+    {
+        return $this->profiles->statusPayload($user);
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeStartPayment(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $payment = $this->payments->createPendingPayment($user, $applicationId);
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'payment_id' => $payment['payment']->id,
+            'checkout_url' => $payment['checkout_url'] ?? null,
+            'status' => $payment['payment']->status->value,
         ];
     }
 
@@ -233,6 +289,6 @@ class AgentActionExecutor
 
     private function requiresApprovedProfile(string $actionName): bool
     {
-        return $actionName === 'create_application';
+        return in_array($actionName, ['create_application', 'start_payment'], true);
     }
 }

@@ -15,6 +15,7 @@ use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\AgentUserConfirmationDetector;
+use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -72,12 +73,11 @@ class AIAgentService
                     );
                 }
 
-                if (AgentMessageIntentMatcher::isApplicationStatusQuery($userMessage)
-                    || AgentMessageIntentMatcher::isApplicationNextStepQuery(
-                        $userMessage,
-                        $session->current_intent,
-                        $this->sessionContext->resolveLastDiscussedApplicationId($session)
-                    )) {
+                if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+                    $userMessage,
+                    $session->current_intent,
+                    $this->sessionContext->resolveLastDiscussedApplicationId($session)
+                )) {
                     $awaitingAction->status = AgentActionStatus::Cancelled;
                     $awaitingAction->save();
                     $awaitingAction = null;
@@ -271,6 +271,10 @@ class AIAgentService
                 'get_application_status' => AgentIntent::GetApplicationStatus->value,
                 'get_application_next_step' => AgentIntent::GetApplicationNextStep->value,
                 'get_required_documents' => AgentIntent::GetRequiredDocuments->value,
+                'get_application_fee' => AgentIntent::GetApplicationFee->value,
+                'get_fines' => AgentIntent::GetFines->value,
+                'get_licenses' => AgentIntent::GetLicenses->value,
+                'get_profile_status' => AgentIntent::GetProfileStatus->value,
                 default => $session->current_intent ?? AgentIntent::GeneralHelp->value,
             };
             $session->current_intent = $response['intent'];
@@ -359,6 +363,7 @@ class AIAgentService
             'missing_slots' => $payload['missing_slots'] ?? [],
             'requires_confirmation' => (bool) ($payload['requires_confirmation'] ?? false),
             'pending_action' => null,
+            'suggested_next_actions' => array_values($payload['suggested_next_actions'] ?? []),
         ];
 
         if ($pendingAction !== null) {

@@ -257,21 +257,7 @@ class AgentMessageIntentMatcher
 
     public static function blocksLicenseTypeExtraction(string $message): bool
     {
-        $normalized = self::normalize($message);
-
-        if (self::isApplicationStatusQuery($message)
-            || self::isApplicationNextStepQuery($message)
-            || self::isRequiredDocumentsQuery($message)) {
-            return true;
-        }
-
-        foreach (self::POSSESSIVE_CONTEXT_PHRASES as $phrase) {
-            if (str_contains($normalized, self::normalize($phrase))) {
-                return true;
-            }
-        }
-
-        return false;
+        return AgentWorkflowPhraseMatcher::blocksLicenseTypeExtraction($message);
     }
 
     public static function shouldExtractLicenseTypeSlot(
@@ -279,7 +265,7 @@ class AgentMessageIntentMatcher
         ?string $intent,
         array $missingSlots,
     ): bool {
-        if (self::blocksLicenseTypeExtraction($message)) {
+        if (AgentWorkflowPhraseMatcher::blocksLicenseTypeExtraction($message)) {
             return false;
         }
 

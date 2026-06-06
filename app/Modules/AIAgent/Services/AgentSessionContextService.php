@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
+use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSessionContextService
@@ -64,13 +65,11 @@ class AgentSessionContextService
     {
         $state = $this->resolveState($session);
 
-        if (AgentMessageIntentMatcher::isApplicationStatusQuery($userMessage)
-            || AgentMessageIntentMatcher::isApplicationNextStepQuery(
-                $userMessage,
-                $state['intent'],
-                $this->resolveLastDiscussedApplicationId($session)
-            )
-            || AgentMessageIntentMatcher::isRequiredDocumentsQuery($userMessage)) {
+        if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+            $userMessage,
+            $state['intent'],
+            $this->resolveLastDiscussedApplicationId($session)
+        )) {
             $state['extracted_license_type'] = null;
 
             return $state;
@@ -147,6 +146,14 @@ class AgentSessionContextService
             AgentIntent::GetApplicationStatus->value,
             AgentIntent::GetApplicationNextStep->value,
             AgentIntent::GetRequiredDocuments->value,
+            AgentIntent::GetApplicationFee->value,
+            AgentIntent::StartPayment->value,
+            AgentIntent::GetFines->value,
+            AgentIntent::GetLicenses->value,
+            AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::BookAppointment->value,
+            AgentIntent::GetTestResults->value,
         ], true)) {
             return false;
         }
@@ -181,6 +188,14 @@ class AgentSessionContextService
             AgentIntent::GetApplicationStatus->value,
             AgentIntent::GetApplicationNextStep->value,
             AgentIntent::GetRequiredDocuments->value,
+            AgentIntent::GetApplicationFee->value,
+            AgentIntent::StartPayment->value,
+            AgentIntent::GetFines->value,
+            AgentIntent::GetLicenses->value,
+            AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::BookAppointment->value,
+            AgentIntent::GetTestResults->value,
         ], true)) {
             $state['collected_slots'] = [];
             $state['missing_slots'] = array_values($payload['missing_slots'] ?? []);
@@ -225,13 +240,11 @@ class AgentSessionContextService
         array $state,
         string $userMessage,
     ): array {
-        if (AgentMessageIntentMatcher::isApplicationStatusQuery($userMessage)
-            || AgentMessageIntentMatcher::isApplicationNextStepQuery(
-                $userMessage,
-                $session->current_intent,
-                $this->resolveLastDiscussedApplicationId($session)
-            )
-            || AgentMessageIntentMatcher::isRequiredDocumentsQuery($userMessage)) {
+        if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+            $userMessage,
+            $session->current_intent,
+            $this->resolveLastDiscussedApplicationId($session)
+        )) {
             return $payload;
         }
 

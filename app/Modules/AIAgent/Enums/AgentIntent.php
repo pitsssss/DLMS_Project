@@ -8,6 +8,7 @@ enum AgentIntent: string
     case GetApplicationStatus = 'get_application_status';
     case GetApplicationNextStep = 'get_application_next_step';
     case GetRequiredDocuments = 'get_required_documents';
+    case GetApplicationFee = 'get_application_fee';
     case SubmitDocumentsForReview = 'submit_documents_for_review';
     case StartPayment = 'start_payment';
     case GetAvailableTests = 'get_available_tests';
@@ -18,6 +19,8 @@ enum AgentIntent: string
     case GetTestResults = 'get_test_results';
     case GetLicenses = 'get_licenses';
     case GetFines = 'get_fines';
+    case GetProfileStatus = 'get_profile_status';
+    case ClarifyApplicationSelection = 'clarify_application_selection';
     case GeneralHelp = 'general_help';
     case OutOfScope = 'out_of_scope';
     case AdminActionDenied = 'admin_action_denied';

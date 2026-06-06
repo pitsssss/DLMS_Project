@@ -91,6 +91,31 @@ class AgentTranslator
             return self::applicationNextStepFallback($status, $replace);
         }
 
+        if (str_starts_with($suffix, 'ai_agent.workflow.no_application.')) {
+            $key = substr($suffix, strlen('ai_agent.workflow.no_application.'));
+
+            return match ($key) {
+                'payment' => 'لا يوجد لديك طلب حالي متعلق بالدفع. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
+                'appointment' => 'لا يوجد لديك طلب حالي متعلق بالمواعيد. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
+                'test_results' => 'لا يوجد لديك طلب حالي لعرض نتائج الاختبارات.',
+                default => 'لا يوجد لديك طلب حالي لهذه العملية.',
+            };
+        }
+
+        if (str_starts_with($suffix, 'ai_agent.workflow.multiple_applications.')) {
+            $key = substr($suffix, strlen('ai_agent.workflow.multiple_applications.'));
+
+            return match ($key) {
+                'payment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة رسومه أو دفعه.'
+                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+                'appointment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد حجز موعد له.'
+                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+                'test_results' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة نتائج اختباراته.'
+                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+                default => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد الطلب المطلوب.',
+            };
+        }
+
         return match ($suffix) {
             'ai_agent.existing_active_application' => 'لديك طلب رخصة قيادة '
                 .($replace['label'] ?? 'قيد المتابعة')
