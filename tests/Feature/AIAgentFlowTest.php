@@ -1325,6 +1325,57 @@ class AIAgentFlowTest extends TestCase
         ]);
     }
 
+    public function test_required_documents_after_upload_via_ai_agent(): void
+    {
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        $application = LicenseApplication::query()->create([
+            'application_number' => 'APP-DOCS-UPLOADED',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => 'draft',
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $checklist = $this->getJson("/api/applications/{$application->id}/required-documents")
+            ->assertOk()
+            ->json('data');
+
+        $this->post(
+            "/api/applications/{$application->id}/documents",
+            [
+                'required_document_id' => $checklist[0]['id'],
+                'file' => \Illuminate\Http\UploadedFile::fake()->create(
+                    'doc-'.$checklist[0]['code'].'.pdf',
+                    80,
+                    'application/pdf'
+                ),
+            ],
+            ['Accept' => 'application/json']
+        )->assertOk();
+
+        $this->mockGemini(null);
+
+        $response = $this->postJson('/api/ai-agent/message', [
+            'message' => 'شو الوثائق المطلوبة؟',
+        ])->assertOk();
+
+        $this->assertEquals('get_required_documents', $response->json('data.intent'));
+        $this->assertStringContainsString('الوثائق المطلوبة', (string) $response->json('data.reply'));
+        $this->assertNotEmpty($response->json('data.result.required_documents'));
+
+        $uploadedCount = collect($response->json('data.result.required_documents'))
+            ->filter(fn (array $item): bool => ! empty($item['latest_document']))
+            ->count();
+
+        $this->assertSame(1, $uploadedCount);
+        $this->assertStringNotContainsString('ApplicationDocumentResource', json_encode($response->json()));
+    }
+
     public function test_read_only_get_application_status_executes_without_confirmation(): void
     {
         $citizen = $this->citizen();
