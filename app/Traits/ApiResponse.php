@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Support\CitizenMessageTranslator;
 use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
@@ -10,7 +11,7 @@ trait ApiResponse
     {
         return response()->json([
             'success' => true,
-            'message' => __($message),
+            'message' => CitizenMessageTranslator::get($message),
             'data' => $data,
         ], $status);
     }
@@ -19,7 +20,7 @@ trait ApiResponse
     {
         return response()->json([
             'success' => false,
-            'message' => __($message),
+            'message' => CitizenMessageTranslator::get($message),
             'errors' => empty($errors) ? (object) [] : $errors,
         ], $status);
     }

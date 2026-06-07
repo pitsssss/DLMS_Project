@@ -101,7 +101,9 @@ class AppointmentFlowTest extends TestCase
         $this->getJson("/api/applications/{$application->id}/available-tests")
             ->assertOk()
             ->assertJsonPath('data.tests.0.code', 'vision')
-            ->assertJsonPath('data.tests.0.can_book', true);
+            ->assertJsonPath('data.tests.0.can_book', true)
+            ->assertJsonPath('message', 'تم جلب الاختبارات المتاحة بنجاح.')
+            ->assertJsonPath('data.tests.0.next_action_label', 'حجز موعد');
 
         $slot = $this->visionSlot();
 

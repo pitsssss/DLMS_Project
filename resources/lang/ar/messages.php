@@ -196,6 +196,21 @@ return [
         'result_passed' => 'ناجح',
         'result_failed' => 'راسب',
         'result_no_show' => 'غائب',
+        'availability' => [
+            'next_action_book' => 'حجز موعد',
+            'previous_test_fallback' => 'الاختبار السابق',
+            'application_not_ready_for_testing' => 'لا يمكن حجز الاختبارات حالياً لأن الطلب ليس في مرحلة الاختبارات.',
+            'payment_not_completed' => 'لا يمكن حجز الاختبارات قبل إكمال عملية الدفع.',
+            'previous_test_not_passed' => 'يجب اجتياز :previous_test أولاً قبل حجز :current_test.',
+            'already_passed' => 'تم اجتياز هذا الاختبار مسبقاً.',
+            'active_appointment_exists' => 'لديك موعد فعال لهذا الاختبار بالفعل.',
+            'waiting_result' => 'لديك موعد سابق لهذا الاختبار بانتظار تسجيل النتيجة.',
+            'max_attempts_reached' => 'تم الوصول إلى الحد الأقصى لمحاولات هذا الاختبار. سيتم تحويل الطلب للمراجعة الإدارية.',
+            'not_current_test' => 'هذا الاختبار غير متاح حالياً بسبب تسلسل الاختبارات.',
+            'application_already_approved' => 'تم اجتياز جميع الاختبارات وأصبح الطلب مؤهلاً لإصدار الرخصة.',
+            'license_already_issued' => 'تم إصدار الرخصة لهذا الطلب مسبقاً.',
+            'application_blocked_or_cancelled' => 'لا يمكن حجز اختبارات لهذا الطلب لأنه غير فعال حالياً.',
+        ],
     ],
 
     'licenses' => [
