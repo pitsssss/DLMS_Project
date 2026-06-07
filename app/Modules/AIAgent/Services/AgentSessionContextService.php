@@ -99,6 +99,22 @@ class AgentSessionContextService
             return (int) $context['last_application_id'];
         }
 
+        $bookAction = AIAgentAction::query()
+            ->where('session_id', $session->id)
+            ->where('status', AgentActionStatus::Executed)
+            ->where('action_name', 'book_appointment')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($bookAction !== null) {
+            $fromBookResult = $this->extractApplicationIdFromArray(
+                is_array($bookAction->result) ? $bookAction->result : []
+            );
+            if ($fromBookResult !== null) {
+                return $fromBookResult;
+            }
+        }
+
         $actions = AIAgentAction::query()
             ->where('session_id', $session->id)
             ->where('status', AgentActionStatus::Executed)
@@ -107,6 +123,11 @@ class AgentSessionContextService
                 'get_application_next_step',
                 'get_required_documents',
                 'create_application',
+                'get_available_tests',
+                'get_appointment_slots',
+                'get_current_appointments',
+                'book_appointment',
+                'start_payment',
             ])
             ->orderByDesc('id')
             ->get();
@@ -151,7 +172,9 @@ class AgentSessionContextService
             AgentIntent::GetFines->value,
             AgentIntent::GetLicenses->value,
             AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAvailableTests->value,
             AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::GetCurrentAppointments->value,
             AgentIntent::BookAppointment->value,
             AgentIntent::GetTestResults->value,
         ], true)) {
@@ -193,7 +216,9 @@ class AgentSessionContextService
             AgentIntent::GetFines->value,
             AgentIntent::GetLicenses->value,
             AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAvailableTests->value,
             AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::GetCurrentAppointments->value,
             AgentIntent::BookAppointment->value,
             AgentIntent::GetTestResults->value,
         ], true)) {

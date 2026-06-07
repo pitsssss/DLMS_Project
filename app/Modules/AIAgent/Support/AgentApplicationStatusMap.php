@@ -117,6 +117,10 @@ class AgentApplicationStatusMap
         $definition = self::definition($status);
         $actionName = self::normalizeAction($actionName);
 
+        if ($actionName === 'get_current_appointments') {
+            return ! in_array($actionName, $definition['blocked_actions'], true);
+        }
+
         if (in_array($actionName, $definition['blocked_actions'], true)) {
             return false;
         }

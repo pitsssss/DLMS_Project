@@ -214,4 +214,35 @@ class AppointmentFlowTest extends TestCase
             'appointment_slot_id' => $slot->id,
         ])->assertStatus(422);
     }
+
+    private function theorySlot(): AppointmentSlot
+    {
+        $theory = TestType::query()->where('code', 'theory')->firstOrFail();
+
+        return AppointmentSlot::query()
+            ->where('test_type_id', $theory->id)
+            ->where('is_active', true)
+            ->whereColumn('booked_count', '<', 'capacity')
+            ->where('date', '>=', now()->toDateString())
+            ->firstOrFail();
+    }
+
+    public function test_cannot_book_theory_before_vision_returns_arabic_message(): void
+    {
+        app()->setLocale('en');
+
+        [$citizen, $application] = $this->citizenInAppointmentPending();
+        Sanctum::actingAs($citizen);
+
+        $response = $this->postJson("/api/applications/{$application->id}/appointments", [
+            'appointment_slot_id' => $this->theorySlot()->id,
+        ])->assertStatus(422);
+
+        $message = (string) $response->json('message');
+        $this->assertStringNotContainsString('messages.', $message);
+        $this->assertStringContainsString('لا يمكن حجز هذا الاختبار حالياً', $message);
+        $this->assertStringContainsString('اختبار النظر', $message);
+        $this->assertStringContainsString('الاختبار النظري', $message);
+        $this->assertEquals(0, \App\Models\TestAppointment::query()->where('application_id', $application->id)->count());
+    }
 }

@@ -88,6 +88,13 @@ class AgentWorkflowIntentCatalog
                 'action_name' => 'get_appointment_slots',
                 'suggested_followups' => ['book_appointment'],
             ],
+            AgentIntent::GetCurrentAppointments->value => [
+                'intent' => AgentIntent::GetCurrentAppointments->value,
+                'requires_application' => true,
+                'read_only' => true,
+                'action_name' => 'get_current_appointments',
+                'suggested_followups' => ['get_available_tests', 'get_appointment_slots'],
+            ],
             AgentIntent::BookAppointment->value => [
                 'intent' => AgentIntent::BookAppointment->value,
                 'requires_application' => true,

@@ -12,6 +12,8 @@ class AgentActionReplyBuilder
 {
     public function __construct(
         private readonly AgentRequiredDocumentsHandler $requiredDocumentsHandler,
+        private readonly AgentAvailableTestsHandler $availableTestsHandler,
+        private readonly AgentAppointmentHandler $appointmentHandler,
     ) {}
 
     /**
@@ -29,6 +31,10 @@ class AgentActionReplyBuilder
             'start_payment' => $this->startPaymentReply($result),
             'get_fines' => $this->finesReply($result),
             'get_licenses' => $this->licensesReply($result),
+            'get_available_tests' => $this->availableTestsHandler->replyFromActionResult($result),
+            'get_appointment_slots' => $this->appointmentHandler->replyFromSlotsResult($result),
+            'get_current_appointments' => $this->appointmentHandler->replyFromCurrentAppointmentsResult($result),
+            'book_appointment' => $this->bookAppointmentReply($result),
             default => 'تم تنفيذ العملية بنجاح.',
         };
     }
@@ -132,6 +138,26 @@ class AgentActionReplyBuilder
         return $count === 0
             ? 'لا توجد مخالفات مسجلة على حسابك حالياً.'
             : "لديك {$count} مخalفة مسجلة. يمكنك مراجعة التفاصيل في النتيجة.";
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function bookAppointmentReply(array $result): string
+    {
+        $testName = trim((string) ($result['test_type']['name'] ?? 'الاختبار'));
+        $date = trim((string) ($result['date'] ?? ''));
+        $time = trim((string) ($result['start_time'] ?? ''));
+
+        if ($date !== '' && $time !== '') {
+            return AgentTranslator::message('ai_agent.appointments.current.single', [
+                'test' => $testName,
+                'date' => $date,
+                'time' => $time,
+            ]);
+        }
+
+        return 'تم حجز موعد '.$testName.' بنجاح.';
     }
 
     /**

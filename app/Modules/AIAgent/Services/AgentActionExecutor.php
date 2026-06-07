@@ -2,9 +2,12 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Enums\AppointmentStatus;
 use App\Exceptions\ApiException;
 use App\Models\LicenseType;
 use App\Models\ServiceType;
+use App\Models\TestAppointment;
+use App\Models\TestType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
@@ -12,6 +15,9 @@ use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Applications\Resources\ApplicationResource;
 use App\Modules\Applications\Services\ApplicationDocumentService;
 use App\Modules\Applications\Services\ApplicationService;
+use App\Modules\Appointments\Resources\AppointmentSlotResource;
+use App\Modules\Appointments\Services\AppointmentService;
+use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Auth\Services\ProfileService;
 use App\Modules\Fines\Resources\FineResource;
 use App\Modules\Fines\Services\FineService;
@@ -28,6 +34,8 @@ class AgentActionExecutor
         private readonly ProfileService $profiles,
         private readonly AgentApplicationNextStepService $nextStepService,
         private readonly ApplicationPaymentService $payments,
+        private readonly AppointmentService $appointments,
+        private readonly TestProgressionService $progression,
     ) {}
 
     /**
@@ -59,6 +67,10 @@ class AgentActionExecutor
             'start_payment' => $this->executeStartPayment($user, $arguments),
             'get_fines' => $this->executeGetFines($user),
             'get_licenses' => $this->executeGetLicenses($user),
+            'get_available_tests' => $this->executeGetAvailableTests($user, $arguments),
+            'get_appointment_slots' => $this->executeGetAppointmentSlots($user, $arguments),
+            'get_current_appointments' => $this->executeGetCurrentAppointments($user, $arguments),
+            'book_appointment' => $this->executeBookAppointment($user, $arguments),
             default => throw new ApiException('Unsupported AI agent action.', 422),
         };
     }
@@ -225,6 +237,168 @@ class AgentActionExecutor
 
     /**
      * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetAvailableTests(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $tests = $this->appointments->availableTestsForApplication($user, $applicationId);
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'status' => $application->status->value,
+            'tests' => $tests,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetAppointmentSlots(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $testType = $this->resolveTestTypeFromArguments($arguments, $application);
+
+        $slots = $this->appointments->listAvailableSlots($testType->id);
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'status' => $application->status->value,
+            'test_type' => [
+                'id' => $testType->id,
+                'code' => $testType->code,
+                'name' => $testType->name,
+            ],
+            'slots' => collect(AppointmentSlotResource::collection($slots)->resolve())
+                ->map(function (array $slot): array {
+                    $slot['available_capacity'] = $slot['remaining_capacity'] ?? null;
+
+                    return $slot;
+                })
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetCurrentAppointments(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $appointments = $this->appointments->listApplicationAppointments($user, $applicationId);
+
+        $booked = $appointments->filter(
+            fn (TestAppointment $appointment): bool => $appointment->status === AppointmentStatus::Booked
+        );
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'appointments' => $booked
+                ->map(fn (TestAppointment $appointment): array => $this->formatAppointmentForAgent($appointment))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeBookAppointment(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $slotId = $arguments['appointment_slot_id'] ?? null;
+
+        if (! is_numeric($slotId) || (int) $slotId < 1) {
+            throw new ApiException('Appointment slot ID is required for this action.', 422, [
+                'appointment_slot_id' => ['The appointment_slot_id argument is required.'],
+            ]);
+        }
+
+        $appointment = $this->appointments->book($user, $applicationId, (int) $slotId)
+            ->loadMissing(['application', 'testType', 'appointmentSlot']);
+
+        return $this->formatAppointmentForAgent($appointment, includeApplicationMeta: true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatAppointmentForAgent(
+        TestAppointment $appointment,
+        bool $includeApplicationMeta = false,
+    ): array {
+        $appointment->loadMissing(['testType', 'appointmentSlot']);
+        $slot = $appointment->appointmentSlot;
+
+        $payload = [
+            'appointment_id' => $appointment->id,
+            'id' => $appointment->id,
+            'status' => $appointment->status->value,
+            'scheduled_at' => $appointment->scheduled_at?->toIso8601String(),
+            'date' => $slot?->date?->format('Y-m-d') ?? $appointment->scheduled_at?->format('Y-m-d'),
+            'start_time' => $slot?->start_time ?? $appointment->scheduled_at?->format('H:i'),
+            'end_time' => $slot?->end_time,
+            'test_type' => [
+                'id' => $appointment->testType?->id,
+                'code' => $appointment->testType?->code,
+                'name' => $appointment->testType?->name,
+            ],
+        ];
+
+        if ($includeApplicationMeta) {
+            $payload['application_id'] = $appointment->application_id;
+            $payload['application_number'] = $appointment->application?->application_number;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     */
+    private function resolveTestTypeFromArguments(array $arguments, \App\Models\LicenseApplication $application): \App\Models\TestType
+    {
+        if (isset($arguments['test_type_id']) && is_numeric($arguments['test_type_id'])) {
+            $testType = TestType::query()
+                ->whereKey((int) $arguments['test_type_id'])
+                ->where('is_active', true)
+                ->first();
+
+            if ($testType !== null) {
+                return $testType;
+            }
+        }
+
+        $code = trim((string) ($arguments['test_type_code'] ?? ''));
+        if ($code !== '') {
+            $testType = TestType::query()->where('code', $code)->where('is_active', true)->first();
+            if ($testType !== null) {
+                return $testType;
+            }
+        }
+
+        $bookable = $this->progression->resolveBookableTestType($application);
+        if ($bookable !== null) {
+            return $bookable;
+        }
+
+        throw new ApiException('Test type is required for this action.', 422, [
+            'test_type_id' => ['The test_type_id argument is required.'],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
      */
     private function requireApplicationId(array $arguments): int
     {
@@ -289,6 +463,6 @@ class AgentActionExecutor
 
     private function requiresApprovedProfile(string $actionName): bool
     {
-        return in_array($actionName, ['create_application', 'start_payment'], true);
+        return in_array($actionName, ['create_application', 'start_payment', 'book_appointment'], true);
     }
 }

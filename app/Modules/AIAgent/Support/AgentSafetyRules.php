@@ -16,7 +16,12 @@ class AgentSafetyRules
         'get_profile_status',
         'get_fines',
         'get_licenses',
+        'get_available_tests',
+        'get_appointment_slots',
+        'get_current_appointments',
+        'get_test_results',
         'start_payment',
+        'book_appointment',
     ];
 
     /** @var list<string> Read-only actions that may run without explicit confirmation. */
@@ -28,6 +33,10 @@ class AgentSafetyRules
         'get_profile_status',
         'get_fines',
         'get_licenses',
+        'get_available_tests',
+        'get_appointment_slots',
+        'get_current_appointments',
+        'get_test_results',
     ];
 
     /** @var list<string> */
@@ -109,7 +118,8 @@ class AgentSafetyRules
 
     public static function isReadOnlyAction(string $actionName): bool
     {
-        return in_array($actionName, self::READ_ONLY_ACTIONS, true);
+        return in_array($actionName, self::READ_ONLY_ACTIONS, true)
+            || AgentWorkflowActionMap::isReadOnly($actionName);
     }
 
     public static function isMutatingAction(string $actionName): bool
@@ -139,6 +149,8 @@ class AgentSafetyRules
             'إصدار الرخصة',
             'حظر الرخصة',
             'تسجيل نتيجة',
+            'ثبتلي النتيجة',
+            'ثبت النتيجة',
             'إنشاء مخالفة',
             'سجل التدقيق',
         ];

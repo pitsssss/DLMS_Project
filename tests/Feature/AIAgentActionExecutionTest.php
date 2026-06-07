@@ -14,10 +14,12 @@ use App\Modules\AIAgent\Models\AIAgentEvaluation;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Services\GeminiAgentClient;
+use Database\Seeders\AppointmentSlotsSeeder;
 use Database\Seeders\LicenseTypesSeeder;
 use Database\Seeders\PermissionsSeeder;
 use Database\Seeders\RolesSeeder;
 use Database\Seeders\ServiceTypesSeeder;
+use Database\Seeders\TestTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Laravel\Sanctum\Sanctum;
@@ -36,6 +38,8 @@ class AIAgentActionExecutionTest extends TestCase
             PermissionsSeeder::class,
             LicenseTypesSeeder::class,
             ServiceTypesSeeder::class,
+            TestTypesSeeder::class,
+            AppointmentSlotsSeeder::class,
         ]);
         $this->withoutMiddleware([ThrottleRequests::class]);
     }
@@ -503,5 +507,121 @@ class AIAgentActionExecutionTest extends TestCase
 
         $action->refresh();
         $this->assertSame(AgentActionStatus::Failed, $action->status);
+    }
+
+    public function test_get_current_appointments_executes_without_confirmation(): void
+    {
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        $application = LicenseApplication::query()->create([
+            'application_number' => 'APP-CURRENT-APT',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::AppointmentPending,
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $action = $this->awaitingAction($citizen, 'get_current_appointments', [
+            'application_id' => $application->id,
+        ]);
+        $action->requires_confirmation = false;
+        $action->save();
+
+        $response = $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")->assertOk();
+
+        $this->assertEquals('get_current_appointments', $response->json('data.action.name'));
+        $this->assertEquals('executed', $response->json('data.action.status'));
+        $this->assertSame([], $response->json('data.result.appointments'));
+        $this->assertStringContainsString('لا يوجد لديك موعد محجوز', (string) $response->json('data.reply'));
+        $this->assertStringNotContainsString('messages.', json_encode($response->json(), JSON_UNESCAPED_UNICODE));
+    }
+
+    public function test_book_appointment_confirm_returns_structured_appointment_payload(): void
+    {
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        LicenseApplication::query()->create([
+            'application_number' => 'APP-BOOK-EXEC',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::AppointmentPending,
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $slotId = \App\Models\AppointmentSlot::query()->whereHas('testType', fn ($q) => $q->where('code', 'vision'))->value('id');
+        $this->assertNotNull($slotId);
+
+        $action = $this->awaitingAction($citizen, 'book_appointment', [
+            'application_id' => LicenseApplication::query()->where('application_number', 'APP-BOOK-EXEC')->value('id'),
+            'appointment_slot_id' => $slotId,
+            'test_type_code' => 'vision',
+        ]);
+
+        $response = $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")->assertOk();
+
+        $this->assertEquals('booked', $response->json('data.result.status'));
+        $this->assertNotNull($response->json('data.result.appointment_id'));
+        $this->assertNotNull($response->json('data.result.date'));
+        $this->assertNotNull($response->json('data.result.start_time'));
+        $this->assertEquals('vision', $response->json('data.result.test_type.code'));
+        $this->assertStringContainsString('تم حجز موعد', (string) $response->json('data.reply'));
+    }
+
+    public function test_book_appointment_confirm_theory_before_vision_returns_arabic_message(): void
+    {
+        app()->setLocale('en');
+
+        $citizen = $this->citizen();
+        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+
+        $application = LicenseApplication::query()->create([
+            'application_number' => 'APP-BOOK-THEORY',
+            'citizen_id' => $citizen->id,
+            'license_type_id' => $licenseType->id,
+            'service_type_id' => $serviceType->id,
+            'status' => ApplicationStatus::AppointmentPending,
+        ]);
+
+        Sanctum::actingAs($citizen);
+
+        $theory = \App\Models\TestType::query()->where('code', 'theory')->firstOrFail();
+        $slotId = \App\Models\AppointmentSlot::query()
+            ->where('test_type_id', $theory->id)
+            ->where('is_active', true)
+            ->whereColumn('booked_count', '<', 'capacity')
+            ->where('date', '>=', now()->toDateString())
+            ->value('id');
+
+        $this->assertNotNull($slotId);
+
+        $action = $this->awaitingAction($citizen, 'book_appointment', [
+            'application_id' => $application->id,
+            'appointment_slot_id' => $slotId,
+            'test_type_code' => 'theory',
+        ]);
+
+        $response = $this->postJson("/api/ai-agent/actions/{$action->id}/confirm")
+            ->assertStatus(422);
+
+        $message = (string) $response->json('message');
+        $this->assertStringNotContainsString('messages.', $message);
+        $this->assertStringNotContainsString('messages.', json_encode($response->json(), JSON_UNESCAPED_UNICODE));
+        $this->assertStringContainsString('لا يمكن حجز هذا الاختبار حالياً', $message);
+        $this->assertStringContainsString('اختبار النظر', $message);
+        $this->assertStringContainsString('الاختبار النظري', $message);
+
+        $action->refresh();
+        $this->assertSame(AgentActionStatus::Failed, $action->status);
+        $this->assertStringNotContainsString('messages.', (string) $action->error_message);
+        $this->assertEquals(0, \App\Models\TestAppointment::query()->where('application_id', $application->id)->count());
     }
 }

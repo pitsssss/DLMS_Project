@@ -40,10 +40,20 @@ class AgentWorkflowPhraseMatcher
                 : AgentIntent::GetApplicationFee;
         }
 
-        if (self::isAppointmentQuery($message)) {
-            return self::isBookAppointmentQuery($message)
-                ? AgentIntent::BookAppointment
-                : AgentIntent::GetAppointmentSlots;
+        if (self::isCurrentAppointmentsQuery($message)) {
+            return AgentIntent::GetCurrentAppointments;
+        }
+
+        if (self::isAvailableTestsQuery($message)) {
+            return AgentIntent::GetAvailableTests;
+        }
+
+        if (self::isAppointmentSlotsQuery($message)) {
+            return AgentIntent::GetAppointmentSlots;
+        }
+
+        if (self::isBookAppointmentQuery($message)) {
+            return AgentIntent::BookAppointment;
         }
 
         if (self::isTestResultsQuery($message)) {
@@ -162,13 +172,34 @@ class AgentWorkflowPhraseMatcher
         return false;
     }
 
-    public static function isAppointmentQuery(string $message): bool
+    public static function isAvailableTestsQuery(string $message): bool
     {
         $normalized = self::normalize($message);
 
         foreach ([
-            'احجزلي موعد', 'احجز موعد', 'بدي احجز', 'بدي أحجز', 'المواعيد المتاحة',
-            'شو المواعيد', 'appointment', 'book appointment', 'available slots',
+            'شو الفحوص المتاحة',
+            'شو الفحوصات المتاحة',
+            'شو الاختبارات المتاحة',
+            'شو الاختبار المتاح',
+            'شو الفحص المتاح',
+            'اعرض الفحوص المتاحة',
+            'اعرض الاختبارات المتاحة',
+            'اعرض الفحوصات المتاحة',
+            'ما هي الاختبارات المتاحة',
+            'ما الاختبارات المتاحة',
+            'شو في فحوصات متاحة',
+            'أي فحص لازم أحجز',
+            'أي فحص لازم احجز',
+            'أي اختبار لازم أحجز',
+            'أي اختبار لازم احجز',
+            'أي فحص عليي هلق',
+            'أي فحص علي هلق',
+            'شو الاختبار الحالي',
+            'شو الفحص الحالي',
+            'available tests',
+            'what tests are available',
+            'current test',
+            'which test should i book',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -178,14 +209,162 @@ class AgentWorkflowPhraseMatcher
         return false;
     }
 
-    public static function isBookAppointmentQuery(string $message): bool
+    public static function isAppointmentSlotsQuery(string $message): bool
     {
+        if (self::isAvailableTestsQuery($message)) {
+            return false;
+        }
+
         $normalized = self::normalize($message);
 
-        foreach (['احجزلي', 'احجز موعد', 'بدي احجز', 'بدي أحجز', 'book appointment'] as $phrase) {
+        foreach ([
+            'المواعيد المتاحة',
+            'شو المواعيد',
+            'اعرض المواعيد',
+            'مواعيد اختبار',
+            'مواعيد فحص',
+            'available slots',
+            'show appointment slots',
+            'show available slots',
+        ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
             }
+        }
+
+        if (AgentTestTypeExtractor::extractFromMessage($message) !== null
+            && str_contains($normalized, self::normalize('مواعيد'))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function isVagueBookAppointmentQuery(string $message): bool
+    {
+        if (self::isBookFirstAvailableSlotQuery($message)) {
+            return false;
+        }
+
+        if (self::isAppointmentSlotsQuery($message) || self::isAvailableTestsQuery($message)) {
+            return false;
+        }
+
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'احجزلي موعد',
+            'احجز موعد',
+            'بدي احجز موعد',
+            'بدي أحجز موعد',
+            'book appointment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isBookFirstAvailableSlotQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'احجز أول موعد',
+            'احجزلي الموعد الأول',
+            'احجز اول موعد',
+            'احجزلي اول موعد',
+            'أول موعد متاح',
+            'اول موعد متاح',
+            'book first appointment',
+            'book first slot',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isCurrentAppointmentsQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'حجزتلي موعد',
+            'تم حجز الموعد',
+            'انحجز الموعد',
+            'حجزت موعد',
+            'عندي موعد محجوز',
+            'عندي موعد',
+            'شو موعدي',
+            'متى موعدي',
+            'وقت موعدي',
+            'وين موعدي',
+            'اعرضلي موعدي',
+            'اعرض المواعيد المحجوزة',
+            'شو الموعد اللي حجزته',
+            'تأكدلي إذا انحجز الموعد',
+            'صار عندي موعد',
+            'did you book an appointment',
+            'is my appointment booked',
+            'show my appointment',
+            'when is my appointment',
+            'my booked appointment',
+            'appointment status',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        if (preg_match('/(?:حجزت|انحجز|تم\s+حجز).{0,20}موعد/u', $normalized)
+            && (str_contains($normalized, '?') || str_contains($normalized, '؟'))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function isAppointmentQuery(string $message): bool
+    {
+        return self::isCurrentAppointmentsQuery($message)
+            || self::isAppointmentSlotsQuery($message)
+            || self::isBookAppointmentQuery($message)
+            || self::isVagueBookAppointmentQuery($message)
+            || self::isBookFirstAvailableSlotQuery($message);
+    }
+
+    public static function isBookAppointmentQuery(string $message): bool
+    {
+        if (self::isCurrentAppointmentsQuery($message)) {
+            return false;
+        }
+
+        if (self::isVagueBookAppointmentQuery($message) || self::isBookFirstAvailableSlotQuery($message)) {
+            return true;
+        }
+
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'احجزلي',
+            'احجز موعد',
+            'بدي احجز',
+            'بدي أحجز',
+            'book appointment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        if (AgentTestTypeExtractor::extractFromMessage($message) !== null
+            && (str_contains($normalized, 'احجز') || str_contains($normalized, 'book'))) {
+            return true;
         }
 
         return false;

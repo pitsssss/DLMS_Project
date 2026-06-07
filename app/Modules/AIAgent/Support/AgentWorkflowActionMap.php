@@ -13,6 +13,7 @@ class AgentWorkflowActionMap
         'get_payment_status',
         'get_available_tests',
         'get_appointment_slots',
+        'get_current_appointments',
         'get_test_results',
         'get_licenses',
         'get_license_details',

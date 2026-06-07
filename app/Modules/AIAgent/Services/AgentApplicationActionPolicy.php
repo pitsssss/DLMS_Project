@@ -33,7 +33,9 @@ class AgentApplicationActionPolicy
                 .'. الخطوة الحالية هي '
                 .$definition['next_step_ar']
                 .'.',
-            'book_appointment', 'get_appointment_slots', 'get_available_tests' => 'لا يمكنك حجز موعد قبل إكمال المتطلبات السابقة. الخطوة الحالية هي '
+            'get_available_tests' => $this->availableTestsBlockReason($status, $definition),
+            'get_appointment_slots' => $this->appointmentSlotsBlockReason($status, $definition),
+            'book_appointment' => 'لا يمكنك حجز موعد قبل إكمال المتطلبات السابقة. الخطوة الحالية هي '
                 .$definition['next_step_ar']
                 .'.',
             'get_application_fee' => 'لا يمكن عرض رسوم هذا الطلب في مرحلة '
@@ -87,5 +89,53 @@ class AgentApplicationActionPolicy
         return AgentTranslator::message('ai_agent.workflow.multiple_applications.'.$intentKey, [
             'summary' => $summary,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     */
+    private function availableTestsBlockReason(ApplicationStatus $status, array $definition): string
+    {
+        if ($status === ApplicationStatus::PaymentPending) {
+            return 'لا يمكنك عرض الاختبارات المتاحة قبل إكمال عملية الدفع. الخطوة الحالية هي '
+                .$definition['next_step_ar']
+                .'.';
+        }
+
+        if ($status === ApplicationStatus::Draft) {
+            return 'لا يمكنك عرض الاختبارات المتاحة حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
+                .$definition['next_step_ar']
+                .'.';
+        }
+
+        return 'لا يمكنك عرض الاختبارات المتاحة في مرحلة '
+            .$definition['label_ar']
+            .'. الخطوة الحالية هي '
+            .$definition['next_step_ar']
+            .'.';
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     */
+    private function appointmentSlotsBlockReason(ApplicationStatus $status, array $definition): string
+    {
+        if ($status === ApplicationStatus::PaymentPending) {
+            return 'لا يمكنك حجز موعد قبل دفع الرسوم. الخطوة الحالية هي '
+                .$definition['next_step_ar']
+                .'.';
+        }
+
+        if ($status === ApplicationStatus::Draft) {
+            return 'لا يمكنك عرض مواعيد الاختبارات حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
+                .$definition['next_step_ar']
+                .'.';
+        }
+
+        return 'لا يمكنك عرض مواعيد الاختبارات في مرحلة '
+            .$definition['label_ar']
+            .'. الخطوة الحالية هي '
+            .$definition['next_step_ar']
+            .'.';
     }
 }

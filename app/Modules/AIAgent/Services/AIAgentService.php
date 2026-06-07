@@ -275,10 +275,20 @@ class AIAgentService
                 'get_fines' => AgentIntent::GetFines->value,
                 'get_licenses' => AgentIntent::GetLicenses->value,
                 'get_profile_status' => AgentIntent::GetProfileStatus->value,
+                'get_available_tests' => AgentIntent::GetAvailableTests->value,
+                'get_appointment_slots' => AgentIntent::GetAppointmentSlots->value,
+                'get_current_appointments' => AgentIntent::GetCurrentAppointments->value,
+                'book_appointment' => AgentIntent::BookAppointment->value,
                 default => $session->current_intent ?? AgentIntent::GeneralHelp->value,
             };
             $session->current_intent = $response['intent'];
             $session->save();
+        }
+
+        if (! $cancelled
+            && ($action['name'] ?? null) === 'get_current_appointments'
+            && empty($actionResult['result']['appointments'] ?? [])) {
+            $response['suggested_next_actions'] = ['get_available_tests', 'get_appointment_slots'];
         }
 
         return AgentTranslator::localizePayload($response);
@@ -303,6 +313,17 @@ class AIAgentService
 
         $context = $session->context ?? [];
         $context['last_application_id'] = $applicationId;
+
+        if (isset($result['appointment_id']) && is_numeric($result['appointment_id'])) {
+            $context['last_appointment_id'] = (int) $result['appointment_id'];
+        } elseif (isset($result['id']) && is_numeric($result['id']) && isset($result['test_type'])) {
+            $context['last_appointment_id'] = (int) $result['id'];
+        }
+
+        if (isset($result['test_type']['code']) && is_string($result['test_type']['code'])) {
+            $context['last_test_type_code'] = $result['test_type']['code'];
+        }
+
         $session->context = $context;
         $session->save();
     }

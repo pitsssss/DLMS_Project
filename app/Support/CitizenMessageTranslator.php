@@ -35,6 +35,34 @@ class CitizenMessageTranslator
     {
         $suffix = str_replace('messages.', '', $fullKey);
 
+        if (str_starts_with($suffix, 'appointments.')) {
+            $code = substr($suffix, strlen('appointments.'));
+
+            $text = match ($code) {
+                'available_tests' => 'تم جلب الاختبارات المتاحة بنجاح.',
+                'slots' => 'تم جلب المواعيد المتاحة بنجاح.',
+                'booked' => 'تم حجز موعد الاختبار بنجاح.',
+                'rescheduled' => 'تم تعديل موعد الاختبار بنجاح.',
+                'cancelled' => 'تم إلغاء موعد الاختبار بنجاح.',
+                'list' => 'تم جلب مواعيد الاختبارات بنجاح.',
+                'test_type_not_found' => 'نوع الاختبار غير موجود.',
+                'no_test_available' => 'لا يمكن حجز هذا الاختبار حالياً.',
+                'previous_test_not_passed' => 'لا يمكن حجز هذا الاختبار حالياً. يجب اجتياز :previous_test أولاً قبل حجز :current_test.',
+                'slot_unavailable' => 'موعد الاختبار المحدد غير متاح.',
+                'not_found' => 'موعد الاختبار غير موجود.',
+                'only_booked_reschedule' => 'يمكن تعديل المواعيد المحجوزة فقط.',
+                'only_booked_cancel' => 'يمكن إلغاء المواعيد المحجوزة فقط.',
+                'slot_not_available' => 'الموعد المحدد غير متاح.',
+                'cannot_book_status' => 'لا يمكن حجز المواعيد في الحالة الحالية للطلب.',
+                'test_not_ready' => 'لا يمكن حجز هذا الاختبار حالياً. أكمل الاختبارات السابقة أو أنهِ الحجز الحالي أولاً.',
+                'prior_tests_required' => 'يجب اجتياز الاختبارات السابقة قبل حجز هذا الاختبار.',
+                'note_booked' => 'تم حجز موعد الاختبار. الطلب الآن قيد الاختبار.',
+                default => 'لا يمكن حجز هذا الاختبار حالياً.',
+            };
+
+            return self::replacePlaceholders($text, $replace);
+        }
+
         if (str_starts_with($suffix, 'tests.availability.')) {
             $code = substr($suffix, strlen('tests.availability.'));
 
@@ -60,6 +88,11 @@ class CitizenMessageTranslator
 
         return match ($suffix) {
             'appointments.available_tests' => 'تم جلب الاختبارات المتاحة بنجاح.',
+            'ai_agent.response_generated' => 'تم إنشاء رد المساعد الذكي بنجاح.',
+            'ai_agent.sessions_list' => 'تم جلب جلسات المساعد الذكي بنجاح.',
+            'ai_agent.session_retrieved' => 'تم جلب جلسة المساعد الذكي بنجاح.',
+            'ai_agent.action_executed' => 'تم تنفيذ عملية المساعد الذكي بنجاح.',
+            'ai_agent.action_cancelled' => 'تم إلغاء عملية المساعد الذكي بنجاح.',
             'generic.success' => 'تمت العملية بنجاح.',
             'generic.error' => 'حدث خطأ.',
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً.',

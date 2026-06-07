@@ -138,6 +138,18 @@ class AgentTranslator
             'ai_agent.required_documents.already_uploaded_hint' => 'بعض الوثائق مرفوعة مسبقاً، ويمكنك متابعة حالة كل وثيقة من صفحة وثائق الطلب.',
             'ai_agent.required_documents.stage_completed_hint' => 'تمت مراجعة وثائق هذا الطلب أو تجاوز مرحلة الوثائق. يمكنك متابعة الخطوة الحالية من حالة الطلب.',
             'ai_agent.required_documents.unavailable' => 'لم أتمكن من جلب الوثائق المطلوبة لهذا الطلب حالياً.',
+            'ai_agent.appointments.current.single' => 'نعم، تم حجز موعد لاختبار '
+                .($replace['test'] ?? 'الاختبار')
+                .' بتاريخ '
+                .($replace['date'] ?? '')
+                .' الساعة '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.current.multiple' => 'لديك أكثر من موعد مرتبط بهذا الطلب.',
+            'ai_agent.appointments.current.none' => 'لا يوجد لديك موعد محجوز حالياً لهذا الطلب. يمكنك عرض المواعيد المتاحة وحجز موعد مناسب.',
+            'ai_agent.appointments.current.no_application' => 'لا يوجد لديك طلب حالي لعرض موعده.',
+            'ai_agent.appointments.current.choose_application' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد عرض موعده.'
+                .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.',
         };
     }

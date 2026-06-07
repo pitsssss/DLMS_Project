@@ -73,9 +73,24 @@ class AppointmentService
 
             $this->progression->assertCanBook($application, $bookable);
 
-            $slot = $this->slots->findAvailableForBooking($appointmentSlotId, $bookable->id);
-            if ($slot === null) {
+            $slot = AppointmentSlot::query()
+                ->whereKey($appointmentSlotId)
+                ->lockForUpdate()
+                ->with('testType')
+                ->first();
+
+            if ($slot === null
+                || ! $slot->is_active
+                || $slot->date->format('Y-m-d') < now()->toDateString()
+                || $slot->booked_count >= $slot->capacity) {
                 throw new ApiException('messages.appointments.slot_unavailable', 422);
+            }
+
+            if ($slot->test_type_id !== $bookable->id) {
+                throw new ApiException('messages.appointments.previous_test_not_passed', 422, [], [
+                    'previous_test' => $bookable->name,
+                    'current_test' => $slot->testType?->name ?? '',
+                ]);
             }
 
             $scheduledAt = Carbon::parse($slot->date->format('Y-m-d').' '.$slot->start_time);

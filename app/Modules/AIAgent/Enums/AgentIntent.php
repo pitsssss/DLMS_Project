@@ -13,6 +13,7 @@ enum AgentIntent: string
     case StartPayment = 'start_payment';
     case GetAvailableTests = 'get_available_tests';
     case GetAppointmentSlots = 'get_appointment_slots';
+    case GetCurrentAppointments = 'get_current_appointments';
     case BookAppointment = 'book_appointment';
     case RescheduleAppointment = 'reschedule_appointment';
     case CancelAppointment = 'cancel_appointment';
