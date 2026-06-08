@@ -34,6 +34,12 @@ class CitizenUserSeeder extends Seeder
                 'name' => 'Eline Faramnd',
                 'password' => 'password',
             ],
+            [
+                'email' => 'joellealbotros@gmail.com',
+                'phone' => '0932477535',
+                'name' => 'Joelle Albotros',
+                'password' => 'password112233',
+            ],
         ];
 
         foreach ($citizens as $citizen) {
