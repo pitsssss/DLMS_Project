@@ -76,7 +76,7 @@ class AppointmentService
             $slot = AppointmentSlot::query()
                 ->whereKey($appointmentSlotId)
                 ->lockForUpdate()
-                ->with('testType')
+                ->with(['testType', 'appointmentCenter'])
                 ->first();
 
             if ($slot === null
@@ -121,7 +121,7 @@ class AppointmentService
                 $application->save();
             }
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 
@@ -148,7 +148,7 @@ class AppointmentService
             }
 
             if ($newSlot->id === $appointment->appointment_slot_id) {
-                return $appointment->fresh(['appointmentSlot', 'testType']);
+                return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
             }
 
             $oldSlot = AppointmentSlot::query()->whereKey($appointment->appointment_slot_id)->lockForUpdate()->firstOrFail();
@@ -164,7 +164,7 @@ class AppointmentService
             $appointment->scheduled_at = $scheduledAt;
             $appointment->save();
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 
@@ -195,7 +195,7 @@ class AppointmentService
             $appointment->cancellation_reason = $reason;
             $appointment->save();
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 

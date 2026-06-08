@@ -17,7 +17,7 @@ class AppointmentSlotRepository
             ->where('is_active', true)
             ->whereColumn('booked_count', '<', 'capacity')
             ->where('date', '>=', now()->toDateString())
-            ->with('testType')
+            ->with(['testType', 'appointmentCenter'])
             ->orderBy('date')
             ->orderBy('start_time');
 

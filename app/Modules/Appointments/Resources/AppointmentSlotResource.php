@@ -30,7 +30,27 @@ class AppointmentSlotResource extends JsonResource
             'booked_count' => $this->booked_count,
             'remaining_capacity' => $remaining,
             'location' => $this->location,
+            'center' => self::resolveCenterPayload($this->resource),
             'is_active' => $this->is_active,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public static function resolveCenterPayload(\App\Models\AppointmentSlot $slot): ?array
+    {
+        if ($slot->relationLoaded('appointmentCenter') && $slot->appointmentCenter !== null) {
+            return (new AppointmentCenterResource($slot->appointmentCenter))->resolve();
+        }
+
+        if ($slot->appointment_center_id !== null) {
+            $slot->loadMissing('appointmentCenter');
+            if ($slot->appointmentCenter !== null) {
+                return (new AppointmentCenterResource($slot->appointmentCenter))->resolve();
+            }
+        }
+
+        return AppointmentCenterResource::fromSlotLocation($slot->location);
     }
 }

@@ -10,6 +10,7 @@ class AppointmentSlot extends Model
 {
     protected $fillable = [
         'test_type_id',
+        'appointment_center_id',
         'date',
         'start_time',
         'end_time',
@@ -30,6 +31,11 @@ class AppointmentSlot extends Model
     public function testType(): BelongsTo
     {
         return $this->belongsTo(TestType::class);
+    }
+
+    public function appointmentCenter(): BelongsTo
+    {
+        return $this->belongsTo(AppointmentCenter::class);
     }
 
     public function testAppointments(): HasMany

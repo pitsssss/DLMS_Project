@@ -325,7 +325,7 @@ class AgentActionExecutor
         }
 
         $appointment = $this->appointments->book($user, $applicationId, (int) $slotId)
-            ->loadMissing(['application', 'testType', 'appointmentSlot']);
+            ->loadMissing(['application', 'testType', 'appointmentSlot.appointmentCenter']);
 
         return $this->formatAppointmentForAgent($appointment, includeApplicationMeta: true);
     }
@@ -337,7 +337,7 @@ class AgentActionExecutor
         TestAppointment $appointment,
         bool $includeApplicationMeta = false,
     ): array {
-        $appointment->loadMissing(['testType', 'appointmentSlot']);
+        $appointment->loadMissing(['testType', 'appointmentSlot.appointmentCenter']);
         $slot = $appointment->appointmentSlot;
 
         $payload = [
@@ -353,6 +353,9 @@ class AgentActionExecutor
                 'code' => $appointment->testType?->code,
                 'name' => $appointment->testType?->name,
             ],
+            'center' => $slot !== null
+                ? AppointmentSlotResource::resolveCenterPayload($slot)
+                : null,
         ];
 
         if ($includeApplicationMeta) {
