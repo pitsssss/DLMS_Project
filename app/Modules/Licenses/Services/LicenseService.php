@@ -7,6 +7,7 @@ use App\Enums\DocumentStatus;
 use App\Enums\FineStatus;
 use App\Enums\LicenseStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ServiceCode;
 use App\Exceptions\ApiException;
 use App\Models\ApplicationDocument;
 use App\Models\License;
@@ -16,7 +17,9 @@ use App\Models\RequiredDocument;
 use App\Models\User;
 use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Licenses\Repositories\LicenseRepository;
+use App\Modules\Payments\Support\ApplicationFeeResolver;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,6 +31,7 @@ class LicenseService
         private readonly LicenseRepository $licenses,
         private readonly ApplicationRepository $applications,
         private readonly TestProgressionService $progression,
+        private readonly ApplicationFeeResolver $feeResolver,
         private readonly AuditLogService $auditLogs,
         private readonly NotificationService $notifications
     ) {}
@@ -57,7 +61,7 @@ class LicenseService
             $application = LicenseApplication::query()
                 ->whereKey($applicationId)
                 ->lockForUpdate()
-                ->with(['licenseType', 'serviceType'])
+                ->with(['licenseType', 'serviceType', 'relatedLicense'])
                 ->first();
 
             if ($application === null) {
@@ -70,18 +74,13 @@ class LicenseService
                 throw new ApiException('messages.licenses.already_issued', 422);
             }
 
-            $issueDate = now()->toDateString();
-            $expiryDate = now()->addYears((int) config('license.validity_years', 10))->toDateString();
-
-            $license = $this->licenses->create([
-                'license_number' => $this->licenses->generateUniqueLicenseNumber(),
-                'citizen_id' => $application->citizen_id,
-                'license_type_id' => $application->license_type_id,
-                'application_id' => $application->id,
-                'status' => LicenseStatus::Active,
-                'issue_date' => $issueDate,
-                'expiry_date' => $expiryDate,
-            ]);
+            $serviceCode = ServiceWorkflow::fromServiceType($application->serviceType);
+            $license = match ($serviceCode) {
+                ServiceCode::RenewLicense => $this->issueRenewalLicense($application),
+                ServiceCode::LostReplacement => $this->issueReplacementLicense($application, ServiceCode::LostReplacement),
+                ServiceCode::DamagedReplacement => $this->issueReplacementLicense($application, ServiceCode::DamagedReplacement),
+                default => $this->issueNewLicense($application),
+            };
 
             $application->approved_at ??= now();
             $application->issued_at = now();
@@ -94,13 +93,28 @@ class LicenseService
                 __('messages.licenses.note_issued')
             );
 
+            $auditAction = match ($serviceCode) {
+                ServiceCode::RenewLicense => 'license.renewed',
+                ServiceCode::LostReplacement => 'license.lost_replacement_issued',
+                ServiceCode::DamagedReplacement => 'license.damaged_replacement_issued',
+                default => 'license.issued',
+            };
+
             $this->auditLogs->log(
                 $employee,
-                'license.issued',
+                $auditAction,
                 'license',
                 $license->id,
                 null,
                 ['license_number' => $license->license_number, 'application_id' => $application->id]
+            );
+
+            $this->notifications->sendToUser(
+                $application->citizen_id,
+                __('messages.notifications.license_issued_title'),
+                __('messages.notifications.license_issued_body'),
+                'license.issued',
+                ['license_id' => $license->id, 'application_id' => $application->id]
             );
 
             return $license->fresh(['licenseType', 'application']);
@@ -284,13 +298,86 @@ class LicenseService
         });
     }
 
+    private function issueNewLicense(LicenseApplication $application): License
+    {
+        $issueDate = now()->toDateString();
+        $expiryDate = now()->addYears((int) config('license.validity_years', 10))->toDateString();
+
+        return $this->licenses->create([
+            'license_number' => $this->licenses->generateUniqueLicenseNumber(),
+            'citizen_id' => $application->citizen_id,
+            'license_type_id' => $application->license_type_id,
+            'application_id' => $application->id,
+            'status' => LicenseStatus::Active,
+            'issue_date' => $issueDate,
+            'expiry_date' => $expiryDate,
+        ]);
+    }
+
+    private function issueRenewalLicense(LicenseApplication $application): License
+    {
+        $old = $this->requireRelatedLicense($application);
+
+        $issueDate = now()->toDateString();
+        $expiryDate = now()->addYears((int) config('license.validity_years', 10))->toDateString();
+
+        $license = $this->licenses->create([
+            'license_number' => $this->licenses->generateUniqueLicenseNumber(),
+            'citizen_id' => $application->citizen_id,
+            'license_type_id' => $application->license_type_id,
+            'application_id' => $application->id,
+            'status' => LicenseStatus::Active,
+            'issue_date' => $issueDate,
+            'expiry_date' => $expiryDate,
+        ]);
+
+        $old->status = LicenseStatus::Renewed;
+        $old->save();
+
+        return $license;
+    }
+
+    private function issueReplacementLicense(LicenseApplication $application, ServiceCode $serviceCode): License
+    {
+        $old = $this->requireRelatedLicense($application);
+
+        $license = $this->licenses->create([
+            'license_number' => $this->licenses->generateUniqueLicenseNumber(),
+            'citizen_id' => $application->citizen_id,
+            'license_type_id' => $application->license_type_id,
+            'application_id' => $application->id,
+            'status' => LicenseStatus::Active,
+            'issue_date' => now()->toDateString(),
+            'expiry_date' => $old->expiry_date,
+        ]);
+
+        $old->status = LicenseStatus::Inactive;
+        $old->save();
+
+        return $license;
+    }
+
+    private function requireRelatedLicense(LicenseApplication $application): License
+    {
+        $application->loadMissing('relatedLicense');
+
+        if ($application->relatedLicense === null) {
+            throw new ApiException('messages.applications.related_license_required', 422);
+        }
+
+        return $application->relatedLicense;
+    }
+
     private function assertApplicationReadyForIssuance(LicenseApplication $application): void
     {
         if ($application->status !== ApplicationStatus::Approved) {
             throw new ApiException('messages.licenses.must_be_approved', 422);
         }
 
-        if (! $this->progression->allRequiredTestsPassed($application)) {
+        $application->loadMissing('serviceType');
+
+        if (ServiceWorkflow::requiresTests($application->serviceType?->code)
+            && ! $this->progression->allRequiredTestsPassed($application)) {
             throw new ApiException('messages.licenses.tests_required', 422);
         }
 
@@ -309,10 +396,12 @@ class LicenseService
 
     private function applicationFeePaid(LicenseApplication $application): bool
     {
+        $feeCode = $this->feeResolver->feeCodeForApplication($application);
+
         return Payment::query()
             ->where('application_id', $application->id)
             ->where('status', PaymentStatus::Completed)
-            ->whereHas('fee', fn ($q) => $q->where('code', 'application_fee'))
+            ->whereHas('fee', fn ($q) => $q->where('code', $feeCode))
             ->exists();
     }
 

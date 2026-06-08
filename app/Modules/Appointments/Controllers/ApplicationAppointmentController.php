@@ -12,12 +12,12 @@ class ApplicationAppointmentController extends Controller
 {
     public function availableTests(Request $request, int $application, AppointmentService $appointments)
     {
-        $items = $appointments->availableTestsForApplication($request->user(), $application);
+        $payload = $appointments->availableTestsForApplication($request->user(), $application);
 
-        return $this->successResponse([
-            'application_id' => $application,
-            'tests' => $items,
-        ], 'messages.appointments.available_tests');
+        return $this->successResponse(array_merge(
+            ['application_id' => $application],
+            $payload
+        ), 'messages.appointments.available_tests');
     }
 
     public function index(Request $request, int $application, AppointmentService $appointments)

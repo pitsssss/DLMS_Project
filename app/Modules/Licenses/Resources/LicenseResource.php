@@ -30,6 +30,9 @@ class LicenseResource extends JsonResource
                 'status' => $this->application->status->value,
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
+            'can_renew' => $this->when(isset($this->can_renew), (bool) $this->can_renew),
+            'can_request_lost_replacement' => $this->when(isset($this->can_request_lost_replacement), (bool) $this->can_request_lost_replacement),
+            'can_request_damaged_replacement' => $this->when(isset($this->can_request_damaged_replacement), (bool) $this->can_request_damaged_replacement),
         ];
     }
 }

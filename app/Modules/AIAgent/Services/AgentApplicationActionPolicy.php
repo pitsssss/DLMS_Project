@@ -9,17 +9,24 @@ use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentApplicationStatusMap;
 use App\Modules\AIAgent\Support\AgentTranslator;
+use App\Modules\Applications\Support\ServiceWorkflow;
 use Illuminate\Support\Collection;
 
 class AgentApplicationActionPolicy
 {
     public function blockReason(LicenseApplication $application, string $actionName): ?string
     {
+        $application->loadMissing('serviceType');
+        $actionName = AgentApplicationStatusMap::normalizeAction($actionName);
+
+        if (! ServiceWorkflow::requiresTests($application->serviceType?->code)
+            && in_array($actionName, ['get_available_tests', 'get_appointment_slots', 'book_appointment'], true)) {
+            return 'هذه الخدمة لا تتطلب حجز اختبارات. الخطوة الحالية هي متابعة الوثائق والدفع حتى إصدار الرخصة.';
+        }
+
         $status = $application->status instanceof ApplicationStatus
             ? $application->status
             : ApplicationStatus::tryFrom((string) $application->status) ?? ApplicationStatus::Draft;
-
-        $actionName = AgentApplicationStatusMap::normalizeAction($actionName);
 
         if (AgentApplicationStatusMap::isActionAllowed($status, $actionName)) {
             return null;

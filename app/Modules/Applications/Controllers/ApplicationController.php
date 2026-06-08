@@ -35,12 +35,9 @@ class ApplicationController extends Controller
 
     public function store(StoreApplicationRequest $request, ApplicationService $applications)
     {
-        $validated = $request->validated();
-
-        $application = $applications->createDraft(
+        $application = $applications->createFromPayload(
             $request->user(),
-            (int) $validated['license_type_id'],
-            (int) $validated['service_type_id']
+            $request->validated()
         );
 
         return $this->successResponse(

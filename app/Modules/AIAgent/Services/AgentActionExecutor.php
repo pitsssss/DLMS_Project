@@ -81,19 +81,15 @@ class AgentActionExecutor
      */
     private function executeCreateApplication(User $user, array $arguments): array
     {
-        $licenseType = $this->resolveLicenseType($arguments);
-        $serviceType = $this->resolveServiceType($arguments);
-
-        $application = $this->applications->createDraft(
-            $user,
-            $licenseType->id,
-            $serviceType->id
-        );
+        $application = $this->applications->createFromPayload($user, $arguments);
+        $application->loadMissing(['licenseType', 'serviceType', 'relatedLicense']);
 
         return [
             'application_id' => $application->id,
             'application_number' => $application->application_number,
             'status' => $application->status->value,
+            'service_type_code' => $application->serviceType?->code,
+            'related_license_id' => $application->related_license_id,
         ];
     }
 
@@ -243,14 +239,13 @@ class AgentActionExecutor
     {
         $applicationId = $this->requireApplicationId($arguments);
         $application = $this->applications->getForCitizen($user, $applicationId);
-        $tests = $this->appointments->availableTestsForApplication($user, $applicationId);
+        $payload = $this->appointments->availableTestsForApplication($user, $applicationId);
 
-        return [
+        return array_merge([
             'application_id' => $applicationId,
             'application_number' => $application->application_number,
             'status' => $application->status->value,
-            'tests' => $tests,
-        ];
+        ], $payload);
     }
 
     /**

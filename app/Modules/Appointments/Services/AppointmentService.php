@@ -32,8 +32,21 @@ class AppointmentService
     public function availableTestsForApplication(User $citizen, int $applicationId): array
     {
         $application = $this->requireOwnedApplication($citizen, $applicationId);
+        $application->loadMissing('serviceType');
 
-        return $this->progression->availableTestsPayload($application);
+        if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
+            return [
+                'blocked' => true,
+                'message' => 'هذه الخدمة لا تتطلب حجز اختبارات.',
+                'tests' => [],
+            ];
+        }
+
+        return [
+            'blocked' => false,
+            'message' => null,
+            'tests' => $this->progression->availableTestsPayload($application),
+        ];
     }
 
     /**
@@ -65,6 +78,11 @@ class AppointmentService
 
         return DB::transaction(function () use ($citizen, $application, $appointmentSlotId) {
             $application = LicenseApplication::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            $application->loadMissing('serviceType');
+
+            if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
+                throw new ApiException('هذه الخدمة لا تتطلب حجز اختبارات.', 422);
+            }
 
             $bookable = $this->progression->resolveBookableTestType($application);
             if ($bookable === null) {

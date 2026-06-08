@@ -64,6 +64,18 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::GetFines;
         }
 
+        if (self::isRenewLicenseRequest($message)) {
+            return AgentIntent::CreateRenewLicenseApplication;
+        }
+
+        if (self::isLostReplacementRequest($message)) {
+            return AgentIntent::CreateLostReplacementApplication;
+        }
+
+        if (self::isDamagedReplacementRequest($message)) {
+            return AgentIntent::CreateDamagedReplacementApplication;
+        }
+
         if (self::isLicensesQuery($message)) {
             return AgentIntent::GetLicenses;
         }
@@ -141,6 +153,51 @@ class AgentWorkflowPhraseMatcher
     public static function isExplicitNewLicenseRequest(string $message): bool
     {
         return AgentMessageIntentMatcher::isExplicitNewLicenseRequest($message);
+    }
+
+    public static function isRenewLicenseRequest(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'بدي جدد رخصتي', 'تجديد رخصة', 'رخصتي قربت تنتهي', 'جددلي الرخصة', 'renew my license',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isLostReplacementRequest(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'ضاعت رخصتي', 'فقدت رخصتي', 'بدي بدل فاقد', 'رخصتي مفقودة', 'lost license replacement',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isDamagedReplacementRequest(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'رخصتي تالفة', 'الرخصة خربانة', 'بدي بدل تالف', 'الرخصة مكسورة', 'damaged license replacement',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function isPaymentFeeQuery(string $message): bool

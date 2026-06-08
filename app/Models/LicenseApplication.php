@@ -18,6 +18,7 @@ class LicenseApplication extends Model
         'citizen_id',
         'license_type_id',
         'service_type_id',
+        'related_license_id',
         'status',
         'current_test_type_id',
         'rejection_reason',
@@ -49,6 +50,11 @@ class LicenseApplication extends Model
     public function serviceType(): BelongsTo
     {
         return $this->belongsTo(ServiceType::class);
+    }
+
+    public function relatedLicense(): BelongsTo
+    {
+        return $this->belongsTo(License::class, 'related_license_id');
     }
 
     public function currentTestType(): BelongsTo

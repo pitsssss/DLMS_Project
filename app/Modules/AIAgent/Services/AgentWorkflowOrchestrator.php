@@ -2,6 +2,7 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Enums\ServiceCode;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentSession;
@@ -24,6 +25,7 @@ class AgentWorkflowOrchestrator
         private readonly AgentFinesHandler $finesHandler,
         private readonly AgentLicensesHandler $licensesHandler,
         private readonly AgentProfileStatusHandler $profileStatusHandler,
+        private readonly AgentOtherLicenseServicesHandler $otherLicenseServicesHandler,
     ) {}
 
     /**
@@ -67,6 +69,9 @@ class AgentWorkflowOrchestrator
             AgentIntent::GetLicenses => $this->licensesHandler->buildPayload($context),
             AgentIntent::GetProfileStatus => $this->profileStatusHandler->buildPayload($context),
             AgentIntent::CreateNewLicenseApplication => $this->newLicensePayload($citizen, $session, $message, $language, $state),
+            AgentIntent::CreateRenewLicenseApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::RenewLicense, $language),
+            AgentIntent::CreateLostReplacementApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::LostReplacement, $language),
+            AgentIntent::CreateDamagedReplacementApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::DamagedReplacement, $language),
             default => null,
         };
     }

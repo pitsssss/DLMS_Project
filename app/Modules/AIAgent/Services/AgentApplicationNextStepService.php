@@ -10,6 +10,7 @@ use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
+use App\Modules\Applications\Support\ServiceWorkflow;
 use Illuminate\Support\Collection;
 
 class AgentApplicationNextStepService
@@ -92,7 +93,7 @@ class AgentApplicationNextStepService
                 'reply' => "Application {$application->application_number} ({$statusLabel}). {$message}",
                 'next_step_key' => $key,
                 'next_step_message' => $message,
-                'suggested_action' => $this->suggestedActionForStatus($status),
+                'suggested_action' => $this->suggestedActionForApplication($application),
                 'status' => $status->value,
                 'status_label_ar' => $statusLabel,
             ];
@@ -102,7 +103,7 @@ class AgentApplicationNextStepService
             'reply' => $message,
             'next_step_key' => $key,
             'next_step_message' => $message,
-            'suggested_action' => $this->suggestedActionForStatus($status),
+            'suggested_action' => $this->suggestedActionForApplication($application),
             'status' => $status->value,
             'status_label_ar' => $statusLabel,
         ];
@@ -200,8 +201,22 @@ class AgentApplicationNextStepService
         ], $overrides);
     }
 
-    private function suggestedActionForStatus(ApplicationStatus $status): ?string
+    private function suggestedActionForApplication(LicenseApplication $application): ?string
     {
+        $application->loadMissing('serviceType');
+        $status = $application->status instanceof ApplicationStatus
+            ? $application->status
+            : ApplicationStatus::tryFrom((string) $application->status) ?? ApplicationStatus::Draft;
+
+        if (! ServiceWorkflow::requiresTests($application->serviceType?->code)) {
+            return match ($status) {
+                ApplicationStatus::Draft, ApplicationStatus::DocumentsRejected => 'get_required_documents',
+                ApplicationStatus::PaymentPending => 'start_payment',
+                ApplicationStatus::LicenseIssued => 'get_licenses',
+                default => null,
+            };
+        }
+
         return match ($status) {
             ApplicationStatus::Draft => 'get_required_documents',
             ApplicationStatus::DocumentsRejected => 'get_required_documents',

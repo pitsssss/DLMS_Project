@@ -114,6 +114,22 @@
       "value": ""
     },
     {
+      "key": "related_license_id",
+      "value": ""
+    },
+    {
+      "key": "renew_application_id",
+      "value": ""
+    },
+    {
+      "key": "lost_replacement_application_id",
+      "value": ""
+    },
+    {
+      "key": "damaged_replacement_application_id",
+      "value": ""
+    },
+    {
       "key": "fine_id",
       "value": ""
     },
@@ -2334,6 +2350,281 @@
             ],
             "url": "{{base_url}}/ai-agent/actions/{{ai_agent_action_id}}/confirm",
             "description": "If action was created before rejection/pending: confirm fails with Arabic profile error."
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Other License Services",
+      "item": [
+        {
+          "name": "14.1 List Citizen Licenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/licenses",
+            "description": "Returns licenses with can_renew / can_request_lost_replacement / can_request_damaged_replacement flags."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('related_license_id', String(j.data[0].id));",
+                  "    pm.collectionVariables.set('license_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.2 Create Renewal Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type_code\": \"renew_license\",\n  \"related_license_id\": {{related_license_id}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) {",
+                  "    pm.collectionVariables.set('renew_application_id', String(j.data.id));",
+                  "    pm.collectionVariables.set('application_id', String(j.data.id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.3 Create Lost Replacement Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type_code\": \"lost_replacement\",\n  \"related_license_id\": {{related_license_id}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('lost_replacement_application_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.4 Create Damaged Replacement Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type_code\": \"damaged_replacement\",\n  \"related_license_id\": {{related_license_id}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('damaged_replacement_application_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.5 Required Documents (Renew)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{renew_application_id}}/required-documents"
+          }
+        },
+        {
+          "name": "14.6 Upload Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{renew_application_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "14.7 Submit Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{renew_application_id}}/submit-documents"
+          }
+        },
+        {
+          "name": "14.8 Admin Approve Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/admin/documents/{{pending_document_id}}/approve"
+          }
+        },
+        {
+          "name": "14.9 Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{renew_application_id}}/payments"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.data && j.data.id) pm.collectionVariables.set('payment_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.10 Mock Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{renew_application_id}}/payments/{{payment_id}}/confirm"
+          }
+        },
+        {
+          "name": "14.11 Issue Renewed License",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/admin/applications/{{renew_application_id}}/issue-license"
+          }
+        },
+        {
+          "name": "14.12 Issue Replacement License",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/admin/applications/{{lost_replacement_application_id}}/issue-license"
+          }
+        },
+        {
+          "name": "14.13 AI Agent Renew License",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/message",
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"بدي جدد رخصتي\"\n}" }
+          }
+        },
+        {
+          "name": "14.14 AI Agent Lost Replacement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/message",
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"ضاعت رخصتي\"\n}" }
+          }
+        },
+        {
+          "name": "14.15 AI Agent Damaged Replacement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/message",
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"رخصتي تالفة\"\n}" }
           }
         }
       ]

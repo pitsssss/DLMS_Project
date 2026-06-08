@@ -109,6 +109,14 @@ return [
         'complete_profile_first' => 'يجب إكمال الملف الشخصي قبل إنشاء طلب جديد.',
         'note_draft_created' => 'تم إنشاء مسودة الطلب.',
         'duplicate_active_application' => 'يوجد لديك طلب فعال مسبقاً لنفس نوع الرخصة والخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.',
+        'duplicate_active_application_license' => 'يوجد لديك طلب فعال مسبقاً لنفس الرخصة ونفس الخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.',
+        'related_license_required' => 'يجب اختيار الرخصة الحالية لتنفيذ هذه الخدمة.',
+        'related_license_not_allowed' => 'لا يمكن ربط رخصة موجودة مع طلب إصدار رخصة جديدة.',
+        'license_not_owned' => 'الرخصة المحددة لا تخصك.',
+        'license_not_eligible' => 'الرخصة المحددة غير مؤهلة لهذه الخدمة.',
+        'invalid_service_type' => 'نوع الخدمة غير صالح.',
+        'invalid_license_type' => 'نوع الرخصة غير صالح.',
+        'license_type_required' => 'يجب تحديد نوع الرخصة لطلب الإصدار الجديد.',
     ],
 
     'documents' => [
@@ -159,6 +167,7 @@ return [
         'webhook_invalid_signature' => 'توقيع webhook غير صالح.',
         'note_fee_completed' => 'تم إكمال دفع رسوم الطلب.',
         'note_payment_cleared' => 'تمت تسوية الدفع. بانتظار حجز موعد الاختبار.',
+        'note_ready_for_issuance' => 'تمت تسوية الدفع. الطلب جاهز لإصدار الرخصة.',
     ],
 
     'appointments' => [
@@ -264,6 +273,8 @@ return [
         'profile_approved_body' => 'تمت الموافقة على بيانات ملفك الشخصي. يمكنك الآن استخدام خدمات منصة سيرتك.',
         'profile_rejected_title' => 'تم رفض الملف الشخصي',
         'profile_rejected_body' => 'تم رفض بيانات ملفك الشخصي. يرجى مراجعة السبب وتعديل البيانات ثم إعادة إرسالها.',
+        'application_created_title' => 'تم إنشاء الطلب',
+        'application_created_body' => 'تم إنشاء طلب الخدمة بنجاح. يرجى رفع الوثائق المطلوبة للمتابعة.',
         'payment_required_title' => 'الدفع مطلوب',
         'payment_required_body' => 'تم قبول وثائقك. يرجى دفع رسوم الطلب للمتابعة.',
         'documents_rejected_title' => 'تم رفض الوثائق',

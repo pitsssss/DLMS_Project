@@ -30,14 +30,19 @@ class ApplicationRepository
         return 'APP-'.now()->format('Y').'-'.strtoupper(Str::uuid()->toString());
     }
 
-    public function createDraftForCitizen(User $citizen, int $licenseTypeId, int $serviceTypeId): LicenseApplication
-    {
-        return DB::transaction(function () use ($citizen, $licenseTypeId, $serviceTypeId) {
+    public function createDraftForCitizen(
+        User $citizen,
+        int $licenseTypeId,
+        int $serviceTypeId,
+        ?int $relatedLicenseId = null,
+    ): LicenseApplication {
+        return DB::transaction(function () use ($citizen, $licenseTypeId, $serviceTypeId, $relatedLicenseId) {
             $application = LicenseApplication::query()->create([
                 'application_number' => $this->generateUniqueApplicationNumber(),
                 'citizen_id' => $citizen->id,
                 'license_type_id' => $licenseTypeId,
                 'service_type_id' => $serviceTypeId,
+                'related_license_id' => $relatedLicenseId,
                 'status' => ApplicationStatus::Draft,
                 'current_test_type_id' => null,
                 'rejection_reason' => null,
@@ -55,7 +60,7 @@ class ApplicationRepository
                 'notes' => __('messages.applications.note_draft_created'),
             ]);
 
-            return $application->load(['licenseType', 'serviceType', 'currentTestType']);
+            return $application->load(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType']);
         });
     }
 
@@ -64,7 +69,7 @@ class ApplicationRepository
         return LicenseApplication::query()
             ->whereKey($applicationId)
             ->where('citizen_id', $citizen->id)
-            ->with(['licenseType', 'serviceType', 'currentTestType'])
+            ->with(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType'])
             ->first();
     }
 
@@ -75,7 +80,22 @@ class ApplicationRepository
             ->where('license_type_id', $licenseTypeId)
             ->where('service_type_id', $serviceTypeId)
             ->whereIn('status', ApplicationStatus::activeValues())
-            ->with(['licenseType', 'serviceType', 'currentTestType'])
+            ->with(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType'])
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    public function findActiveForCitizenByRelatedLicense(
+        User $citizen,
+        int $serviceTypeId,
+        int $relatedLicenseId,
+    ): ?LicenseApplication {
+        return LicenseApplication::query()
+            ->where('citizen_id', $citizen->id)
+            ->where('service_type_id', $serviceTypeId)
+            ->where('related_license_id', $relatedLicenseId)
+            ->whereIn('status', ApplicationStatus::activeValues())
+            ->with(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType'])
             ->orderByDesc('id')
             ->first();
     }
@@ -135,7 +155,7 @@ class ApplicationRepository
 
             $this->notifications->notifyApplicationStatusChange($application, $newStatus);
 
-            return $application->fresh(['licenseType', 'serviceType', 'currentTestType']);
+            return $application->fresh(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType']);
         });
     }
 }

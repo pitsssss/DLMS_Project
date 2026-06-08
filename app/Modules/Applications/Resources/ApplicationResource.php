@@ -32,6 +32,20 @@ class ApplicationResource extends JsonResource
                     'code' => $this->serviceType->code,
                 ];
             }),
+            'related_license' => $this->whenLoaded('relatedLicense', function () {
+                if ($this->relatedLicense === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $this->relatedLicense->id,
+                    'license_number' => $this->relatedLicense->license_number,
+                    'status' => $this->relatedLicense->status->value,
+                    'issue_date' => $this->relatedLicense->issue_date?->format('Y-m-d'),
+                    'expiry_date' => $this->relatedLicense->expiry_date?->format('Y-m-d'),
+                ];
+            }),
+            'related_license_id' => $this->related_license_id,
             'current_test_type' => $this->whenLoaded('currentTestType', function () {
                 if ($this->currentTestType === null) {
                     return null;

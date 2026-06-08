@@ -72,4 +72,50 @@ class AgentDuplicateApplicationGuard
 
         return $payload;
     }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function blockCreateApplicationIfDuplicateForLicense(
+        User $citizen,
+        array $payload,
+        string $serviceTypeCode,
+        int $relatedLicenseId,
+    ): array {
+        $existing = $this->applications->findActiveApplicationByRelatedLicense(
+            $citizen,
+            $serviceTypeCode,
+            $relatedLicenseId
+        );
+
+        if ($existing === null) {
+            return $payload;
+        }
+
+        $existing->loadMissing(['licenseType', 'serviceType', 'relatedLicense']);
+
+        $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
+            ? $payload['language']
+            : 'ar';
+
+        $payload['intent'] = AgentIntent::GetApplicationStatus->value;
+        $payload['missing_slots'] = [];
+        $payload['proposed_action'] = [
+            'name' => 'get_application_status',
+            'arguments' => [
+                'application_id' => $existing->id,
+            ],
+        ];
+        $payload['requires_confirmation'] = true;
+        $payload['execute_immediately'] = false;
+        $payload['confidence'] = max((float) ($payload['confidence'] ?? 0), 0.9);
+        $payload['requires_human_support'] = false;
+        $payload['safety_status'] = 'safe';
+        $payload['reply'] = $language === 'ar'
+            ? 'يوجد لديك طلب فعال مسبقاً لنفس الرخصة ونفس الخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.'
+            : 'You already have an active application for this license and service.';
+
+        return $payload;
+    }
 }
