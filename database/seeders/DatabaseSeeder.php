@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             EmployeeUserSeeder::class,
             CitizenUserSeeder::class,
+            DemoLicenseServiceTestingSeeder::class,
         ]);
     }
 }

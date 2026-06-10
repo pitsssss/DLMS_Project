@@ -2356,6 +2356,7 @@
     },
     {
       "name": "14. Other License Services",
+      "description": "Demo citizens (password: password123): renew.citizen@example.com (renewal), lost.citizen@example.com (lost replacement), damaged.citizen@example.com (damaged replacement). Login → GET /licenses → copy related_license_id → create application.",
       "item": [
         {
           "name": "14.1 List Citizen Licenses",

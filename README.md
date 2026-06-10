@@ -463,6 +463,36 @@ Role: citizen
 
 ---
 
+## Demo citizens — Other License Services testing
+
+These accounts are seeded by `DemoLicenseServiceTestingSeeder` (included in `php artisan db:seed`).
+
+| Flow | Email | Password |
+| ---- | ----- | -------- |
+| Renewal | renew.citizen@example.com | password123 |
+| Lost replacement | lost.citizen@example.com | password123 |
+| Damaged replacement | damaged.citizen@example.com | password123 |
+
+Each account has an approved profile and one private license ready for manual testing. No active service applications are pre-created.
+
+**Testing steps:**
+
+1. Login with the desired citizen (`POST /api/auth/login`).
+2. `GET /api/licenses` — copy `id` and check eligibility flags (`can_renew`, `can_request_lost_replacement`, `can_request_damaged_replacement`).
+3. `POST /api/applications` with `service_type_code` and `related_license_id`:
+   - `renew_license`
+   - `lost_replacement`
+   - `damaged_replacement`
+4. Continue with required documents, payment, and employee issuance.
+
+**Run seeder only:**
+
+```bash
+php artisan db:seed --class=DemoLicenseServiceTestingSeeder
+```
+
+---
+
 # AI Service Agent (Phase 9)
 
 Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. The backend owns safety rules, structured model output validation, session history, proposed actions, and audit-friendly evaluations.
