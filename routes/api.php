@@ -137,6 +137,10 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])
     ->middleware('throttle:100,1');
 
+require base_path('app/Modules/Settings/Routes/settings.php');
+
+require base_path('app/Modules/Content/Routes/content.php');
+
 require base_path('app/Modules/Dashboard/Routes/dashboard.php');
 
 require base_path('app/Modules/Admin/Routes/admin.php');

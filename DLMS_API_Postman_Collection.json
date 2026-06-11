@@ -2629,6 +2629,124 @@
           }
         }
       ]
+    },
+    {
+      "name": "15. Settings & Support",
+      "item": [
+        {
+          "name": "15.1 Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/settings",
+            "description": "Returns citizen account overview, current preferences (language/theme) and available options. Requires citizen token."
+          }
+        },
+        {
+          "name": "15.2 Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/settings/preferences",
+            "body": { "mode": "raw", "raw": "{\n  \"language\": \"ar\",\n  \"theme\": \"dark\"\n}" },
+            "description": "language: ar|en (nullable). theme: light|dark|system (nullable)."
+          }
+        },
+        {
+          "name": "15.3 Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/settings/change-password",
+            "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"{{citizen_password}}\",\n  \"new_password\": \"new-password-123\",\n  \"new_password_confirmation\": \"new-password-123\"\n}" },
+            "description": "Reuses Auth change-password logic. Returns Arabic success or 'كلمة المرور الحالية غير صحيحة.' on wrong current password."
+          }
+        },
+        {
+          "name": "15.4 Get FAQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{base_url}}/content/faqs",
+            "description": "Public. Returns Arabic FAQ list with id, category, question, answer."
+          }
+        },
+        {
+          "name": "15.5 Get Privacy Policy",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{base_url}}/content/privacy-policy",
+            "description": "Public. Returns title, last_updated and sections[heading, content]."
+          }
+        },
+        {
+          "name": "15.6 Get Contact Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{base_url}}/content/contact-info",
+            "description": "Public. Returns title, description, phone, email, working_hours, address, channels."
+          }
+        },
+        {
+          "name": "15.7 Send Contact Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/contact-messages",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"اسم المواطن\",\n  \"email\": \"{{citizen_email}}\",\n  \"phone\": \"{{citizen_phone}}\",\n  \"subject\": \"استفسار حول الطلب\",\n  \"message\": \"نص الرسالة...\"\n}" },
+            "description": "Public or authenticated. If a citizen token is sent, user_id is linked and missing name/email/phone are prefilled from the account."
+          }
+        },
+        {
+          "name": "15.8 (Admin) List Contact Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/contact-messages?per_page=20",
+            "description": "Requires dashboard user with permission view_contact_messages. Optional ?status= filter."
+          }
+        },
+        {
+          "name": "15.9 (Admin) Update Contact Message Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/contact-messages/1/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"read\"\n}" },
+            "description": "Requires permission manage_contact_messages. status in: new, read, in_progress, resolved, closed."
+          }
+        }
+      ]
     }
   ]
 }

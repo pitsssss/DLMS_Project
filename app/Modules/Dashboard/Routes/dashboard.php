@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardAuthController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
@@ -28,6 +29,15 @@ Route::prefix('dashboard')
             Route::get('/roles', [DashboardRoleController::class, 'index']);
             Route::get('/roles/{role}', [DashboardRoleController::class, 'show']);
             Route::get('/permissions', [DashboardRoleController::class, 'permissions']);
+        });
+
+        Route::middleware('permission:view_contact_messages')->group(function (): void {
+            Route::get('/contact-messages', [DashboardContactMessageController::class, 'index']);
+        });
+
+        Route::middleware('permission:manage_contact_messages')->group(function (): void {
+            Route::patch('/contact-messages/{contactMessage}/status', [DashboardContactMessageController::class, 'updateStatus'])
+                ->whereNumber('contactMessage');
         });
 
         Route::middleware('permission:manage_employees')->group(function (): void {

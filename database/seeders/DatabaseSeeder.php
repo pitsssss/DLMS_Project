@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             TestTypesSeeder::class,
             RequiredDocumentsSeeder::class,
             FeesSeeder::class,
+            FaqSeeder::class,
             AppointmentCentersSeeder::class,
             AppointmentSlotsSeeder::class,
             SuperAdminUserSeeder::class,

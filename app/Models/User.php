@@ -28,6 +28,8 @@ class User extends Authenticatable
         'birth_date',
         'governorate',
         'address',
+        'language',
+        'theme',
         'profile_completed',
         'profile_status',
         'profile_rejection_reason',
