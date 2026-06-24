@@ -4,6 +4,7 @@ use App\Modules\Dashboard\Controllers\DashboardAuthController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use Illuminate\Support\Facades\Route;
+use App\Modules\Dashboard\Controllers\DashboardApplicationController;
 
 Route::prefix('dashboard/auth')->group(function (): void {
     Route::post('/login', [DashboardAuthController::class, 'login']);
@@ -38,5 +39,13 @@ Route::prefix('dashboard')
             Route::patch('/employees/{user}/toggle-active', [DashboardEmployeeController::class, 'toggleActive'])->whereNumber('user');
             Route::post('/employees/{user}/reset-password', [DashboardEmployeeController::class, 'resetPassword'])->whereNumber('user');
             Route::post('/employees/{user}/assign-role', [DashboardEmployeeController::class, 'assignRole'])->whereNumber('user');
+
+
+            Route::middleware('permission:view_applications')->group(function (): void {
+                Route::get('/applications', [DashboardApplicationController::class, 'index']);
+
         });
     });
+
+
+});
