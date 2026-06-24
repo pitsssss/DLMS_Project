@@ -10,6 +10,8 @@ use App\Models\LicenseApplication;
 use App\Models\Payment;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Applications\Support\ServiceWorkflow;
+use App\Modules\Payments\Support\ApplicationFeeResolver;
 use App\Modules\Payments\Support\StripeMoney;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,6 +25,7 @@ class ApplicationPaymentService
         private readonly ApplicationRepository $applications,
         private readonly PaymentProviderManager $providerManager,
         private readonly StripePaymentGatewayService $stripeGateway,
+        private readonly ApplicationFeeResolver $feeResolver,
         private readonly AuditLogService $auditLogs
     ) {}
 
@@ -232,11 +235,18 @@ class ApplicationPaymentService
                     throw new ApiException('messages.applications.not_found', 404);
                 }
 
+                $application->loadMissing('serviceType');
+                $nextStatus = ServiceWorkflow::requiresTests($application->serviceType?->code)
+                    ? ApplicationStatus::AppointmentPending
+                    : ApplicationStatus::Approved;
+
                 $this->applications->transitionStatus(
                     $application,
-                    ApplicationStatus::AppointmentPending,
+                    $nextStatus,
                     $actor,
-                    __('messages.payments.note_payment_cleared')
+                    $nextStatus === ApplicationStatus::Approved
+                        ? __('messages.payments.note_ready_for_issuance')
+                        : __('messages.payments.note_payment_cleared')
                 );
             }
 
@@ -456,18 +466,7 @@ class ApplicationPaymentService
 
     private function resolveApplicationFee(LicenseApplication $application): Fee
     {
-        $fee = Fee::query()
-            ->where('license_type_id', $application->license_type_id)
-            ->where('service_type_id', $application->service_type_id)
-            ->where('code', 'application_fee')
-            ->where('is_active', true)
-            ->first();
-
-        if ($fee === null) {
-            throw new ApiException('messages.payments.no_fee_configured', 422);
-        }
-
-        return $fee;
+        return $this->feeResolver->resolve($application);
     }
 
     private function generateUniquePaymentNumber(): string

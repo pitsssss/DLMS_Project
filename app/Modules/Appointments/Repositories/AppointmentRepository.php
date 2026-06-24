@@ -16,7 +16,7 @@ class AppointmentRepository
         return TestAppointment::query()
             ->where('application_id', $applicationId)
             ->where('citizen_id', $citizenId)
-            ->with(['appointmentSlot', 'testType', 'testResult'])
+            ->with(['appointmentSlot.appointmentCenter', 'testType', 'testResult'])
             ->orderByDesc('id')
             ->get();
     }
@@ -26,7 +26,7 @@ class AppointmentRepository
         return TestAppointment::query()
             ->whereKey($appointmentId)
             ->where('citizen_id', $citizen->id)
-            ->with(['appointmentSlot', 'testType', 'application'])
+            ->with(['appointmentSlot.appointmentCenter', 'testType', 'application'])
             ->first();
     }
 

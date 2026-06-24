@@ -2,10 +2,13 @@
 
 namespace App\Modules\AIAgent\Services;
 
+use App\Modules\AIAgent\Enums\AgentActionStatus;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
+use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSessionContextService
@@ -61,7 +64,24 @@ class AgentSessionContextService
     public function mergeUserMessage(AIAgentSession $session, string $userMessage): array
     {
         $state = $this->resolveState($session);
-        $extracted = LicenseTypeSlotExtractor::extract($userMessage);
+
+        if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+            $userMessage,
+            $state['intent'],
+            $this->resolveLastDiscussedApplicationId($session)
+        )) {
+            $state['extracted_license_type'] = null;
+
+            return $state;
+        }
+
+        $allowExtract = AgentMessageIntentMatcher::shouldExtractLicenseTypeSlot(
+            $userMessage,
+            $state['intent'],
+            $state['missing_slots']
+        );
+
+        $extracted = LicenseTypeSlotExtractor::extract($userMessage, $allowExtract);
 
         if ($extracted !== null) {
             $state['collected_slots']['license_type_code'] = $extracted;
@@ -72,8 +92,95 @@ class AgentSessionContextService
         return $state;
     }
 
+    public function resolveLastDiscussedApplicationId(AIAgentSession $session): ?int
+    {
+        $context = $session->context ?? [];
+        if (isset($context['last_application_id']) && is_numeric($context['last_application_id'])) {
+            return (int) $context['last_application_id'];
+        }
+
+        $bookAction = AIAgentAction::query()
+            ->where('session_id', $session->id)
+            ->where('status', AgentActionStatus::Executed)
+            ->where('action_name', 'book_appointment')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($bookAction !== null) {
+            $fromBookResult = $this->extractApplicationIdFromArray(
+                is_array($bookAction->result) ? $bookAction->result : []
+            );
+            if ($fromBookResult !== null) {
+                return $fromBookResult;
+            }
+        }
+
+        $actions = AIAgentAction::query()
+            ->where('session_id', $session->id)
+            ->where('status', AgentActionStatus::Executed)
+            ->whereIn('action_name', [
+                'get_application_status',
+                'get_application_next_step',
+                'get_required_documents',
+                'create_application',
+                'get_available_tests',
+                'get_appointment_slots',
+                'get_current_appointments',
+                'book_appointment',
+                'start_payment',
+            ])
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($actions as $action) {
+            $fromResult = $this->extractApplicationIdFromArray(is_array($action->result) ? $action->result : []);
+            if ($fromResult !== null) {
+                return $fromResult;
+            }
+
+            $fromArgs = $this->extractApplicationIdFromArray(is_array($action->arguments) ? $action->arguments : []);
+            if ($fromArgs !== null) {
+                return $fromArgs;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function extractApplicationIdFromArray(array $data): ?int
+    {
+        foreach (['application_id', 'id'] as $key) {
+            if (isset($data[$key]) && is_numeric($data[$key])) {
+                return (int) $data[$key];
+            }
+        }
+
+        return null;
+    }
+
     public function isNewLicenseContinuation(array $state, ?string $extractedLicenseType = null): bool
     {
+        if (in_array($state['intent'] ?? null, [
+            AgentIntent::GetApplicationStatus->value,
+            AgentIntent::GetApplicationNextStep->value,
+            AgentIntent::GetRequiredDocuments->value,
+            AgentIntent::GetApplicationFee->value,
+            AgentIntent::StartPayment->value,
+            AgentIntent::GetFines->value,
+            AgentIntent::GetLicenses->value,
+            AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAvailableTests->value,
+            AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::GetCurrentAppointments->value,
+            AgentIntent::BookAppointment->value,
+            AgentIntent::GetTestResults->value,
+        ], true)) {
+            return false;
+        }
+
         if (($state['intent'] ?? null) === AgentIntent::CreateNewLicenseApplication->value) {
             return true;
         }
@@ -100,7 +207,35 @@ class AgentSessionContextService
      */
     public function finalizeState(array $state, array $payload, string $userMessage): array
     {
-        $extracted = LicenseTypeSlotExtractor::extract($userMessage);
+        if (in_array($payload['intent'] ?? null, [
+            AgentIntent::GetApplicationStatus->value,
+            AgentIntent::GetApplicationNextStep->value,
+            AgentIntent::GetRequiredDocuments->value,
+            AgentIntent::GetApplicationFee->value,
+            AgentIntent::StartPayment->value,
+            AgentIntent::GetFines->value,
+            AgentIntent::GetLicenses->value,
+            AgentIntent::GetProfileStatus->value,
+            AgentIntent::GetAvailableTests->value,
+            AgentIntent::GetAppointmentSlots->value,
+            AgentIntent::GetCurrentAppointments->value,
+            AgentIntent::BookAppointment->value,
+            AgentIntent::GetTestResults->value,
+        ], true)) {
+            $state['collected_slots'] = [];
+            $state['missing_slots'] = array_values($payload['missing_slots'] ?? []);
+            $state['intent'] = $payload['intent'];
+
+            return $state;
+        }
+
+        $allowExtract = AgentMessageIntentMatcher::shouldExtractLicenseTypeSlot(
+            $userMessage,
+            $payload['intent'] ?? $state['intent'],
+            $state['missing_slots'] ?? []
+        );
+
+        $extracted = LicenseTypeSlotExtractor::extract($userMessage, $allowExtract);
 
         if ($extracted !== null) {
             $state['collected_slots']['license_type_code'] = $extracted;
@@ -130,13 +265,27 @@ class AgentSessionContextService
         array $state,
         string $userMessage,
     ): array {
+        if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+            $userMessage,
+            $session->current_intent,
+            $this->resolveLastDiscussedApplicationId($session)
+        )) {
+            return $payload;
+        }
+
         $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
             ? $payload['language']
             : 'ar';
 
+        $allowExtract = AgentMessageIntentMatcher::shouldExtractLicenseTypeSlot(
+            $userMessage,
+            $state['intent'] ?? ($payload['intent'] ?? null),
+            $state['missing_slots'] ?? []
+        );
+
         $licenseType = $state['collected_slots']['license_type_code']
             ?? $state['extracted_license_type']
-            ?? LicenseTypeSlotExtractor::extract($userMessage);
+            ?? LicenseTypeSlotExtractor::extract($userMessage, $allowExtract);
 
         if (! $this->isNewLicenseContinuation($state, $licenseType)) {
             return $payload;
@@ -225,6 +374,20 @@ class AgentSessionContextService
                 'status' => $pendingAction->status->value,
                 'arguments' => $pendingAction->arguments ?? [],
             ];
+
+            $applicationId = $this->extractApplicationIdFromArray($pendingAction->arguments ?? []);
+            if ($applicationId !== null) {
+                $context['last_application_id'] = $applicationId;
+            }
+        }
+
+        $proposedId = $this->extractApplicationIdFromArray(
+            is_array($payload['proposed_action']['arguments'] ?? null)
+                ? $payload['proposed_action']['arguments']
+                : []
+        );
+        if ($proposedId !== null) {
+            $context['last_application_id'] = $proposedId;
         }
 
         return $context;

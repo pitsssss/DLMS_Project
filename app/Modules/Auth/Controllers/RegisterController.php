@@ -14,10 +14,6 @@ class RegisterController extends Controller
     {
         $payload = $auth->register($request->validated());
 
-        if (config('app.debug') && config('otp.fixed_code')) {
-            $payload['debug_otp'] = config('otp.fixed_code');
-        }
-
         return $this->successResponse(
             $payload,
             'messages.auth.register_success',

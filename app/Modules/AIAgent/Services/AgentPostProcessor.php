@@ -5,6 +5,7 @@ namespace App\Modules\AIAgent\Services;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\AgentTranslator;
 
 class AgentPostProcessor
 {
@@ -80,7 +81,7 @@ class AgentPostProcessor
             $requiresConfirmation = false;
         }
 
-        return [
+        $payload = [
             'intent' => $intent,
             'confidence' => $confidence,
             'language' => $language,
@@ -91,6 +92,15 @@ class AgentPostProcessor
             'safety_status' => $safetyStatus,
             'requires_human_support' => $requiresHumanSupport,
         ];
+
+        if ($proposedAction !== null
+            && AgentSafetyRules::isReadOnlyAction($proposedAction['name'])
+            && $missingSlots === []
+            && ($raw['execute_immediately'] ?? true) !== false) {
+            $payload['requires_confirmation'] = false;
+        }
+
+        return AgentTranslator::localizePayload($payload);
     }
 
     private function normalizeConfidence(mixed $value): float
@@ -183,6 +193,8 @@ class AgentPostProcessor
 
     public function applyConfirmationReply(array $payload): array
     {
+        $payload = AgentTranslator::localizePayload($payload);
+
         if (! ($payload['requires_confirmation'] ?? false)) {
             return $payload;
         }

@@ -129,13 +129,24 @@ class OtpService
 
         $plain = $this->generateCode();
 
-        return Otp::query()->create([
+        $expiresAt = Carbon::now()->addMinutes($this->expiryMinutes());
+
+        $otp = Otp::query()->create([
             'email' => null,
             'phone' => $phone,
             'code' => Hash::make($plain),
             'purpose' => $purpose,
-            'expires_at' => Carbon::now()->addMinutes($this->expiryMinutes()),
+            'expires_at' => $expiresAt,
         ]);
+
+        $this->logOtpForDebug(
+            purpose: $purpose,
+            plainCode: $plain,
+            expiresAt: $expiresAt,
+            phone: $phone,
+        );
+
+        return $otp;
     }
 
     /**
@@ -170,12 +181,71 @@ class OtpService
 
     protected function storeEmailOtpRecord(string $email, OtpPurpose $purpose, string $plainCode): Otp
     {
-        return Otp::query()->create([
+        $otp = Otp::query()->create([
             'email' => $email,
             'phone' => null,
             'code' => Hash::make($plainCode),
             'purpose' => $purpose,
             'expires_at' => Carbon::now()->addMinutes($this->expiryMinutes()),
         ]);
+
+        $this->logOtpForDebug(
+            purpose: $purpose,
+            plainCode: $plainCode,
+            expiresAt: $otp->expires_at,
+            email: $email,
+        );
+
+        return $otp;
+    }
+
+    private function logOtpForDebug(
+        OtpPurpose $purpose,
+        string $plainCode,
+        Carbon $expiresAt,
+        ?string $email = null,
+        ?string $phone = null,
+        ?int $userId = null,
+    ): void {
+        if (! app()->environment(['local', 'testing', 'staging'])) {
+            return;
+        }
+
+        $recipient = $email ?? $phone ?? 'unknown';
+
+        if ($userId === null) {
+            $userQuery = User::query();
+            if ($email !== null) {
+                $userQuery->where('email', $email);
+            } elseif ($phone !== null) {
+                $userQuery->where('phone', $phone);
+            } else {
+                $userQuery->whereRaw('1 = 0');
+            }
+
+            $userId = $userQuery->value('id');
+        }
+
+        $lines = [
+            '[OTP DEBUG]',
+            'Purpose: '.$purpose->value,
+            'User/Email/Phone: '.$recipient,
+        ];
+
+        if ($userId !== null) {
+            $lines[] = 'User ID: '.$userId;
+        }
+
+        if (! app()->runningInConsole() && app()->bound('request')) {
+            $ip = request()->ip();
+            if ($ip !== null && $ip !== '') {
+                $lines[] = 'Request IP: '.$ip;
+            }
+        }
+
+        $lines[] = 'OTP Code: '.$plainCode;
+        $lines[] = 'Expires At: '.$expiresAt->format('Y-m-d H:i:s');
+
+        Log::info(implode("\n", $lines));
     }
 }

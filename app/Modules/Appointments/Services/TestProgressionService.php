@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class TestProgressionService
 {
+    public function __construct(
+        private readonly AvailableTestReasonResolver $availabilityReasons,
+    ) {}
     /**
      * @return Collection<int, TestType>
      */
@@ -116,24 +119,67 @@ class TestProgressionService
      */
     public function availableTestsPayload(LicenseApplication $application): array
     {
+        $requiredTestTypes = $this->requiredTestTypes();
         $bookable = $this->resolveBookableTestType($application);
         $passedIds = $this->passedTestTypeIds($application);
 
         $items = [];
-        foreach ($this->requiredTestTypes() as $testType) {
+        foreach ($requiredTestTypes as $testType) {
+            $attemptsCount = $this->attemptCount($application, $testType->id);
+            $availability = $this->availabilityReasons->resolve(
+                $application,
+                $testType,
+                $requiredTestTypes,
+                $bookable,
+                $passedIds,
+                $attemptsCount,
+            );
+
             $items[] = [
                 'id' => $testType->id,
+                'test_type_id' => $testType->id,
                 'name' => $testType->name,
                 'code' => $testType->code,
                 'sequence_order' => $testType->sequence_order,
                 'max_attempts' => $testType->max_attempts,
                 'passed' => in_array($testType->id, $passedIds, true),
-                'can_book' => $bookable !== null && $bookable->id === $testType->id,
-                'attempts_used' => $this->attemptCount($application, $testType->id),
+                'is_completed' => in_array($testType->id, $passedIds, true),
+                'can_book' => $availability['is_available'],
+                'is_available' => $availability['is_available'],
+                'has_active_appointment' => $this->hasActiveBookedAppointment($application, $testType->id),
+                'latest_result' => $this->latestResultPayload($application, $testType->id),
+                'attempts_used' => $attemptsCount,
+                'attempts_count' => $attemptsCount,
+                'reason_code' => $availability['reason_code'],
+                'reason' => $availability['reason'],
+                'next_action_label' => $availability['next_action_label'],
             ];
         }
 
         return $items;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function latestResultPayload(LicenseApplication $application, int $testTypeId): ?array
+    {
+        $result = TestResult::query()
+            ->where('application_id', $application->id)
+            ->where('test_type_id', $testTypeId)
+            ->orderByDesc('recorded_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return [
+            'result' => $result->result->value,
+            'attempt_number' => $result->attempt_number,
+            'recorded_at' => $result->recorded_at?->toIso8601String(),
+        ];
     }
 
     public function assertCanBook(LicenseApplication $application, TestType $testType): void

@@ -70,22 +70,214 @@ class DocumentFlowTest extends TestCase
     {
         Sanctum::actingAs($citizen);
 
-        $checklist = $this->getJson("/api/applications/{$applicationId}/required-documents")
-            ->assertOk()
-            ->json('data');
+        $checklist = $this->getRequiredChecklist($applicationId);
 
         $this->assertNotEmpty($checklist);
 
         foreach ($checklist as $item) {
-            $this->post(
-                "/api/applications/{$applicationId}/documents",
-                [
-                    'required_document_id' => $item['id'],
-                    'file' => UploadedFile::fake()->create('doc-'.$item['code'].'.pdf', 80, 'application/pdf'),
-                ],
-                ['Accept' => 'application/json']
-            )->assertOk();
+            $this->uploadRequiredDocument($applicationId, (int) $item['id'], (string) $item['code']);
         }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function getRequiredChecklist(int $applicationId): array
+    {
+        return $this->getJson("/api/applications/{$applicationId}/required-documents")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->json('data');
+    }
+
+    private function uploadRequiredDocument(int $applicationId, int $requiredDocumentId, string $code): void
+    {
+        $this->post(
+            "/api/applications/{$applicationId}/documents",
+            [
+                'required_document_id' => $requiredDocumentId,
+                'file' => UploadedFile::fake()->create('doc-'.$code.'.pdf', 80, 'application/pdf'),
+            ],
+            ['Accept' => 'application/json']
+        )->assertOk();
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $checklist
+     */
+    private function assertChecklistUploadCounts(array $checklist, int $uploadedCount, int $totalCount): void
+    {
+        $this->assertCount($totalCount, $checklist);
+
+        $uploadedItems = collect($checklist)->filter(
+            fn (array $item): bool => ! empty($item['latest_document'])
+        );
+
+        $this->assertCount($uploadedCount, $uploadedItems);
+        $this->assertCount($totalCount - $uploadedCount, collect($checklist)->filter(
+            fn (array $item): bool => empty($item['latest_document'])
+        ));
+    }
+
+    public function test_required_checklist_before_upload(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+
+        Sanctum::actingAs($citizen);
+        $checklist = $this->getRequiredChecklist($applicationId);
+
+        $this->assertNotEmpty($checklist);
+        $this->assertChecklistUploadCounts($checklist, 0, count($checklist));
+
+        foreach ($checklist as $item) {
+            $this->assertArrayHasKey('id', $item);
+            $this->assertArrayHasKey('name', $item);
+            $this->assertArrayHasKey('is_required', $item);
+            $this->assertTrue((bool) $item['is_required']);
+            $this->assertNull($item['latest_document']);
+        }
+    }
+
+    public function test_required_checklist_after_one_upload(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+
+        Sanctum::actingAs($citizen);
+        $before = $this->getRequiredChecklist($applicationId);
+        $firstRequiredId = (int) $before[0]['id'];
+        $firstCode = (string) $before[0]['code'];
+
+        $this->uploadRequiredDocument($applicationId, $firstRequiredId, $firstCode);
+
+        $after = $this->getRequiredChecklist($applicationId);
+        $this->assertChecklistUploadCounts($after, 1, count($before));
+
+        $uploadedItem = collect($after)->firstWhere('id', $firstRequiredId);
+        $this->assertNotNull($uploadedItem);
+        $this->assertNotNull($uploadedItem['latest_document']);
+        $this->assertEquals(DocumentStatus::PendingReview->value, $uploadedItem['latest_document']['status']);
+        $this->assertEquals('doc-'.$firstCode.'.pdf', $uploadedItem['latest_document']['original_name']);
+    }
+
+    public function test_required_checklist_after_multiple_uploads(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+
+        Sanctum::actingAs($citizen);
+        $checklist = $this->getRequiredChecklist($applicationId);
+
+        $this->uploadRequiredDocument($applicationId, (int) $checklist[0]['id'], (string) $checklist[0]['code']);
+        $this->uploadRequiredDocument($applicationId, (int) $checklist[1]['id'], (string) $checklist[1]['code']);
+
+        $after = $this->getRequiredChecklist($applicationId);
+        $this->assertChecklistUploadCounts($after, 2, count($checklist));
+    }
+
+    public function test_required_checklist_after_all_uploads(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+
+        Sanctum::actingAs($citizen);
+        $before = $this->getRequiredChecklist($applicationId);
+        $this->uploadAllRequired($citizen, $applicationId);
+
+        $after = $this->getRequiredChecklist($applicationId);
+        $this->assertChecklistUploadCounts($after, count($before), count($before));
+
+        foreach ($after as $item) {
+            $this->assertNotNull($item['latest_document']);
+            $this->assertEquals(DocumentStatus::PendingReview->value, $item['latest_document']['status']);
+        }
+    }
+
+    public function test_citizen_cannot_view_another_citizens_required_checklist(): void
+    {
+        $owner = $this->readyCitizen();
+        $other = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($owner);
+
+        Sanctum::actingAs($other);
+        $this->getJson("/api/applications/{$applicationId}/required-documents")
+            ->assertStatus(404)
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_required_checklist_shows_rejected_document_status(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+        $this->uploadAllRequired($citizen, $applicationId);
+
+        Sanctum::actingAs($citizen);
+        $this->postJson("/api/applications/{$applicationId}/submit-documents")->assertOk();
+
+        $employee = $this->employeeUser();
+        Sanctum::actingAs($employee);
+
+        $firstDocId = (int) $this->getJson('/api/admin/documents/pending-review')->json('data.items.0.id');
+        $requiredDocumentId = (int) ApplicationDocument::query()->findOrFail($firstDocId)->required_document_id;
+
+        $this->postJson("/api/admin/documents/{$firstDocId}/reject", [
+            'rejection_reason' => 'Illegible scan.',
+        ])->assertOk();
+
+        Sanctum::actingAs($citizen);
+        $checklist = $this->getRequiredChecklist($applicationId);
+        $rejectedItem = collect($checklist)->firstWhere('id', $requiredDocumentId);
+
+        $this->assertNotNull($rejectedItem);
+        $this->assertNotNull($rejectedItem['latest_document']);
+        $this->assertEquals(DocumentStatus::Rejected->value, $rejectedItem['latest_document']['status']);
+        $this->assertEquals('Illegible scan.', $rejectedItem['latest_document']['rejection_reason']);
+    }
+
+    public function test_required_checklist_shows_approved_document_status(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+        $this->uploadAllRequired($citizen, $applicationId);
+
+        Sanctum::actingAs($citizen);
+        $this->postJson("/api/applications/{$applicationId}/submit-documents")->assertOk();
+
+        $employee = $this->employeeUser();
+        Sanctum::actingAs($employee);
+
+        $firstDocId = (int) $this->getJson('/api/admin/documents/pending-review')->json('data.items.0.id');
+        $requiredDocumentId = (int) ApplicationDocument::query()->findOrFail($firstDocId)->required_document_id;
+
+        $this->postJson("/api/admin/documents/{$firstDocId}/approve")->assertOk();
+
+        Sanctum::actingAs($citizen);
+        $checklist = $this->getRequiredChecklist($applicationId);
+        $approvedItem = collect($checklist)->firstWhere('id', $requiredDocumentId);
+
+        $this->assertNotNull($approvedItem);
+        $this->assertNotNull($approvedItem['latest_document']);
+        $this->assertEquals(DocumentStatus::Approved->value, $approvedItem['latest_document']['status']);
+    }
+
+    public function test_required_checklist_does_not_fail_after_upload(): void
+    {
+        $citizen = $this->readyCitizen();
+        $applicationId = $this->createNewLicenseApplication($citizen);
+
+        Sanctum::actingAs($citizen);
+        $checklist = $this->getRequiredChecklist($applicationId);
+        $this->uploadRequiredDocument($applicationId, (int) $checklist[0]['id'], (string) $checklist[0]['code']);
+
+        $response = $this->getJson("/api/applications/{$applicationId}/required-documents");
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonMissing(['exception'])
+            ->assertJsonMissing(['trace']);
+
+        $this->assertNotNull($response->json('data.0.latest_document.id'));
     }
 
     public function test_full_document_review_moves_application_to_payment_pending(): void

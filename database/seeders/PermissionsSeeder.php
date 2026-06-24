@@ -44,6 +44,8 @@ class PermissionsSeeder extends Seeder
             'view_ai_agent_logs',
             'view_ai_agent_reports',
             'manage_users',
+            'view_contact_messages',
+            'manage_contact_messages',
         ];
 
         $names = array_values(array_unique($names));
@@ -80,6 +82,8 @@ class PermissionsSeeder extends Seeder
             'settings_employee' => [
                 'access_dashboard',
                 'manage_settings',
+                'view_contact_messages',
+                'manage_contact_messages',
             ],
             'application_manager' => [
                 'access_dashboard',

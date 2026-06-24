@@ -32,8 +32,21 @@ class AppointmentService
     public function availableTestsForApplication(User $citizen, int $applicationId): array
     {
         $application = $this->requireOwnedApplication($citizen, $applicationId);
+        $application->loadMissing('serviceType');
 
-        return $this->progression->availableTestsPayload($application);
+        if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
+            return [
+                'blocked' => true,
+                'message' => 'هذه الخدمة لا تتطلب حجز اختبارات.',
+                'tests' => [],
+            ];
+        }
+
+        return [
+            'blocked' => false,
+            'message' => null,
+            'tests' => $this->progression->availableTestsPayload($application),
+        ];
     }
 
     /**
@@ -65,6 +78,11 @@ class AppointmentService
 
         return DB::transaction(function () use ($citizen, $application, $appointmentSlotId) {
             $application = LicenseApplication::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            $application->loadMissing('serviceType');
+
+            if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
+                throw new ApiException('هذه الخدمة لا تتطلب حجز اختبارات.', 422);
+            }
 
             $bookable = $this->progression->resolveBookableTestType($application);
             if ($bookable === null) {
@@ -73,9 +91,24 @@ class AppointmentService
 
             $this->progression->assertCanBook($application, $bookable);
 
-            $slot = $this->slots->findAvailableForBooking($appointmentSlotId, $bookable->id);
-            if ($slot === null) {
+            $slot = AppointmentSlot::query()
+                ->whereKey($appointmentSlotId)
+                ->lockForUpdate()
+                ->with(['testType', 'appointmentCenter'])
+                ->first();
+
+            if ($slot === null
+                || ! $slot->is_active
+                || $slot->date->format('Y-m-d') < now()->toDateString()
+                || $slot->booked_count >= $slot->capacity) {
                 throw new ApiException('messages.appointments.slot_unavailable', 422);
+            }
+
+            if ($slot->test_type_id !== $bookable->id) {
+                throw new ApiException('messages.appointments.previous_test_not_passed', 422, [], [
+                    'previous_test' => $bookable->name,
+                    'current_test' => $slot->testType?->name ?? '',
+                ]);
             }
 
             $scheduledAt = Carbon::parse($slot->date->format('Y-m-d').' '.$slot->start_time);
@@ -106,7 +139,7 @@ class AppointmentService
                 $application->save();
             }
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 
@@ -133,7 +166,7 @@ class AppointmentService
             }
 
             if ($newSlot->id === $appointment->appointment_slot_id) {
-                return $appointment->fresh(['appointmentSlot', 'testType']);
+                return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
             }
 
             $oldSlot = AppointmentSlot::query()->whereKey($appointment->appointment_slot_id)->lockForUpdate()->firstOrFail();
@@ -149,7 +182,7 @@ class AppointmentService
             $appointment->scheduled_at = $scheduledAt;
             $appointment->save();
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 
@@ -180,7 +213,7 @@ class AppointmentService
             $appointment->cancellation_reason = $reason;
             $appointment->save();
 
-            return $appointment->fresh(['appointmentSlot', 'testType']);
+            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
     }
 

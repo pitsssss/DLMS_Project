@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
             TestTypesSeeder::class,
             RequiredDocumentsSeeder::class,
             FeesSeeder::class,
+            FaqSeeder::class,
+            AppointmentCentersSeeder::class,
             AppointmentSlotsSeeder::class,
             SuperAdminUserSeeder::class,
             DashboardEmployeesSeeder::class,
@@ -23,6 +25,7 @@ class DatabaseSeeder extends Seeder
             EmployeeUserSeeder::class,
             CitizenUserSeeder::class,
             LicenseApplicationSeeder::class,
+            DemoLicenseServiceTestingSeeder::class,
 
         ]);
     }

@@ -5,12 +5,17 @@ namespace App\Modules\AIAgent\Services;
 use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentActionStatus;
+use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Enums\AgentMessageRole;
 use App\Modules\AIAgent\Enums\AgentSessionStatus;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
+use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\AgentUserConfirmationDetector;
+use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -67,6 +72,16 @@ class AIAgentService
                         cancelled: true
                     );
                 }
+
+                if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
+                    $userMessage,
+                    $session->current_intent,
+                    $this->sessionContext->resolveLastDiscussedApplicationId($session)
+                )) {
+                    $awaitingAction->status = AgentActionStatus::Cancelled;
+                    $awaitingAction->save();
+                    $awaitingAction = null;
+                }
             }
 
             $startedAt = hrtime(true);
@@ -98,13 +113,26 @@ class AIAgentService
                 );
             }
 
+            $payload = $this->intentDetector->applyDeterministicOverrides($user, $session, $userMessage, $payload, $state);
+            $payload = $this->applyReadOnlyConfirmationDefaults($payload);
+
             $payload = $this->slotFiller->apply($user, $session, $payload, $userMessage, $state);
             $payload = $this->postProcessor->enforceProfileApprovalRules($user, $payload);
             $payload = $this->postProcessor->enforceDuplicateApplicationRules($user, $payload);
             $payload = $this->postProcessor->applyConfirmationReply($payload);
+            $payload = AgentTranslator::localizePayload($payload);
             $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);
 
+            $session->current_intent = $payload['intent'];
+            $session->last_message_at = now();
+            $session->save();
+
             $pendingAction = $this->persistProposedAction($user, $session, $payload);
+
+            $executed = $this->maybeExecuteReadOnlyAction($user, $session, $pendingAction, $payload);
+            if ($executed !== null) {
+                return $executed;
+            }
 
             $assistantMessage = $this->storeMessage(
                 $session,
@@ -119,9 +147,6 @@ class AIAgentService
             );
 
             $this->slotFiller->persistSessionContext($session, $payload, $state, $pendingAction);
-
-            $session->current_intent = $payload['intent'];
-            $session->last_message_at = now();
             $session->save();
 
             $latencyMs = (int) ((hrtime(true) - $startedAt) / 1_000_000);
@@ -226,7 +251,7 @@ class AIAgentService
         $response = [
             'session_id' => $session->id,
             'reply' => (string) ($actionResult['reply'] ?? ''),
-            'intent' => $session->current_intent ?? 'create_new_license_application',
+            'intent' => $session->current_intent ?? AgentIntent::GeneralHelp->value,
             'confidence' => 1.0,
             'missing_slots' => [],
             'requires_confirmation' => false,
@@ -238,9 +263,69 @@ class AIAgentService
 
         if (! $cancelled && isset($actionResult['result'])) {
             $response['result'] = $actionResult['result'];
+            $this->rememberLastDiscussedApplication($session, $actionResult['result']);
         }
 
-        return $response;
+        if (! $cancelled && isset($action['name'])) {
+            $response['intent'] = match ($action['name']) {
+                'get_application_status' => AgentIntent::GetApplicationStatus->value,
+                'get_application_next_step' => AgentIntent::GetApplicationNextStep->value,
+                'get_required_documents' => AgentIntent::GetRequiredDocuments->value,
+                'get_application_fee' => AgentIntent::GetApplicationFee->value,
+                'get_fines' => AgentIntent::GetFines->value,
+                'get_licenses' => AgentIntent::GetLicenses->value,
+                'get_profile_status' => AgentIntent::GetProfileStatus->value,
+                'get_available_tests' => AgentIntent::GetAvailableTests->value,
+                'get_appointment_slots' => AgentIntent::GetAppointmentSlots->value,
+                'get_current_appointments' => AgentIntent::GetCurrentAppointments->value,
+                'book_appointment' => AgentIntent::BookAppointment->value,
+                default => $session->current_intent ?? AgentIntent::GeneralHelp->value,
+            };
+            $session->current_intent = $response['intent'];
+            $session->save();
+        }
+
+        if (! $cancelled
+            && ($action['name'] ?? null) === 'get_current_appointments'
+            && empty($actionResult['result']['appointments'] ?? [])) {
+            $response['suggested_next_actions'] = ['get_available_tests', 'get_appointment_slots'];
+        }
+
+        return AgentTranslator::localizePayload($response);
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function rememberLastDiscussedApplication(AIAgentSession $session, array $result): void
+    {
+        $applicationId = null;
+        foreach (['application_id', 'id'] as $key) {
+            if (isset($result[$key]) && is_numeric($result[$key])) {
+                $applicationId = (int) $result[$key];
+                break;
+            }
+        }
+
+        if ($applicationId === null) {
+            return;
+        }
+
+        $context = $session->context ?? [];
+        $context['last_application_id'] = $applicationId;
+
+        if (isset($result['appointment_id']) && is_numeric($result['appointment_id'])) {
+            $context['last_appointment_id'] = (int) $result['appointment_id'];
+        } elseif (isset($result['id']) && is_numeric($result['id']) && isset($result['test_type'])) {
+            $context['last_appointment_id'] = (int) $result['id'];
+        }
+
+        if (isset($result['test_type']['code']) && is_string($result['test_type']['code'])) {
+            $context['last_test_type_code'] = $result['test_type']['code'];
+        }
+
+        $session->context = $context;
+        $session->save();
     }
 
     private function persistProposedAction(User $user, AIAgentSession $session, array $payload): ?AIAgentAction
@@ -261,6 +346,12 @@ class AIAgentService
         }
 
         $requiresConfirmation = (bool) ($payload['requires_confirmation'] ?? config('ai.require_confirmation'));
+
+        if (AgentSafetyRules::isReadOnlyAction((string) $proposed['name'])
+            && empty($payload['missing_slots'])
+            && ($payload['execute_immediately'] ?? true) !== false) {
+            $requiresConfirmation = false;
+        }
 
         $status = $requiresConfirmation
             ? AgentActionStatus::AwaitingConfirmation
@@ -293,6 +384,7 @@ class AIAgentService
             'missing_slots' => $payload['missing_slots'] ?? [],
             'requires_confirmation' => (bool) ($payload['requires_confirmation'] ?? false),
             'pending_action' => null,
+            'suggested_next_actions' => array_values($payload['suggested_next_actions'] ?? []),
         ];
 
         if ($pendingAction !== null) {
@@ -307,5 +399,61 @@ class AIAgentService
         }
 
         return $response;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function applyReadOnlyConfirmationDefaults(array $payload): array
+    {
+        $proposed = $payload['proposed_action'] ?? null;
+
+        if (is_array($proposed)
+            && AgentSafetyRules::isReadOnlyAction((string) ($proposed['name'] ?? ''))
+            && empty($payload['missing_slots'])
+            && ($payload['execute_immediately'] ?? true) !== false) {
+            $payload['requires_confirmation'] = false;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Execute read-only actions immediately (status, fines, licenses, documents list).
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>|null
+     */
+    private function maybeExecuteReadOnlyAction(
+        User $user,
+        AIAgentSession $session,
+        ?AIAgentAction $pendingAction,
+        array $payload,
+    ): ?array {
+        if ($pendingAction === null || $pendingAction->requires_confirmation) {
+            return null;
+        }
+
+        if (! AgentSafetyRules::isReadOnlyAction($pendingAction->action_name)) {
+            return null;
+        }
+
+        if (! empty($payload['missing_slots'])) {
+            return null;
+        }
+
+        if (($payload['execute_immediately'] ?? true) === false) {
+            return null;
+        }
+
+        try {
+            return $this->formatMessageResponseFromActionResult(
+                $session,
+                $this->actionService->executeReadOnlyNow($user, $pendingAction->id)
+            );
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

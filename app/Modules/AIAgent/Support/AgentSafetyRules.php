@@ -10,16 +10,43 @@ class AgentSafetyRules
     public const PHASE_9B_EXECUTABLE_ACTIONS = [
         'create_application',
         'get_application_status',
+        'get_application_next_step',
         'get_required_documents',
+        'get_application_fee',
+        'get_profile_status',
         'get_fines',
         'get_licenses',
+        'get_available_tests',
+        'get_appointment_slots',
+        'get_current_appointments',
+        'get_test_results',
+        'start_payment',
+        'book_appointment',
+    ];
+
+    /** @var list<string> Read-only actions that may run without explicit confirmation. */
+    public const READ_ONLY_ACTIONS = [
+        'get_application_status',
+        'get_application_next_step',
+        'get_required_documents',
+        'get_application_fee',
+        'get_profile_status',
+        'get_fines',
+        'get_licenses',
+        'get_available_tests',
+        'get_appointment_slots',
+        'get_current_appointments',
+        'get_test_results',
     ];
 
     /** @var list<string> */
     public const ALLOWED_PROPOSED_ACTIONS = [
         'create_application',
         'get_application_status',
+        'get_application_next_step',
         'get_required_documents',
+        'get_application_fee',
+        'get_profile_status',
         'submit_documents_for_review',
         'start_payment',
         'get_available_tests',
@@ -89,6 +116,17 @@ class AgentSafetyRules
         return in_array($actionName, self::PHASE_9B_EXECUTABLE_ACTIONS, true);
     }
 
+    public static function isReadOnlyAction(string $actionName): bool
+    {
+        return in_array($actionName, self::READ_ONLY_ACTIONS, true)
+            || AgentWorkflowActionMap::isReadOnly($actionName);
+    }
+
+    public static function isMutatingAction(string $actionName): bool
+    {
+        return AgentWorkflowActionMap::isMutating($actionName);
+    }
+
     public static function messageLooksAdminRelated(string $message): bool
     {
         $normalized = mb_strtolower(trim($message));
@@ -105,10 +143,14 @@ class AgentSafetyRules
             'manage user',
             'manage role',
             'الموافقة على المستند',
+            'وافقلي على وثائقي',
+            'وافق على وثائق',
             'رفض المستند',
             'إصدار الرخصة',
             'حظر الرخصة',
             'تسجيل نتيجة',
+            'ثبتلي النتيجة',
+            'ثبت النتيجة',
             'إنشاء مخالفة',
             'سجل التدقيق',
         ];

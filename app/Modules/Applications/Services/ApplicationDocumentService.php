@@ -10,6 +10,7 @@ use App\Models\LicenseApplication;
 use App\Models\RequiredDocument;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Applications\Resources\ApplicationDocumentResource;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;

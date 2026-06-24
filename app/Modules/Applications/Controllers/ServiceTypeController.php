@@ -4,6 +4,7 @@ namespace App\Modules\Applications\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ServiceType;
+use App\Modules\Applications\Resources\ServiceTypeResource;
 
 class ServiceTypeController extends Controller
 {
@@ -12,8 +13,11 @@ class ServiceTypeController extends Controller
         $types = ServiceType::query()
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'code', 'description']);
+            ->get();
 
-        return $this->successResponse($types, 'messages.applications.service_types');
+        return $this->successResponse(
+            ServiceTypeResource::collection($types)->resolve(),
+            'messages.applications.service_types'
+        );
     }
 }

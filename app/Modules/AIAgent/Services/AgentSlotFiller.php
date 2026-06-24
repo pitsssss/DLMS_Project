@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSlotFiller
@@ -24,10 +25,25 @@ class AgentSlotFiller
      */
     public function apply(User $citizen, AIAgentSession $session, array $payload, string $userMessage, array $state): array
     {
+        if (AgentMessageIntentMatcher::isApplicationStatusQuery($userMessage)
+            || AgentMessageIntentMatcher::isApplicationNextStepQuery(
+                $userMessage,
+                $session->current_intent,
+                $this->sessionContext->resolveLastDiscussedApplicationId($session)
+            )) {
+            return $payload;
+        }
+
         $payload = $this->sessionContext->applyContinuity($citizen, $session, $payload, $state, $userMessage);
 
+        $allowExtract = AgentMessageIntentMatcher::shouldExtractLicenseTypeSlot(
+            $userMessage,
+            $payload['intent'] ?? $state['intent'],
+            $state['missing_slots'] ?? []
+        );
+
         $licenseType = $state['collected_slots']['license_type_code']
-            ?? LicenseTypeSlotExtractor::extract($userMessage);
+            ?? LicenseTypeSlotExtractor::extract($userMessage, $allowExtract);
 
         if (($payload['intent'] ?? null) === AgentIntent::CreateNewLicenseApplication->value) {
             if ($licenseType === null) {

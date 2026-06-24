@@ -101,7 +101,9 @@ class AppointmentFlowTest extends TestCase
         $this->getJson("/api/applications/{$application->id}/available-tests")
             ->assertOk()
             ->assertJsonPath('data.tests.0.code', 'vision')
-            ->assertJsonPath('data.tests.0.can_book', true);
+            ->assertJsonPath('data.tests.0.can_book', true)
+            ->assertJsonPath('message', 'تم جلب الاختبارات المتاحة بنجاح.')
+            ->assertJsonPath('data.tests.0.next_action_label', 'حجز موعد');
 
         $slot = $this->visionSlot();
 
@@ -211,5 +213,36 @@ class AppointmentFlowTest extends TestCase
         $this->postJson("/api/applications/{$applicationB->id}/appointments", [
             'appointment_slot_id' => $slot->id,
         ])->assertStatus(422);
+    }
+
+    private function theorySlot(): AppointmentSlot
+    {
+        $theory = TestType::query()->where('code', 'theory')->firstOrFail();
+
+        return AppointmentSlot::query()
+            ->where('test_type_id', $theory->id)
+            ->where('is_active', true)
+            ->whereColumn('booked_count', '<', 'capacity')
+            ->where('date', '>=', now()->toDateString())
+            ->firstOrFail();
+    }
+
+    public function test_cannot_book_theory_before_vision_returns_arabic_message(): void
+    {
+        app()->setLocale('en');
+
+        [$citizen, $application] = $this->citizenInAppointmentPending();
+        Sanctum::actingAs($citizen);
+
+        $response = $this->postJson("/api/applications/{$application->id}/appointments", [
+            'appointment_slot_id' => $this->theorySlot()->id,
+        ])->assertStatus(422);
+
+        $message = (string) $response->json('message');
+        $this->assertStringNotContainsString('messages.', $message);
+        $this->assertStringContainsString('لا يمكن حجز هذا الاختبار حالياً', $message);
+        $this->assertStringContainsString('اختبار النظر', $message);
+        $this->assertStringContainsString('الاختبار النظري', $message);
+        $this->assertEquals(0, \App\Models\TestAppointment::query()->where('application_id', $application->id)->count());
     }
 }
