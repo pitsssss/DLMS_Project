@@ -61,6 +61,7 @@ class ApplicationService
             }
 
             $this->assertCitizenCanApply($citizen);
+
             $this->assertNoDuplicateActiveApplicationByRelatedLicense($citizen, $serviceType->id, $license->id);
 
             $application = $this->applications->createDraftForCitizen(

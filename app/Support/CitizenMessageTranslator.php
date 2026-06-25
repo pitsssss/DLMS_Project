@@ -95,6 +95,7 @@ class CitizenMessageTranslator
             'ai_agent.action_cancelled' => 'تم إلغاء عملية المساعد الذكي بنجاح.',
             'generic.success' => 'تمت العملية بنجاح.',
             'generic.error' => 'حدث خطأ.',
+            'Applications list retrieved successfully.' => 'تم جلب قائمة الطلبات بنجاح',
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً.',
         };
     }

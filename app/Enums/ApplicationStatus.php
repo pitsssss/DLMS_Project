@@ -18,9 +18,7 @@ enum ApplicationStatus: string
     case Cancelled = 'cancelled';
     case AdministrativeReview = 'administrative_review';
 
-    /**
-     * @return list<self>
-     */
+
     public static function activeCases(): array
     {
         return [

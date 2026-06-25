@@ -28,7 +28,8 @@ class DashboardApplicationService
         }
 
         if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $statusValue = $filters['status'];
+            $query->where('status', $statusValue);
         }
 
         if (! empty($filters['license_type_id'])) {

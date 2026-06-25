@@ -29,6 +29,6 @@ class DashboardApplicationController extends Controller
                 'total'        => $paginator->total(),
                 'last_page'    => $paginator->lastPage(),
             ],
-        ], 'messages.dashboard.applications_list_retrieved');
+        ], 'Applications list retrieved successfully.');
     }
 }
