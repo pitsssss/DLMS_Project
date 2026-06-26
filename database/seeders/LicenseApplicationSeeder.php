@@ -95,6 +95,43 @@ class LicenseApplicationSeeder extends Seeder
             ],
         ];
 
-        DB::table('license_applications')->insert($applications);
+        // Insert applications one by one so we can create matching audit log entries that reference
+        // the inserted application IDs.
+        foreach ($applications as $app) {
+            $now = $app['created_at'] ?? date('Y-m-d H:i:s');
+
+            $insertData = [
+                'application_number' => $app['application_number'],
+                'citizen_id' => $app['citizen_id'],
+                'license_type_id' => $app['license_type_id'],
+                'service_type_id' => $app['service_type_id'],
+                'status' => $app['status'] ?? null,
+                'submitted_at' => $app['submitted_at'] ?? null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            $applicationId = DB::table('license_applications')->insertGetId($insertData);
+
+            // Create an initial audit log entry for the created application.
+            DB::table('audit_logs')->insert([
+                'user_id' => null,
+                'action' => 'created',
+                'entity_type' => 'license_application',
+                'entity_id' => $applicationId,
+                'old_values' => null,
+                'new_values' => json_encode([
+                    'application_number' => $app['application_number'],
+                    'citizen_id' => $app['citizen_id'],
+                    'license_type_id' => $app['license_type_id'],
+                    'service_type_id' => $app['service_type_id'],
+                    'status' => $app['status'] ?? null,
+                ]),
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'seeder',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 }

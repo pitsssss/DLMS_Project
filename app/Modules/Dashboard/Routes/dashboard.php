@@ -53,7 +53,9 @@ Route::prefix('dashboard')
 
             Route::middleware('permission:view_applications')->group(function (): void {
                 Route::get('/applications', [DashboardApplicationController::class, 'index']);
-
+                // Lookup application details by application number (not internal id). The table shows application_number.
+                Route::get('/applications/{application_number}', [DashboardApplicationController::class, 'show'])
+                    ->where('application_number', '[A-Za-z0-9_\-]+');
         });
     });
 

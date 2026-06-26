@@ -12,10 +12,10 @@ class DashboardApplicationController extends Controller
     public function index(Request $request, DashboardApplicationService $service)
     {
         $filters = $request->validate([
-            'search'          => ['sometimes', 'nullable', 'string', 'max:255'],
-            'status'          => ['sometimes', 'nullable', 'string', 'max:64'],
-            'license_type_id' => ['sometimes', 'nullable', 'integer', 'exists:license_types,id'],
-            'per_page'        => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'search'            => ['sometimes', 'nullable', 'string', 'max:255'],
+            'status'            => ['sometimes', 'nullable', 'string', 'max:64'],
+            'license_type_name' => ['sometimes', 'nullable', 'string', 'max:255', 'exists:license_types,name'],
+            'per_page'          => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
         $perPage = (int) ($filters['per_page'] ?? 20);
@@ -30,5 +30,16 @@ class DashboardApplicationController extends Controller
                 'last_page'    => $paginator->lastPage(),
             ],
         ], 'Applications list retrieved successfully.');
+    }
+
+    public function show(string $application_number, DashboardApplicationService $service)
+    {
+        // Fetch application by application number (table shows application_number) with only the needed relation and the formatted audit logs
+        $details = $service->getDetailsByNumber($application_number);
+
+        return $this->successResponse(
+            $details,
+            'تم جلب تفاصيل الطلب بنجاح'
+        );
     }
 }
