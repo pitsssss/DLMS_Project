@@ -121,6 +121,11 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     });
 
     Route::get('/licenses', [LicenseController::class, 'index']);
+
+
+
+
+
     Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
 
     Route::get('/fines', [FineController::class, 'index']);

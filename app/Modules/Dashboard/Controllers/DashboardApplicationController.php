@@ -15,6 +15,8 @@ class DashboardApplicationController extends Controller
             'search'            => ['sometimes', 'nullable', 'string', 'max:255'],
             'status'            => ['sometimes', 'nullable', 'string', 'max:64'],
             'license_type_name' => ['sometimes', 'nullable', 'string', 'max:255', 'exists:license_types,name'],
+            'service_type_name' => ['sometimes', 'nullable', 'string', 'max:255', 'exists:service_types,name'],
+            'test_type_name'    => ['sometimes', 'nullable', 'string', 'max:255', 'exists:test_types,name'],
             'per_page'          => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
