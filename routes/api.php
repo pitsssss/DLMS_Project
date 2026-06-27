@@ -4,6 +4,7 @@ use App\Modules\Applications\Controllers\ApplicationController;
 use App\Modules\Applications\Controllers\ApplicationDocumentController;
 use App\Modules\Applications\Controllers\LicenseTypeController;
 use App\Modules\Applications\Controllers\ServiceTypeController;
+use App\Modules\Applications\Controllers\TestTypeController;
 use App\Modules\Auth\Controllers\ForgotPasswordController;
 use App\Modules\Auth\Controllers\LoginController;
 use App\Modules\Auth\Controllers\LogoutController;
@@ -51,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
 Route::get('/license-types', [LicenseTypeController::class, 'index']);
 Route::get('/service-types', [ServiceTypeController::class, 'index']);
+Route::get('/test-types', [TestTypeController::class, 'index']);
+
 
 Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     Route::get('/profile/status', [ProfileController::class, 'status']);
