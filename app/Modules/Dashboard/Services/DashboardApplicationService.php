@@ -33,27 +33,24 @@ class DashboardApplicationService
             $query->where('status', trim($filters['status']));
         }
 
-        if (! empty($filters['license_type_name'])) {
-            $licenseTypeName = trim($filters['license_type_name']);
-
-            $query->whereHas('licenseType', function ($licenseTypeQuery) use ($licenseTypeName) {
-                $licenseTypeQuery->where('name', $licenseTypeName);
+        if (! empty($filters['license_type_code'])) {
+            $code = trim($filters['license_type_code']);
+            $query->whereHas('licenseType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 
-        if (! empty($filters['service_type_name'])) {
-            $serviceTypeName = trim($filters['service_type_name']);
-
-            $query->whereHas('serviceType', function ($serviceTypeQuery) use ($serviceTypeName) {
-                $serviceTypeQuery->where('name', $serviceTypeName);
+        if (! empty($filters['service_type_code'])) {
+            $code = trim($filters['service_type_code']);
+            $query->whereHas('serviceType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 
-        if (! empty($filters['test_type_name'])) {
-            $testTypeName = trim($filters['test_type_name']);
-
-            $query->whereHas('currentTestType', function ($testTypeQuery) use ($testTypeName) {
-                $testTypeQuery->where('name', $testTypeName);
+        if (! empty($filters['test_type_code'])) {
+            $code = trim($filters['test_type_code']);
+            $query->whereHas('currentTestType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 

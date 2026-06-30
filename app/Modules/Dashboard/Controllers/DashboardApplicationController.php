@@ -14,9 +14,9 @@ class DashboardApplicationController extends Controller
         $filters = $request->validate([
             'search'            => ['sometimes', 'nullable', 'string', 'max:255'],
             'status'            => ['sometimes', 'nullable', 'string', 'max:64'],
-            'license_type_name' => ['sometimes', 'nullable', 'string', 'max:255', 'exists:license_types,name'],
-            'service_type_name' => ['sometimes', 'nullable', 'string', 'max:255', 'exists:service_types,name'],
-            'test_type_name'    => ['sometimes', 'nullable', 'string', 'max:255', 'exists:test_types,name'],
+            'license_type_code'  => ['sometimes', 'nullable', 'string', 'max:64', 'exists:license_types,code'],
+            'service_type_code'  => ['sometimes', 'nullable', 'string', 'max:64', 'exists:service_types,code'],
+            'test_type_code'     => ['sometimes', 'nullable', 'string', 'max:64', 'exists:test_types,code'],
             'per_page'          => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 

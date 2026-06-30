@@ -4,6 +4,7 @@ namespace App\Modules\Applications\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\LicenseType;
+use App\Modules\Applications\Resources\LicenseTypeResource;
 
 class LicenseTypeController extends Controller
 {
@@ -14,6 +15,8 @@ class LicenseTypeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'minimum_age', 'validity_years']);
 
-        return $this->successResponse($types, 'messages.applications.license_types');
-    }
+        return $this->successResponse(
+            LicenseTypeResource::collection($types)->resolve(),
+            'messages.applications.license_types'
+        ); }
 }
