@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Support\CitizenMessageTranslator;
+use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
@@ -21,6 +22,30 @@ trait ApiResponse
         return response()->json([
             'success' => false,
             'message' => CitizenMessageTranslator::get($message),
+            'errors' => empty($errors) ? (object) [] : $errors,
+        ], $status);
+    }
+
+    protected function employeeSuccessResponse(
+        mixed $data = null,
+        string $message = 'employee.generic.success',
+        int $status = 200
+    ): JsonResponse {
+        return response()->json([
+            'success' => true,
+            'message' => EmployeeMessageTranslator::get($message),
+            'data' => $data,
+        ], $status);
+    }
+
+    protected function employeeErrorResponse(
+        string $message = 'employee.generic.error',
+        array $errors = [],
+        int $status = 400
+    ): JsonResponse {
+        return response()->json([
+            'success' => false,
+            'message' => EmployeeMessageTranslator::get($message),
             'errors' => empty($errors) ? (object) [] : $errors,
         ], $status);
     }

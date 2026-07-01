@@ -57,10 +57,15 @@ class DashboardApplicationService
         return $query->paginate($perPage);
     }
 
-    public function getDetailsByNumber(string $applicationNumber): array
+    public function getDetailsByNumber(string $applicationNumber): LicenseApplication
     {
         $application = LicenseApplication::query()
-            ->with('currentTestType')
+            ->with([
+                'citizen',
+                'licenseType',
+                'serviceType',
+                'currentTestType',
+            ])
             ->where('application_number', $applicationNumber)
             ->firstOrFail();
 
@@ -72,22 +77,13 @@ class DashboardApplicationService
             ->orderByDesc('id')
             ->get();
 
+        /*
+         * لا نحتاج علاقة حقيقية بالموديل.
+         * فقط نخزن الـ logs كـ loaded relation حتى يقرأها الـ Resource.
+         */
+        $application->setRelation('dashboardAuditLogs', $logs);
 
-        return [
-            'id' => $application->id,
-            'application_number' => $application->application_number,
-            'extra_details' => [
-                'current_test_type' => $application->currentTestType ? [
-                    'name' => $application->currentTestType->name,
-                ] : null,
-                'rejection_reason' => $application->rejection_reason,
-                'approved_at' => $application->approved_at?->format('Y-m-d H:i:s'),
-                'issued_at' => $application->issued_at?->format('Y-m-d H:i:s'),
-                'created_at' => $application->created_at?->format('Y-m-d H:i:s'),
-                'updated_at' => $application->updated_at?->format('Y-m-d H:i:s'),
-            ],
-            'audit_logs' => $this->formatAuditLogs($logs),
-        ];
+        return $application;
     }
 
 
