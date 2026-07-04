@@ -1,0 +1,504 @@
+{
+  "info": {
+    "_postman_id": "9b7f3180-57b9-4f35-a595-8f663c11f2c8",
+    "name": "DLMS Dashboard Citizens",
+    "description": "Focused collection for testing DashboardCitizenController routes. Run Dashboard Login first, then Create Citizen to populate citizen_id for show/update/delete.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Dashboard Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('dashboard_token', json.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{dashboard_email}}\",\n  \"password\": \"{{dashboard_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Citizens",
+      "item": [
+        {
+          "name": "List Citizens",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?per_page=20&is_active={{citizen_filter_is_active}}&profile_status={{citizen_filter_profile_status}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "is_active",
+                  "value": "{{citizen_filter_is_active}}"
+                },
+                {
+                  "key": "profile_status",
+                  "value": "{{citizen_filter_profile_status}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profile Status Options",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/profile-statuses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "profile-statuses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Citizens",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/search?search_term={{citizen_search_term}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "search_term",
+                  "value": "{{citizen_search_term}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Citizen",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const stamp = Date.now();",
+                  "pm.collectionVariables.set('new_citizen_email', `citizen.${stamp}@example.com`);",
+                  "pm.collectionVariables.set('new_citizen_phone', `+9639${String(stamp).slice(-8)}`);",
+                  "pm.collectionVariables.set('new_citizen_national_id', `NID${stamp}`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Citizen created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('citizen_id', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dashboard Test Citizen\",\n  \"email\": \"{{new_citizen_email}}\",\n  \"phone\": \"{{new_citizen_phone}}\",\n  \"national_id\": \"{{new_citizen_national_id}}\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"birth_date\": \"1995-05-20\",\n  \"governorate\": \"Damascus\",\n  \"address\": \"Dashboard test address\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show Citizen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Citizen Applications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/applications?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Citizen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Dashboard Test Citizen\",\n  \"governorate\": \"Rif Dimashq\",\n  \"address\": \"Updated dashboard test address\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Citizen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_email",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "citizen_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "citizen_search_term",
+      "value": "Dashboard",
+      "type": "string"
+    },
+    {
+      "key": "citizen_filter_is_active",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "citizen_filter_profile_status",
+      "value": "approved",
+      "type": "string"
+    },
+    {
+      "key": "new_citizen_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_citizen_phone",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_citizen_national_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardAuthController;
+use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,17 @@ Route::prefix('dashboard')
                 ->whereNumber('contactMessage');
         });
 
+        Route::middleware('permission:manage_users')->group(function (): void {
+            Route::get('/citizens', [DashboardCitizenController::class, 'index']);
+            Route::post('/citizens', [DashboardCitizenController::class, 'store']);
+            Route::get('/citizens/search', [DashboardCitizenController::class, 'search']);
+            Route::get('/citizens/profile-statuses', [DashboardCitizenController::class, 'profileStatuses']);
+            Route::get('/citizens/{user}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('user');
+            Route::get('/citizens/{user}', [DashboardCitizenController::class, 'show'])->whereNumber('user');
+            Route::put('/citizens/{user}', [DashboardCitizenController::class, 'update'])->whereNumber('user');
+            Route::delete('/citizens/{user}', [DashboardCitizenController::class, 'destroy'])->whereNumber('user');
+        });
+
         Route::middleware('permission:manage_employees')->group(function (): void {
             Route::get('/employees', [DashboardEmployeeController::class, 'index']);
             Route::post('/employees', [DashboardEmployeeController::class, 'store']);
@@ -53,7 +65,6 @@ Route::prefix('dashboard')
 
             Route::middleware('permission:view_applications')->group(function (): void {
                 Route::get('/applications', [DashboardApplicationController::class, 'index']);
-                // Lookup application details by application number (not internal id). The table shows application_number.
                 Route::get('/applications/{application_number}', [DashboardApplicationController::class, 'show'])
                     ->where('application_number', '[A-Za-z0-9_\-]+');
         });

@@ -52,6 +52,17 @@ class EmployeeMessageTranslator
             };
         }
 
+        if (str_starts_with($suffix, 'employee.profile_statuses.')) {
+            $code = substr($suffix, strlen('employee.profile_statuses.'));
+            return match ($code) {
+                'incomplete'     => 'غير مكتمل',
+                'pending_review' => 'قيد المراجعة',
+                'approved'       => 'مقبول',
+                'rejected'       => 'مرفوض',
+                default          => $code,
+            };
+        }
+
         if (str_starts_with($suffix, 'employee.services.')) {
             $code = substr($suffix, strlen('employee.services.'));
             return match ($code) {
