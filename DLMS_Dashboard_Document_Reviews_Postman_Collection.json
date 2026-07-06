@@ -1,0 +1,409 @@
+{
+  "info": {
+    "_postman_id": "6af9e947-40d8-4f71-91dc-3c0a3d1fb4d7",
+    "name": "DLMS Dashboard Document Reviews",
+    "description": "Focused collection for testing Dashboard document review endpoints. Run Dashboard Login first, then List Document Review Applications and Show Document Review Application to populate application_id and document_id.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Dashboard Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('dashboard_token', json.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{dashboard_email}}\",\n  \"password\": \"{{dashboard_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Document Reviews",
+      "item": [
+        {
+          "name": "List Document Review Applications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('List loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const first = json && json.data && Array.isArray(json.data.items) ? json.data.items[0] : null;",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('application_id', first.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?per_page={{per_page}}&search={{search}}&service_type_code={{service_type_code}}&license_type_code={{license_type_code}}&review_status={{review_status}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                },
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "description": "Application number, citizen name, email, phone, or national id. Leave empty to list all."
+                },
+                {
+                  "key": "service_type_code",
+                  "value": "{{service_type_code}}",
+                  "description": "Example: new_license. Leave empty to ignore."
+                },
+                {
+                  "key": "license_type_code",
+                  "value": "{{license_type_code}}",
+                  "description": "Example: private. Leave empty to ignore."
+                },
+                {
+                  "key": "review_status",
+                  "value": "{{review_status}}",
+                  "description": "awaiting_review | completed | late | reupload_required. Leave empty to ignore."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Document Review Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show Document Review Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Application details loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const docs = json && json.data && Array.isArray(json.data.documents) ? json.data.documents : [];",
+                  "const actionable = docs.find((item) => item.actions && item.actions.document_id);",
+                  "if (actionable && actionable.actions.document_id) {",
+                  "  pm.collectionVariables.set('document_id', actionable.actions.document_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews/{{application_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews",
+                "{{application_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preview Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/pdf,image/*,*/*"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/preview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews",
+                "documents",
+                "{{document_id}}",
+                "preview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews",
+                "documents",
+                "{{document_id}}",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dashboard_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason\": \"الوثيقة غير واضحة. يرجى إعادة الرفع بصورة أوضح.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews",
+                "documents",
+                "{{document_id}}",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_email",
+      "value": "profile_document_reviewer@syrtak.gov.sy",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "per_page",
+      "value": "20",
+      "type": "string"
+    },
+    {
+      "key": "search",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "service_type_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "license_type_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "review_status",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "application_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

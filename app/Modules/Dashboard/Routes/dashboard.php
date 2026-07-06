@@ -3,6 +3,7 @@
 use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardAuthController;
 use App\Modules\Dashboard\Controllers\DashboardCitizenController;
+use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,19 @@ Route::prefix('dashboard')
             Route::get('/citizens/{user}', [DashboardCitizenController::class, 'show'])->whereNumber('user');
             Route::put('/citizens/{user}', [DashboardCitizenController::class, 'update'])->whereNumber('user');
             Route::delete('/citizens/{user}', [DashboardCitizenController::class, 'destroy'])->whereNumber('user');
+        });
+
+        Route::middleware('permission:review_documents')->group(function (): void {
+            Route::get('/document-reviews', [DashboardDocumentReviewController::class, 'index']);
+            Route::get('/document-reviews/stats', [DashboardDocumentReviewController::class, 'stats']);
+            Route::get('/document-reviews/{application}', [DashboardDocumentReviewController::class, 'show'])->whereNumber('application');
+            Route::get('/document-reviews/documents/{document}/preview', [DashboardDocumentReviewController::class, 'preview'])->whereNumber('document');
+            Route::post('/document-reviews/documents/{document}/approve', [DashboardDocumentReviewController::class, 'approve'])
+                ->whereNumber('document')
+                ->middleware('throttle:60,1');
+            Route::post('/document-reviews/documents/{document}/reject', [DashboardDocumentReviewController::class, 'reject'])
+                ->whereNumber('document')
+                ->middleware('throttle:60,1');
         });
 
         Route::middleware('permission:manage_employees')->group(function (): void {
