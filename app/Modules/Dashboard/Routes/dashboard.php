@@ -49,6 +49,8 @@ Route::prefix('dashboard')
             Route::get('/citizens/search', [DashboardCitizenController::class, 'search']);
             Route::get('/citizens/profile-statuses', [DashboardCitizenController::class, 'profileStatuses']);
             Route::get('/citizens/{user}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('user');
+            Route::get('/citizens/{user}/licenses', [DashboardCitizenController::class, 'licenses'])->whereNumber('user');
+            Route::get('/citizens/{user}/fines', [DashboardCitizenController::class, 'fines'])->whereNumber('user');
             Route::get('/citizens/{user}', [DashboardCitizenController::class, 'show'])->whereNumber('user');
             Route::put('/citizens/{user}', [DashboardCitizenController::class, 'update'])->whereNumber('user');
             Route::delete('/citizens/{user}', [DashboardCitizenController::class, 'destroy'])->whereNumber('user');

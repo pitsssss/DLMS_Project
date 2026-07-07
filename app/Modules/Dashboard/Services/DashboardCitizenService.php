@@ -5,6 +5,8 @@ namespace App\Modules\Dashboard\Services;
 use App\Enums\ProfileStatus;
 use App\Enums\UserType;
 use App\Exceptions\ApiException;
+use App\Models\Fine;
+use App\Models\License;
 use App\Models\LicenseApplication;
 use App\Models\Role;
 use App\Models\User;
@@ -89,6 +91,28 @@ class DashboardCitizenService
         return LicenseApplication::query()
             ->where('citizen_id', $citizen->id)
             ->with(['citizen', 'licenseType', 'serviceType'])
+            ->orderByDesc('id')
+            ->paginate($perPage);
+    }
+
+    public function citizenLicenses(User $citizen, int $perPage): LengthAwarePaginator
+    {
+        $this->assertCitizen($citizen);
+
+        return License::query()
+            ->where('citizen_id', $citizen->id)
+            ->with(['licenseType', 'application'])
+            ->orderByDesc('id')
+            ->paginate($perPage);
+    }
+
+    public function citizenFines(User $citizen, int $perPage): LengthAwarePaginator
+    {
+        $this->assertCitizen($citizen);
+
+        return Fine::query()
+            ->where('citizen_id', $citizen->id)
+            ->with('license')
             ->orderByDesc('id')
             ->paginate($perPage);
     }

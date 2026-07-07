@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             LicenseApplicationSeeder::class,
             DashboardDocumentReviewDemoSeeder::class,
             DemoLicenseServiceTestingSeeder::class,
+            DashboardCitizenLicensesFinesDemoSeeder::class,
 
         ]);
     }

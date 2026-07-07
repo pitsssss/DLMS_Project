@@ -4,11 +4,13 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Enums\ProfileStatus;
 use App\Http\Controllers\Controller;
+use App\Modules\Fines\Resources\FineResource;
 use App\Modules\Dashboard\Requests\StoreDashboardCitizenRequest;
 use App\Modules\Dashboard\Requests\UpdateDashboardCitizenRequest;
 use App\Modules\Dashboard\Resources\DashboardApplicationResource;
 use App\Modules\Dashboard\Resources\DashboardCitizenResource;
 use App\Modules\Dashboard\Services\DashboardCitizenService;
+use App\Modules\Licenses\Resources\LicenseResource;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -76,6 +78,50 @@ class DashboardCitizenController extends Controller
                 'last_page' => $paginator->lastPage(),
             ],
         ], 'messages.dashboard.citizen_applications_retrieved');
+    }
+
+    public function licenses(Request $request, int $user, DashboardCitizenService $citizens)
+    {
+        $validated = $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $paginator = $citizens->citizenLicenses(
+            $citizens->getCitizen($user),
+            (int) ($validated['per_page'] ?? 20)
+        );
+
+        return $this->successResponse([
+            'items' => LicenseResource::collection($paginator->items())->resolve(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ]);
+    }
+
+    public function fines(Request $request, int $user, DashboardCitizenService $citizens)
+    {
+        $validated = $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $paginator = $citizens->citizenFines(
+            $citizens->getCitizen($user),
+            (int) ($validated['per_page'] ?? 20)
+        );
+
+        return $this->successResponse([
+            'items' => FineResource::collection($paginator->items())->resolve(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ]);
     }
 
     public function update(UpdateDashboardCitizenRequest $request, int $user, DashboardCitizenService $citizens)
