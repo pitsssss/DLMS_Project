@@ -133,11 +133,22 @@ class DashboardDocumentReviewService
             ->with('application')
             ->first();
 
-        if ($document === null || ! Storage::disk('local')->exists($document->file_path)) {
+        if ($document === null || $this->resolvePreviewFilePath($document->file_path) === null) {
             throw new ApiException('messages.documents.review_not_found', 404);
         }
 
         return $document;
+    }
+
+    public function getPreviewFilePath(ApplicationDocument $document): string
+    {
+        $path = $this->resolvePreviewFilePath($document->file_path);
+
+        if ($path === null) {
+            throw new ApiException('messages.documents.review_not_found', 404);
+        }
+
+        return $path;
     }
 
     private function attachChecklist(LicenseApplication $application): void
@@ -224,5 +235,25 @@ class DashboardDocumentReviewService
                             ->where('created_at', '<=', $deadline);
                     });
             });
+    }
+
+    private function resolvePreviewFilePath(string $filePath): ?string
+    {
+        $path = trim($filePath, " \t\n\r\0\x0B\"'");
+
+        if ($this->isAbsolutePath($path)) {
+            return is_file($path) ? $path : null;
+        }
+
+        return Storage::disk('local')->exists($path)
+            ? Storage::disk('local')->path($path)
+            : null;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            || str_starts_with($path, '\\\\')
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
 }

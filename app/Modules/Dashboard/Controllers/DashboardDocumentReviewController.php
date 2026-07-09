@@ -9,7 +9,6 @@ use App\Modules\Dashboard\Resources\DashboardDocumentReviewApplicationResource;
 use App\Modules\Dashboard\Resources\DashboardDocumentReviewDetailsResource;
 use App\Modules\Dashboard\Services\DashboardDocumentReviewService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DashboardDocumentReviewController extends Controller
@@ -78,9 +77,10 @@ class DashboardDocumentReviewController extends Controller
     public function preview(int $document, DashboardDocumentReviewService $reviews): BinaryFileResponse
     {
         $model = $reviews->getPreviewDocument($document);
+        $path = $reviews->getPreviewFilePath($model);
 
         return response()->file(
-            Storage::disk('local')->path($model->file_path),
+            $path,
             ['Content-Type' => $model->mime_type ?: 'application/octet-stream']
         );
     }
