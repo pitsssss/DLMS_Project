@@ -5,7 +5,8 @@ namespace App\Modules\Dashboard\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class DashboardEmployeeResource extends JsonResource
+/** @mixin \App\Models\ServiceType */
+class DashboardServiceTypeResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -15,15 +16,9 @@ class DashboardEmployeeResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'user_type' => $this->user_type?->value,
+            'code' => $this->code,
+            'description' => $this->description,
             'is_active' => (bool) $this->is_active,
-            'role' => $this->whenLoaded('role', fn () => [
-                'id' => $this->role->id,
-                'name' => $this->role->name,
-                'display_name' => $this->role->display_name,
-            ]),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

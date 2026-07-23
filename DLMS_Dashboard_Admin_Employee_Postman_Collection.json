@@ -23,6 +23,10 @@
       "value": ""
     },
     {
+      "key": "dashboard_token",
+      "value": ""
+    },
+    {
       "key": "employee_email",
       "value": "fines.employee@syrtak.gov.sy"
     },
@@ -77,6 +81,18 @@
     {
       "key": "role_id",
       "value": ""
+    },
+    {
+      "key": "license_type_id",
+      "value": ""
+    },
+    {
+      "key": "service_type_id",
+      "value": ""
+    },
+    {
+      "key": "employee_search",
+      "value": "موظف"
     },
     {
       "key": "role_name",
@@ -160,7 +176,10 @@
                 "exec": [
                   "try {",
                   "  var j = pm.response.json();",
-                  "  if (j.data && j.data.token) pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "  if (j.data && j.data.token) {",
+                  "    pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "    pm.collectionVariables.set('dashboard_token', j.data.token);",
+                  "  }",
                   "} catch (e) {}"
                 ]
               }
@@ -245,7 +264,10 @@
                 "exec": [
                   "try {",
                   "  var j = pm.response.json();",
-                  "  if (j.data && j.data.token) pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "  if (j.data && j.data.token) {",
+                  "    pm.collectionVariables.set('super_admin_token', j.data.token);",
+                  "    pm.collectionVariables.set('dashboard_token', j.data.token);",
+                  "  }",
                   "} catch (e) {}"
                 ]
               }
@@ -472,27 +494,167 @@
     },
     {
       "name": "04 - Employee Management",
+      "description": "Query params for GET /dashboard/employees: search, role_id, is_active (0|1), page, per_page (10|20|25|50), sort_by (name|email|created_at), sort_direction (asc|desc), optional user_type (admin|employee). Response includes items, pagination (with from/to), statistics, and role_options. Auth: Bearer {{dashboard_token}} or {{super_admin_token}}. Permission: manage_employees.",
       "item": [
+        {
+          "name": "List employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?page=1&per_page=20&sort_by=created_at&sort_direction=desc",
+            "description": "Default list. per_page defaults to 20. Returns items, pagination, statistics, role_options."
+          }
+        },
+        {
+          "name": "Search by name",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?search={{employee_search}}"
+          }
+        },
+        {
+          "name": "Search by email",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?search=fines.employee"
+          }
+        },
+        {
+          "name": "Search by phone",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?search=09"
+          }
+        },
+        {
+          "name": "Filter by role",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?role_id={{role_id}}"
+          }
+        },
+        {
+          "name": "Filter active employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?is_active=1"
+          }
+        },
+        {
+          "name": "Filter inactive employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?is_active=0"
+          }
+        },
+        {
+          "name": "Combined search and filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?search=employee&role_id={{role_id}}&is_active=1&page=1&per_page=20&sort_by=created_at&sort_direction=desc"
+          }
+        },
+        {
+          "name": "Pagination page 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?page=2&per_page=10"
+          }
+        },
+        {
+          "name": "Per-page 25",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?per_page=25"
+          }
+        },
+        {
+          "name": "Sort by name asc",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees?sort_by=name&sort_direction=asc&per_page=20"
+          }
+        },
+        {
+          "name": "Role options via list roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/roles",
+            "description": "Existing roles endpoint (permission: view_roles). List employees also embeds data.role_options with id, name, display_name."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var items = Array.isArray(j.data) ? j.data : (j.data && j.data.items);",
+                  "  if (items && items[0]) {",
+                  "    pm.collectionVariables.set('role_id', String(items[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Create employee",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/dashboard/employees",
             "body": {
@@ -509,7 +671,6 @@
                   "try {",
                   "  var j = pm.response.json();",
                   "  if (j.data && j.data.id) pm.collectionVariables.set('employee_id', String(j.data.id));",
-                  "  if (j.data && j.data.user && j.data.user.id) pm.collectionVariables.set('employee_id', String(j.data.user.id));",
                   "} catch (e) {}"
                 ]
               }
@@ -521,21 +682,9 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}",
             "body": {
@@ -545,27 +694,44 @@
           }
         },
         {
-          "name": "Toggle active",
+          "name": "Activate employee",
           "request": {
             "method": "PATCH",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
             ],
-            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/toggle-active"
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/activate",
+            "description": "Sets is_active=true. Idempotent if already active. Audit: employee.activated"
+          }
+        },
+        {
+          "name": "Deactivate employee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/deactivate",
+            "description": "Sets is_active=false. Blocks self-deactivation and last active super_admin. Audit: employee.deactivated"
+          }
+        },
+        {
+          "name": "Toggle active (legacy)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{employee_id}}/toggle-active",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"is_active\": false}"
+            },
+            "description": "Legacy. Prefer activate/deactivate. Optional body is_active true|false; omit to flip."
           }
         },
         {
@@ -573,21 +739,9 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/reset-password",
             "body": {
@@ -601,21 +755,9 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/assign-role",
             "body": {
@@ -1291,6 +1433,338 @@
               }
             ],
             "url": "{{base_url}}/dashboard/employees"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - License Types Settings",
+      "description": "Dashboard license types CRUD. Permission: manage_settings. Query: search, is_active, page, per_page (10|20|25|50), sort_by (name|code|created_at), sort_direction (asc|desc). Code is immutable after create. No DELETE.",
+      "item": [
+        {
+          "name": "List license types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?page=1&per_page=20&sort_by=created_at&sort_direction=desc"
+          }
+        },
+        {
+          "name": "Search license types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?search=private"
+          }
+        },
+        {
+          "name": "Filter active license types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?is_active=1"
+          }
+        },
+        {
+          "name": "Filter inactive license types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?is_active=0"
+          }
+        },
+        {
+          "name": "Paginate license types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?page=1&per_page=10"
+          }
+        },
+        {
+          "name": "Sort license types by name",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types?sort_by=name&sort_direction=asc"
+          }
+        },
+        {
+          "name": "Show license type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}"
+          }
+        },
+        {
+          "name": "Create license type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"رخصة دراجة\",\n  \"code\": \"motorcycle\",\n  \"minimum_age\": 18,\n  \"validity_years\": 5,\n  \"is_active\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var j = pm.response.json(); if (j.data && j.data.id) pm.collectionVariables.set('license_type_id', String(j.data.id)); } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update license type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"رخصة دراجة نارية\",\n  \"minimum_age\": 18,\n  \"validity_years\": 5\n}"
+            },
+            "description": "code cannot be changed after creation."
+          }
+        },
+        {
+          "name": "Activate license type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}/activate"
+          }
+        },
+        {
+          "name": "Deactivate license type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}/deactivate"
+          }
+        },
+        {
+          "name": "Create license type validation error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/license-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"code\": \"private\",\n  \"minimum_age\": 10,\n  \"validity_years\": 0\n}"
+            },
+            "description": "Expect 422 (empty name, duplicate code, invalid age/years)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Service Types Settings",
+      "description": "Dashboard service types CRUD. Permission: manage_settings. Query: search (name|code|description), is_active, page, per_page, sort_by, sort_direction. Code is immutable (used by ServiceCode workflows). No DELETE.",
+      "item": [
+        {
+          "name": "List service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?page=1&per_page=20&sort_by=created_at&sort_direction=desc"
+          }
+        },
+        {
+          "name": "Search service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?search=renew"
+          }
+        },
+        {
+          "name": "Filter active service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?is_active=1"
+          }
+        },
+        {
+          "name": "Filter inactive service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?is_active=0"
+          }
+        },
+        {
+          "name": "Paginate service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?page=1&per_page=10"
+          }
+        },
+        {
+          "name": "Sort service types by code",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types?sort_by=code&sort_direction=asc"
+          }
+        },
+        {
+          "name": "Show service type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}"
+          }
+        },
+        {
+          "name": "Create service type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"خدمة تجريبية\",\n  \"code\": \"custom_service\",\n  \"description\": \"وصف الخدمة التجريبية\",\n  \"is_active\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var j = pm.response.json(); if (j.data && j.data.id) pm.collectionVariables.set('service_type_id', String(j.data.id)); } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update service type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"خدمة تجريبية محدثة\",\n  \"description\": \"وصف محدث\"\n}"
+            },
+            "description": "code cannot be changed (workflow identifiers)."
+          }
+        },
+        {
+          "name": "Activate service type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}/activate"
+          }
+        },
+        {
+          "name": "Deactivate service type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}/deactivate"
+          }
+        },
+        {
+          "name": "Create service type validation error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/service-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"code\": \"new_license\"\n}"
+            },
+            "description": "Expect 422 (empty name / duplicate code)."
           }
         }
       ]

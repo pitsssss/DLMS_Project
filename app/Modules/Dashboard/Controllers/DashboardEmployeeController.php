@@ -4,6 +4,7 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Dashboard\Requests\AssignDashboardEmployeeRoleRequest;
+use App\Modules\Dashboard\Requests\ListDashboardEmployeesRequest;
 use App\Modules\Dashboard\Requests\ResetDashboardEmployeePasswordRequest;
 use App\Modules\Dashboard\Requests\StoreDashboardEmployeeRequest;
 use App\Modules\Dashboard\Requests\UpdateDashboardEmployeeRequest;
@@ -13,13 +14,10 @@ use Illuminate\Http\Request;
 
 class DashboardEmployeeController extends Controller
 {
-    public function index(Request $request, DashboardEmployeeService $employees)
+    public function index(ListDashboardEmployeesRequest $request, DashboardEmployeeService $employees)
     {
-        $validated = $request->validate([
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
-        ]);
-
-        $paginator = $employees->paginate((int) ($validated['per_page'] ?? 20));
+        $filters = $request->filters();
+        $paginator = $employees->paginate($filters);
 
         return $this->successResponse([
             'items' => DashboardEmployeeResource::collection($paginator->items())->resolve(),
@@ -28,7 +26,11 @@ class DashboardEmployeeController extends Controller
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
             ],
+            'statistics' => $employees->statistics(),
+            'role_options' => $employees->roleOptions(),
         ], 'messages.dashboard.employees_list_retrieved');
     }
 
@@ -64,13 +66,61 @@ class DashboardEmployeeController extends Controller
         );
     }
 
-    public function toggleActive(int $user, DashboardEmployeeService $employees)
+    public function activate(Request $request, int $user, DashboardEmployeeService $employees)
     {
-        $employee = $employees->toggleActive($employees->getEmployee($user));
+        $employee = $employees->setActive(
+            $employees->getEmployee($user),
+            true,
+            $request->user()
+        );
+
+        return $this->successResponse(
+            new DashboardEmployeeResource($employee),
+            'messages.dashboard.employee_activated'
+        );
+    }
+
+    public function deactivate(Request $request, int $user, DashboardEmployeeService $employees)
+    {
+        $employee = $employees->setActive(
+            $employees->getEmployee($user),
+            false,
+            $request->user()
+        );
+
+        return $this->successResponse(
+            new DashboardEmployeeResource($employee),
+            'messages.dashboard.employee_deactivated'
+        );
+    }
+
+    /**
+     * Legacy toggle / explicit set via body { "is_active": true|false }.
+     * Prefer activate/deactivate endpoints for new clients.
+     */
+    public function toggleActive(Request $request, int $user, DashboardEmployeeService $employees)
+    {
+        $validated = $request->validate([
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+
+        $desired = array_key_exists('is_active', $validated)
+            ? filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : null;
+
+        $employee = $employees->setActive(
+            $employees->getEmployee($user),
+            $desired,
+            $request->user()
+        );
+
+        $message = $employee->is_active
+            ? 'messages.dashboard.employee_activated'
+            : 'messages.dashboard.employee_deactivated';
 
         return $this->successResponse(
             new DashboardEmployeeResource($employee->load('role')),
-            'messages.dashboard.employee_status_updated'
+            $message
         );
     }
 
