@@ -3,7 +3,6 @@
 namespace App\Modules\Dashboard\Resources;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\DocumentStatus;
 use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -32,8 +31,6 @@ class DashboardDocumentReviewApplicationResource extends JsonResource
             'citizen' => $this->relationLoaded('citizen') && $this->citizen ? [
                 'id' => $this->citizen->id,
                 'name' => $this->citizen->name,
-                'phone' => $this->citizen->phone,
-                'national_id' => $this->citizen->national_id,
             ] : null,
             'service_type' => $this->relationLoaded('serviceType') && $this->serviceType ? [
                 'code' => $this->serviceType->code,

@@ -4,6 +4,7 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Applications\Resources\ApplicationDocumentResource;
+use App\Modules\Dashboard\Requests\DashboardDocumentReviewIndexRequest;
 use App\Modules\Dashboard\Requests\RejectDashboardDocumentRequest;
 use App\Modules\Dashboard\Resources\DashboardDocumentReviewApplicationResource;
 use App\Modules\Dashboard\Resources\DashboardDocumentReviewDetailsResource;
@@ -13,16 +14,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DashboardDocumentReviewController extends Controller
 {
-    public function index(Request $request, DashboardDocumentReviewService $reviews)
+    public function index(DashboardDocumentReviewIndexRequest $request, DashboardDocumentReviewService $reviews)
     {
-        $filters = $request->validate([
-            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'service_type_code' => ['sometimes', 'nullable', 'string', 'max:64', 'exists:service_types,code'],
-            'license_type_code' => ['sometimes', 'nullable', 'string', 'max:64', 'exists:license_types,code'],
-            'review_status' => ['sometimes', 'nullable', 'string', 'in:awaiting_review,completed,late,reupload_required'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
-        ]);
-
+        $filters = $request->validated();
         $paginator = $reviews->paginate($filters, (int) ($filters['per_page'] ?? 20));
 
         return $this->employeeSuccessResponse([
@@ -68,7 +62,12 @@ class DashboardDocumentReviewController extends Controller
     ) {
         return $this->employeeSuccessResponse(
             new ApplicationDocumentResource(
-                $reviews->reject($request->user(), $document, $request->validated('rejection_reason'))
+                $reviews->reject(
+                    $request->user(),
+                    $document,
+                    $request->rejectionReason(),
+                    $request->rejectionDetails()
+                )
             ),
             'messages.documents.rejected'
         );
@@ -78,10 +77,13 @@ class DashboardDocumentReviewController extends Controller
     {
         $model = $reviews->getPreviewDocument($document);
         $path = $reviews->getPreviewFilePath($model);
+        $filename = $reviews->sanitizedPreviewFilename($model);
+        $contentType = $reviews->resolvePreviewContentType($model);
 
-        return response()->file(
-            $path,
-            ['Content-Type' => $model->mime_type ?: 'application/octet-stream']
-        );
+        return response()->file($path, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

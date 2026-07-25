@@ -116,6 +116,8 @@ class ApplicationDocumentService
                 'size' => (int) $file->getSize(),
                 'status' => DocumentStatus::PendingReview,
                 'rejection_reason' => null,
+                'rejection_reason_code' => null,
+                'rejection_details' => null,
                 'reviewed_by' => null,
                 'reviewed_at' => null,
             ])->load('requiredDocument');

@@ -48,10 +48,10 @@ class DocumentReviewController extends Controller
         int $document,
         DocumentReviewService $reviews
     ) {
-        $model = $reviews->reject(
+        $model = $reviews->rejectFromLegacyReason(
             $request->user(),
             $document,
-            $request->validated('rejection_reason')
+            (string) $request->validated('rejection_reason')
         );
 
         return $this->successResponse(

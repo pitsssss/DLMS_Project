@@ -2,6 +2,8 @@
 
 namespace App\Modules\Applications\Resources;
 
+use App\Enums\DocumentRejectionReason;
+use App\Enums\DocumentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,6 +21,8 @@ class ApplicationDocumentResource extends JsonResource
             'original_name' => $this->original_name,
             'mime_type' => $this->mime_type,
             'size' => $this->size,
+            'rejection' => $this->rejectionPayload(),
+            // Legacy compatibility display text — prefer rejection.* for new clients
             'rejection_reason' => $this->rejection_reason,
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
@@ -36,6 +40,24 @@ class ApplicationDocumentResource extends JsonResource
                     'status' => $this->application->status->value,
                 ];
             }),
+        ];
+    }
+
+    /**
+     * @return array{code: ?string, label: ?string, details: ?string}|null
+     */
+    private function rejectionPayload(): ?array
+    {
+        if ($this->status !== DocumentStatus::Rejected) {
+            return null;
+        }
+
+        $code = DocumentRejectionReason::tryFrom((string) $this->rejection_reason_code);
+
+        return [
+            'code' => $code?->value ?? $this->rejection_reason_code,
+            'label' => $code?->label() ?? ($this->rejection_reason ?: null),
+            'details' => $this->rejection_details,
         ];
     }
 }

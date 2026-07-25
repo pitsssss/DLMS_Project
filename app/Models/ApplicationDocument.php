@@ -20,6 +20,8 @@ class ApplicationDocument extends Model
         'size',
         'status',
         'rejection_reason',
+        'rejection_reason_code',
+        'rejection_details',
         'reviewed_by',
         'reviewed_at',
     ];

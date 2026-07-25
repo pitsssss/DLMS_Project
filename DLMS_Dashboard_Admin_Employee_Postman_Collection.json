@@ -1908,6 +1908,317 @@
           }
         }
       ]
+    },
+    {
+      "name": "08 - Dashboard Document Review",
+      "description": "Dashboard Document Review APIs (auth:sanctum + dashboard + permission:review_documents).\n\nAuth: Bearer {{dashboard_token}} — keep empty; do not store a real token.\n\nDefault queue scope: review_status=awaiting_review (applications in documents_under_review with at least one pending_review document).\n\nSearch fields: application_number, citizen name only. Phone / email / national_id are NOT searchable and are NOT returned in queue rows.\n\nQueue citizen shape: { id, name } only.\n\nOrdering: FIFO by COALESCE(submitted_at, created_at) ASC, then id ASC.\n\nStats units (all application counts):\n- awaiting_review: applications awaiting document review\n- completed_documents: applications that left document-review stage (post-review statuses) — name is historical; unit is applications\n- late_requests: awaiting-review applications older than 3 days\n- reupload_required: applications in documents_rejected\n\nReject payload (Dashboard):\n{\n  \"rejection_reason_code\": \"unclear_document|wrong_document|expired_document|incomplete_document|other\",\n  \"rejection_details\": \"optional except required when code=other (max 2000)\"\n}\n\nPreview is authenticated inline binary (PDF/JPEG/PNG). No public URL. No storage paths in JSON.\n\nLegacy admin POST /admin/documents/{id}/reject still accepts free-text rejection_reason.",
+      "item": [
+        {
+          "name": "01 Review queue — default awaiting review",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews",
+            "description": "Default review_status=awaiting_review. No phone/email/national_id in items."
+          }
+        },
+        {
+          "name": "02 Queue search",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?search=APP",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "search", "value": "APP", "description": "Matches application_number or citizen name only." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 Queue by service type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?service_type_code=new_license",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "service_type_code", "value": "new_license" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 Queue by license type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?license_type_code=private",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "license_type_code", "value": "private" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 Awaiting-review filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?review_status=awaiting_review",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "review_status", "value": "awaiting_review" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "06 Completed filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?review_status=completed",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "review_status", "value": "completed", "description": "Applications past document-review stage." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 Late filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?review_status=late",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "review_status", "value": "late", "description": "Awaiting review older than 3 days." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "08 Re-upload-required filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?review_status=reupload_required",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "review_status", "value": "reupload_required" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "09 Pagination",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/document-reviews?per_page=20&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "document-reviews"],
+              "query": [
+                { "key": "per_page", "value": "20", "description": "1–100" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10 Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/stats",
+            "description": "All keys are application counts (see folder description)."
+          }
+        },
+        {
+          "name": "11 Review details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/{{application_id}}",
+            "description": "Includes summary, header, documents (latest active versions), actions, rejection_reasons Combobox options, structured rejection on rejected docs."
+          }
+        },
+        {
+          "name": "12 Preview document",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/preview",
+            "description": "Authenticated inline binary. Allowed: PDF, JPEG, PNG. Content-Disposition: inline. No public URL."
+          }
+        },
+        {
+          "name": "13 Approve document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/approve",
+            "description": "No body. Stale/already-reviewed → 422. Final required approval → payment_pending."
+          }
+        },
+        {
+          "name": "14 Reject document — known reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason_code\": \"unclear_document\",\n  \"rejection_details\": \"الصورة غير واضحة في الجزء السفلي.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15 Reject document — other",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason_code\": \"other\",\n  \"rejection_details\": \"تفاصيل سبب الرفض.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "16 Invalid reason validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason_code\": \"not_a_real_code\",\n  \"rejection_details\": \"x\"\n}"
+            },
+            "description": "Expect HTTP 422 on rejection_reason_code."
+          }
+        },
+        {
+          "name": "17 Other without details validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason_code\": \"other\"\n}"
+            },
+            "description": "Expect HTTP 422 on rejection_details."
+          }
+        },
+        {
+          "name": "18 Already-reviewed / stale decision",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/approve",
+            "description": "Call after the document was already approved/rejected. Expect HTTP 422 Arabic business conflict."
+          }
+        },
+        {
+          "name": "19 Unauthenticated example",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews",
+            "description": "Expect HTTP 401."
+          }
+        },
+        {
+          "name": "20 Forbidden example",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews",
+            "description": "Use a dashboard token without review_documents. Expect HTTP 403. Citizens also get 403."
+          }
+        }
+      ]
     }
   ]
 }

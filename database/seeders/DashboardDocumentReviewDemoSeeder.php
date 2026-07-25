@@ -249,6 +249,8 @@ class DashboardDocumentReviewDemoSeeder extends Seeder
                     'size' => Storage::disk('local')->size($filePath),
                     'status' => $documentStatus,
                     'rejection_reason' => $documentStatus === DocumentStatus::Rejected ? $rejectionReason : null,
+                    'rejection_reason_code' => $documentStatus === DocumentStatus::Rejected ? 'other' : null,
+                    'rejection_details' => $documentStatus === DocumentStatus::Rejected ? $rejectionReason : null,
                     'reviewed_by' => $reviewed ? $reviewer?->id : null,
                     'reviewed_at' => $reviewed ? $submittedAt->copy()->addHours(4) : null,
                     'deleted_at' => null,

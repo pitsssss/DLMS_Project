@@ -2,6 +2,8 @@
 
 namespace App\Modules\Dashboard\Resources;
 
+use App\Enums\ApplicationStatus;
+use App\Enums\DocumentRejectionReason;
 use App\Enums\DocumentStatus;
 use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\Request;
@@ -29,24 +31,29 @@ class DashboardDocumentReviewDetailsResource extends JsonResource
                     ? EmployeeMessageTranslator::get('employee.license_types.'.$this->licenseType->code)
                     : null,
                 'submitted_at' => $this->submitted_at?->format('Y-m-d H:i:s'),
+                'application_status' => [
+                    'value' => $this->status instanceof ApplicationStatus
+                        ? $this->status->value
+                        : (string) $this->status,
+                    'label' => $this->applicationStatusLabel(),
+                ],
             ],
             'documents' => $this->documents($request),
-            'rejection_reasons' => [
-                ['value' => 'unclear_document', 'label' => 'الوثيقة غير واضحة'],
-                ['value' => 'wrong_document', 'label' => 'الوثيقة المرفوعة غير مطابقة للمطلوب'],
-                ['value' => 'expired_document', 'label' => 'الوثيقة منتهية الصلاحية'],
-                ['value' => 'incomplete_document', 'label' => 'الوثيقة ناقصة أو تحتوي معلومات غير مكتملة'],
-                ['value' => 'other', 'label' => 'سبب آخر'],
-            ],
+            'rejection_reasons' => DocumentRejectionReason::options(),
         ];
     }
 
     private function documents(Request $request): array
     {
+        $applicationUnderReview = $this->status === ApplicationStatus::DocumentsUnderReview;
+
         return $this->checklist()
-            ->map(function (array $item) use ($request): array {
+            ->map(function (array $item) use ($applicationUnderReview): array {
                 $required = $item['required_document'];
                 $document = $item['latest_document'];
+                $canReview = $applicationUnderReview
+                    && $document !== null
+                    && $document->status === DocumentStatus::PendingReview;
 
                 return [
                     'required_document' => [
@@ -68,16 +75,14 @@ class DashboardDocumentReviewDetailsResource extends JsonResource
                         'size_label' => $this->sizeLabel((int) $document->size),
                         'uploaded_at' => $document->created_at?->format('Y-m-d H:i:s'),
                         'reviewed_at' => $document->reviewed_at?->format('Y-m-d H:i:s'),
+                        'rejection' => $this->rejectionPayload($document),
+                        // Legacy compatibility display text — prefer rejection.* for new clients
                         'rejection_reason' => $document->rejection_reason,
                         'preview_url' => url('/api/dashboard/document-reviews/documents/'.$document->id.'/preview'),
                     ] : null,
-                    'actions' => $document && $document->status === DocumentStatus::PendingReview ? [
-                        'can_approve' => true,
-                        'can_reject' => true,
-                        'document_id' => $document->id,
-                    ] : [
-                        'can_approve' => false,
-                        'can_reject' => false,
+                    'actions' => [
+                        'can_approve' => $canReview,
+                        'can_reject' => $canReview,
                         'document_id' => $document?->id,
                     ],
                 ];
@@ -107,12 +112,41 @@ class DashboardDocumentReviewDetailsResource extends JsonResource
         ];
     }
 
+    private function rejectionPayload($document): ?array
+    {
+        if ($document->status !== DocumentStatus::Rejected) {
+            return null;
+        }
+
+        $code = DocumentRejectionReason::tryFrom((string) $document->rejection_reason_code);
+
+        return [
+            'code' => $code?->value ?? $document->rejection_reason_code,
+            'label' => $code?->label() ?? ($document->rejection_reason ?: null),
+            'details' => $document->rejection_details,
+        ];
+    }
+
     private function documentStatusLabel(DocumentStatus $status): string
     {
         return match ($status) {
             DocumentStatus::PendingReview => 'بانتظار المراجعة',
             DocumentStatus::Approved => 'مقبول',
             DocumentStatus::Rejected => 'مرفوض',
+        };
+    }
+
+    private function applicationStatusLabel(): string
+    {
+        $status = $this->status instanceof ApplicationStatus
+            ? $this->status
+            : ApplicationStatus::tryFrom((string) $this->status);
+
+        return match ($status) {
+            ApplicationStatus::DocumentsUnderReview => 'الوثائق قيد المراجعة',
+            ApplicationStatus::DocumentsRejected => 'وثائق مرفوضة',
+            ApplicationStatus::PaymentPending => 'بانتظار الدفع',
+            default => $status?->value ?? (string) $this->status,
         };
     }
 
