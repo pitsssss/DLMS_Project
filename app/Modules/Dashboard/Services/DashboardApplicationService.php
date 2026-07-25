@@ -33,37 +33,39 @@ class DashboardApplicationService
             $query->where('status', trim($filters['status']));
         }
 
-        if (! empty($filters['license_type_name'])) {
-            $licenseTypeName = trim($filters['license_type_name']);
-
-            $query->whereHas('licenseType', function ($licenseTypeQuery) use ($licenseTypeName) {
-                $licenseTypeQuery->where('name', $licenseTypeName);
+        if (! empty($filters['license_type_code'])) {
+            $code = trim($filters['license_type_code']);
+            $query->whereHas('licenseType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 
-        if (! empty($filters['service_type_name'])) {
-            $serviceTypeName = trim($filters['service_type_name']);
-
-            $query->whereHas('serviceType', function ($serviceTypeQuery) use ($serviceTypeName) {
-                $serviceTypeQuery->where('name', $serviceTypeName);
+        if (! empty($filters['service_type_code'])) {
+            $code = trim($filters['service_type_code']);
+            $query->whereHas('serviceType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 
-        if (! empty($filters['test_type_name'])) {
-            $testTypeName = trim($filters['test_type_name']);
-
-            $query->whereHas('currentTestType', function ($testTypeQuery) use ($testTypeName) {
-                $testTypeQuery->where('name', $testTypeName);
+        if (! empty($filters['test_type_code'])) {
+            $code = trim($filters['test_type_code']);
+            $query->whereHas('currentTestType', function ($q) use ($code) {
+                $q->where('code', $code);
             });
         }
 
         return $query->paginate($perPage);
     }
 
-    public function getDetailsByNumber(string $applicationNumber): array
+    public function getDetailsByNumber(string $applicationNumber): LicenseApplication
     {
         $application = LicenseApplication::query()
-            ->with('currentTestType')
+            ->with([
+                'citizen',
+                'licenseType',
+                'serviceType',
+                'currentTestType',
+            ])
             ->where('application_number', $applicationNumber)
             ->firstOrFail();
 
@@ -75,22 +77,13 @@ class DashboardApplicationService
             ->orderByDesc('id')
             ->get();
 
+        /*
+         * لا نحتاج علاقة حقيقية بالموديل.
+         * فقط نخزن الـ logs كـ loaded relation حتى يقرأها الـ Resource.
+         */
+        $application->setRelation('dashboardAuditLogs', $logs);
 
-        return [
-            'id' => $application->id,
-            'application_number' => $application->application_number,
-            'extra_details' => [
-                'current_test_type' => $application->currentTestType ? [
-                    'name' => $application->currentTestType->name,
-                ] : null,
-                'rejection_reason' => $application->rejection_reason,
-                'approved_at' => $application->approved_at?->format('Y-m-d H:i:s'),
-                'issued_at' => $application->issued_at?->format('Y-m-d H:i:s'),
-                'created_at' => $application->created_at?->format('Y-m-d H:i:s'),
-                'updated_at' => $application->updated_at?->format('Y-m-d H:i:s'),
-            ],
-            'audit_logs' => $this->formatAuditLogs($logs),
-        ];
+        return $application;
     }
 
 

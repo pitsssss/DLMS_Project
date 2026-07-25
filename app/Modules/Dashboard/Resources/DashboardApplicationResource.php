@@ -3,6 +3,7 @@
 namespace App\Modules\Dashboard\Resources;
 
 use App\Enums\ApplicationStatus;
+use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,22 +15,26 @@ class DashboardApplicationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id'                 => $this->id,
             'application_number' => $this->application_number,
-            'status' => $this->statusValue(),
-            'submitted_at' => $this->submitted_at?->format('Y-m-d H:i:s'),
+
+            'status'             => EmployeeMessageTranslator::get('employee.statuses.' . $this->statusValue()),
+
+            'submitted_at'       => $this->submitted_at?->format('Y-m-d H:i:s'),
 
             'citizen' => $this->relationLoaded('citizen') && $this->citizen ? [
-                'name' => $this->citizen->name,
+                'name'  => $this->citizen->name,
                 'phone' => $this->citizen->phone ?? null,
             ] : null,
 
             'license_type' => $this->relationLoaded('licenseType') && $this->licenseType ? [
-                'name' => $this->licenseType->name,
+                'code' => $this->licenseType->code,
+                'name' => EmployeeMessageTranslator::get('employee.license_types.' . $this->licenseType->code),
             ] : null,
 
             'service_type' => $this->relationLoaded('serviceType') && $this->serviceType ? [
-                'name' => $this->serviceType->name,
+                'code' => $this->serviceType->code,
+                'name' => EmployeeMessageTranslator::get('employee.services.' . $this->serviceType->code),
             ] : null,
         ];
     }

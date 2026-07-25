@@ -3,6 +3,8 @@
 use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardApplicationController;
 use App\Modules\Dashboard\Controllers\DashboardAuthController;
+use App\Modules\Dashboard\Controllers\DashboardCitizenController;
+use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
@@ -43,6 +45,35 @@ Route::prefix('dashboard')
                 ->whereNumber('contactMessage');
         });
 
+        // Partner: citizens management
+        Route::middleware('permission:manage_users')->group(function (): void {
+            Route::get('/citizens', [DashboardCitizenController::class, 'index']);
+            Route::post('/citizens', [DashboardCitizenController::class, 'store']);
+            Route::get('/citizens/search', [DashboardCitizenController::class, 'search']);
+            Route::get('/citizens/profile-statuses', [DashboardCitizenController::class, 'profileStatuses']);
+            Route::get('/citizens/{user}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('user');
+            Route::get('/citizens/{user}/licenses', [DashboardCitizenController::class, 'licenses'])->whereNumber('user');
+            Route::get('/citizens/{user}/fines', [DashboardCitizenController::class, 'fines'])->whereNumber('user');
+            Route::get('/citizens/{user}', [DashboardCitizenController::class, 'show'])->whereNumber('user');
+            Route::put('/citizens/{user}', [DashboardCitizenController::class, 'update'])->whereNumber('user');
+            Route::delete('/citizens/{user}', [DashboardCitizenController::class, 'destroy'])->whereNumber('user');
+        });
+
+        // Partner: document reviews
+        Route::middleware('permission:review_documents')->group(function (): void {
+            Route::get('/document-reviews', [DashboardDocumentReviewController::class, 'index']);
+            Route::get('/document-reviews/stats', [DashboardDocumentReviewController::class, 'stats']);
+            Route::get('/document-reviews/{application}', [DashboardDocumentReviewController::class, 'show'])->whereNumber('application');
+            Route::get('/document-reviews/documents/{document}/preview', [DashboardDocumentReviewController::class, 'preview'])->whereNumber('document');
+            Route::post('/document-reviews/documents/{document}/approve', [DashboardDocumentReviewController::class, 'approve'])
+                ->whereNumber('document')
+                ->middleware('throttle:60,1');
+            Route::post('/document-reviews/documents/{document}/reject', [DashboardDocumentReviewController::class, 'reject'])
+                ->whereNumber('document')
+                ->middleware('throttle:60,1');
+        });
+
+        // Yours: employees
         Route::middleware('permission:manage_employees')->group(function (): void {
             Route::get('/employees', [DashboardEmployeeController::class, 'index']);
             Route::post('/employees', [DashboardEmployeeController::class, 'store']);
@@ -55,6 +86,7 @@ Route::prefix('dashboard')
             Route::post('/employees/{user}/assign-role', [DashboardEmployeeController::class, 'assignRole'])->whereNumber('user');
         });
 
+        // Applications (shared)
         Route::middleware('permission:view_applications')->group(function (): void {
             Route::get('/applications', [DashboardApplicationController::class, 'index']);
             // Lookup application details by application number (not internal id). The table shows application_number.
@@ -62,6 +94,7 @@ Route::prefix('dashboard')
                 ->where('application_number', '[A-Za-z0-9_\-]+');
         });
 
+        // Yours: license types + service types settings
         Route::middleware('permission:manage_settings')->group(function (): void {
             Route::get('/license-types', [DashboardLicenseTypeController::class, 'index']);
             Route::post('/license-types', [DashboardLicenseTypeController::class, 'store']);

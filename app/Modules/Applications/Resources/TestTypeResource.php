@@ -2,6 +2,7 @@
 
 namespace App\Modules\Applications\Resources;
 
+use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 class TestTypeResource extends JsonResource
@@ -10,7 +11,7 @@ class TestTypeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => EmployeeMessageTranslator::get('employee.test_types.' . $this->code),
             'code' => $this->code,
         ];
     }

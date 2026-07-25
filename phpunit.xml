@@ -12,31 +12,44 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+
     <source>
         <include>
             <directory>app</directory>
         </include>
     </source>
+
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_LOCALE" value="ar"/>
         <env name="APP_FALLBACK_LOCALE" value="ar"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
-        <env name="OTP_FIXED_CODE" value="123456"/>
-        <env name="OTP_CHANNEL" value="email"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+
+        <!-- MySQL Testing Database -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="dlms_testing"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value=""/>
+        <env name="DB_URL" value=""/>
+
+        <env name="OTP_FIXED_CODE" value="123456"/>
+        <env name="OTP_CHANNEL" value="email"/>
+
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+
         <env name="PAYMENT_PROVIDER" value="mock"/>
+
         <env name="AI_AGENT_ENABLED" value="true"/>
         <env name="AI_AGENT_REQUIRE_CONFIRMATION" value="true"/>
         <env name="GEMINI_API_KEY" value="test-key-not-used-in-tests"/>
