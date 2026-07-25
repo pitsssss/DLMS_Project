@@ -99,6 +99,8 @@ return [
         'service_type_activated' => 'تم تفعيل نوع الخدمة بنجاح.',
         'service_type_deactivated' => 'تم تعطيل نوع الخدمة بنجاح.',
         'service_type_not_found' => 'نوع الخدمة غير موجود.',
+        'overview_retrieved' => 'تم جلب بيانات الصفحة الرئيسية بنجاح.',
+        'overview_other' => 'أخرى',
         'forgot_password_sent' => 'إذا كان البريد الإلكتروني مسجلاً لدينا، سيتم إرسال رمز استعادة كلمة المرور.',
         'otp_verified' => 'تم التحقق من رمز الاستعادة بنجاح.',
         'password_reset' => 'تم تعيين كلمة المرور الجديدة بنجاح.',

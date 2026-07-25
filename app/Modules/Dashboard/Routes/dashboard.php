@@ -7,6 +7,7 @@ use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
+use App\Modules\Dashboard\Controllers\DashboardOverviewController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use App\Modules\Dashboard\Controllers\DashboardServiceTypeController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,8 @@ Route::prefix('dashboard/auth')->group(function (): void {
 Route::prefix('dashboard')
     ->middleware(['auth:sanctum', 'dashboard'])
     ->group(function (): void {
+        Route::get('/overview', DashboardOverviewController::class);
+
         Route::middleware('permission:view_roles')->group(function (): void {
             Route::get('/roles', [DashboardRoleController::class, 'index']);
             Route::get('/roles/{role}', [DashboardRoleController::class, 'show']);

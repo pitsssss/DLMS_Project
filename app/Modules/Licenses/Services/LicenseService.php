@@ -3,23 +3,16 @@
 namespace App\Modules\Licenses\Services;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\DocumentStatus;
 use App\Enums\FineStatus;
 use App\Enums\LicenseStatus;
-use App\Enums\PaymentStatus;
 use App\Enums\ServiceCode;
 use App\Exceptions\ApiException;
-use App\Models\ApplicationDocument;
 use App\Models\License;
 use App\Models\LicenseApplication;
-use App\Models\Payment;
-use App\Models\RequiredDocument;
 use App\Models\User;
-use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Licenses\Repositories\LicenseRepository;
-use App\Modules\Payments\Support\ApplicationFeeResolver;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,8 +23,7 @@ class LicenseService
     public function __construct(
         private readonly LicenseRepository $licenses,
         private readonly ApplicationRepository $applications,
-        private readonly TestProgressionService $progression,
-        private readonly ApplicationFeeResolver $feeResolver,
+        private readonly LicenseIssuanceEligibilityService $issuanceEligibility,
         private readonly AuditLogService $auditLogs,
         private readonly NotificationService $notifications
     ) {}
@@ -68,7 +60,7 @@ class LicenseService
                 throw new ApiException('messages.applications.not_found', 404);
             }
 
-            $this->assertApplicationReadyForIssuance($application);
+            $this->issuanceEligibility->assertReady($application);
 
             if ($this->licenses->existsForApplication($application->id)) {
                 throw new ApiException('messages.licenses.already_issued', 422);
@@ -366,73 +358,6 @@ class LicenseService
         }
 
         return $application->relatedLicense;
-    }
-
-    private function assertApplicationReadyForIssuance(LicenseApplication $application): void
-    {
-        if ($application->status !== ApplicationStatus::Approved) {
-            throw new ApiException('messages.licenses.must_be_approved', 422);
-        }
-
-        $application->loadMissing('serviceType');
-
-        if (ServiceWorkflow::requiresTests($application->serviceType?->code)
-            && ! $this->progression->allRequiredTestsPassed($application)) {
-            throw new ApiException('messages.licenses.tests_required', 422);
-        }
-
-        if (! $this->applicationFeePaid($application)) {
-            throw new ApiException('messages.licenses.payment_required', 422);
-        }
-
-        if (! $this->allRequiredDocumentsApproved($application)) {
-            throw new ApiException('messages.licenses.documents_required', 422);
-        }
-
-        if ($this->citizenHasUnpaidFines($application->citizen_id)) {
-            throw new ApiException('messages.licenses.unpaid_fines_issue', 422);
-        }
-    }
-
-    private function applicationFeePaid(LicenseApplication $application): bool
-    {
-        $feeCode = $this->feeResolver->feeCodeForApplication($application);
-
-        return Payment::query()
-            ->where('application_id', $application->id)
-            ->where('status', PaymentStatus::Completed)
-            ->whereHas('fee', fn ($q) => $q->where('code', $feeCode))
-            ->exists();
-    }
-
-    private function allRequiredDocumentsApproved(LicenseApplication $application): bool
-    {
-        $required = RequiredDocument::query()
-            ->where('is_active', true)
-            ->where(function ($q) use ($application): void {
-                $q->whereNull('license_type_id')
-                    ->orWhere('license_type_id', $application->license_type_id);
-            })
-            ->where(function ($q) use ($application): void {
-                $q->whereNull('service_type_id')
-                    ->orWhere('service_type_id', $application->service_type_id);
-            })
-            ->where('is_required', true)
-            ->get();
-
-        foreach ($required as $rd) {
-            $latest = ApplicationDocument::query()
-                ->where('application_id', $application->id)
-                ->where('required_document_id', $rd->id)
-                ->orderByDesc('id')
-                ->first();
-
-            if ($latest === null || $latest->status !== DocumentStatus::Approved) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function requireOwnedRenewableLicense(User $citizen, int $licenseId): License
