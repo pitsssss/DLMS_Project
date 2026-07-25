@@ -60,18 +60,16 @@ class LicenseService
                 throw new ApiException('messages.applications.not_found', 404);
             }
 
+            // Re-check eligibility inside the locked transaction (fail-closed service codes).
             $this->issuanceEligibility->assertReady($application);
-
-            if ($this->licenses->existsForApplication($application->id)) {
-                throw new ApiException('messages.licenses.already_issued', 422);
-            }
 
             $serviceCode = ServiceWorkflow::fromServiceType($application->serviceType);
             $license = match ($serviceCode) {
+                ServiceCode::NewLicense => $this->issueNewLicense($application),
                 ServiceCode::RenewLicense => $this->issueRenewalLicense($application),
                 ServiceCode::LostReplacement => $this->issueReplacementLicense($application, ServiceCode::LostReplacement),
                 ServiceCode::DamagedReplacement => $this->issueReplacementLicense($application, ServiceCode::DamagedReplacement),
-                default => $this->issueNewLicense($application),
+                default => throw new ApiException('messages.licenses.service_not_issuable', 422),
             };
 
             $application->approved_at ??= now();
@@ -89,6 +87,7 @@ class LicenseService
                 ServiceCode::RenewLicense => 'license.renewed',
                 ServiceCode::LostReplacement => 'license.lost_replacement_issued',
                 ServiceCode::DamagedReplacement => 'license.damaged_replacement_issued',
+                ServiceCode::NewLicense => 'license.issued',
                 default => 'license.issued',
             };
 

@@ -59,13 +59,13 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     |
-    | Business calendar for DLMS / SYRTAK. Local and production deployments
-    | should set APP_TIMEZONE=Asia/Damascus. Laravel stores datetime columns
-    | using this application timezone wall-clock.
+    | Laravel application / storage timezone. DLMS stores DATETIME values in UTC.
+    | Syrian business-day calculations use config('dlms.business_timezone')
+    | via BUSINESS_TIMEZONE (Asia/Damascus).
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'Asia/Damascus'),
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------

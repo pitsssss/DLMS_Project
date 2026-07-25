@@ -516,13 +516,17 @@ Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. T
 
 ## Environment variables
 
-Set the business timezone (required for dashboard Overview calendar statistics):
+Set storage and business timezones:
 
 ```env
-APP_TIMEZONE=Asia/Damascus
+APP_TIMEZONE=UTC
+BUSINESS_TIMEZONE=Asia/Damascus
 ```
 
-After changing `APP_TIMEZONE`, run `php artisan config:clear` (and rebuild config cache in production with `php artisan config:cache`). Laravel datetime columns use this application timezone wall-clock; do not migrate historical timestamps solely for a timezone change.
+- `APP_TIMEZONE` controls Laravel’s application/storage datetime convention (UTC).
+- `BUSINESS_TIMEZONE` controls Syrian business-day calculations (Overview periods, “today”, chart buckets).
+- After changes, run `php artisan config:clear` locally, or `php artisan config:cache` in production.
+- Do not migrate historical timestamps solely for a timezone config change.
 
 Add to `.env` (see `.env.example`):
 

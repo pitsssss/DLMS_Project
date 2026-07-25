@@ -227,9 +227,12 @@ class DashboardApplicationDetailsResource extends JsonResource
                 }
 
                 $changes[] = [
-                    'field' => $this->auditFieldLabel($key),
-                    'old' => $this->auditValueLabel($key, $oldValue, $lookups),
-                    'new' => $this->auditValueLabel($key, $newValue, $lookups),
+                    'field' => $key,
+                    'field_label' => $this->auditFieldLabel($key),
+                    'old' => $this->enumValue($oldValue),
+                    'new' => $this->enumValue($newValue),
+                    'old_label' => $this->auditValueLabel($key, $oldValue, $lookups),
+                    'new_label' => $this->auditValueLabel($key, $newValue, $lookups),
                 ];
             }
 

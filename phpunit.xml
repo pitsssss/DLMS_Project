@@ -21,7 +21,8 @@
 
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="APP_TIMEZONE" value="Asia/Damascus"/>
+        <env name="APP_TIMEZONE" value="UTC"/>
+        <env name="BUSINESS_TIMEZONE" value="Asia/Damascus"/>
         <env name="APP_LOCALE" value="ar"/>
         <env name="APP_FALLBACK_LOCALE" value="ar"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

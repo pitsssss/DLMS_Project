@@ -25,6 +25,7 @@ use App\Models\TestAppointment;
 use App\Models\TestResult;
 use App\Models\TestType;
 use App\Models\User;
+use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Licenses\Services\LicenseIssuanceEligibilityService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -60,9 +61,12 @@ class DashboardOverviewTest extends TestCase
             AppointmentSlotsSeeder::class,
         ]);
         $this->withoutMiddleware([ThrottleRequests::class]);
-        // Prefer config from APP_TIMEZONE; keep explicit override for isolation.
-        config(['app.timezone' => 'Asia/Damascus']);
-        date_default_timezone_set('Asia/Damascus');
+        config([
+            'app.timezone' => 'UTC',
+            'dlms.business_timezone' => 'Asia/Damascus',
+        ]);
+        date_default_timezone_set('UTC');
+        // Freeze the absolute instant corresponding to 14:00 Asia/Damascus.
         $frozen = CarbonImmutable::parse('2026-07-25 14:00:00', 'Asia/Damascus');
         CarbonImmutable::setTestNow($frozen);
         Carbon::setTestNow($frozen);
@@ -104,9 +108,11 @@ class DashboardOverviewTest extends TestCase
         ], $overrides));
 
         if ($createdAt !== null) {
+            $createdAtUtc = CarbonImmutable::parse($createdAt)->utc();
+            $updatedAtUtc = CarbonImmutable::parse($updatedAt ?? $createdAt)->utc();
             $application->forceFill([
-                'created_at' => $createdAt,
-                'updated_at' => $updatedAt ?? $createdAt,
+                'created_at' => $createdAtUtc,
+                'updated_at' => $updatedAtUtc,
             ])->saveQuietly();
         }
 
@@ -140,10 +146,21 @@ class DashboardOverviewTest extends TestCase
         ], $overrides));
 
         if (! $skipPayment) {
+            $feeCode = ServiceWorkflow::feeCode(
+                ServiceType::query()->whereKey($application->service_type_id)->value('code')
+            );
             $fee = Fee::query()
-                ->where('code', 'application_fee')
-                ->where('license_type_id', $application->license_type_id)
-                ->where('service_type_id', $application->service_type_id)
+                ->where('code', $feeCode)
+                ->where(function ($q) use ($application): void {
+                    $q->where(function ($scoped) use ($application): void {
+                        $scoped->where('license_type_id', $application->license_type_id)
+                            ->where('service_type_id', $application->service_type_id);
+                    })->orWhere(function ($scoped) use ($application): void {
+                        $scoped->whereNull('license_type_id')
+                            ->where('service_type_id', $application->service_type_id);
+                    });
+                })
+                ->orderByRaw('license_type_id IS NULL')
                 ->firstOrFail();
 
             Payment::query()->create([
@@ -600,8 +617,9 @@ class DashboardOverviewTest extends TestCase
 
         $meta = $this->getJson('/api/dashboard/overview?period=30d')->json('data.meta');
 
-        $this->assertSame(config('app.timezone'), $meta['timezone']);
+        $this->assertSame(config('dlms.business_timezone'), $meta['timezone']);
         $this->assertSame('Asia/Damascus', $meta['timezone']);
+        $this->assertNotSame(config('app.timezone'), $meta['timezone']);
         $this->assertStringStartsWith('2026-06-26', $meta['date_from']);
         $this->assertStringStartsWith('2026-07-25', $meta['date_to']);
         $this->assertStringStartsWith('2026-05-27', $meta['previous_date_from']);
@@ -612,11 +630,12 @@ class DashboardOverviewTest extends TestCase
         );
     }
 
-    public function test_meta_timezone_follows_config_not_machine_timezone(): void
+    public function test_meta_timezone_uses_business_timezone_not_app_timezone(): void
     {
         $this->asAdmin();
-        config(['app.timezone' => 'Asia/Damascus']);
-        date_default_timezone_set('UTC'); // machine/PHP default must not leak into meta
+        $this->assertSame('UTC', config('app.timezone'));
+        $this->assertSame('Asia/Damascus', config('dlms.business_timezone'));
+        date_default_timezone_set('UTC');
 
         $meta = $this->getJson('/api/dashboard/overview')->assertOk()->json('data.meta');
 
@@ -625,17 +644,17 @@ class DashboardOverviewTest extends TestCase
         $this->assertStringContainsString('+03:00', $meta['date_from']);
     }
 
-    public function test_local_midnight_boundary_for_applications_and_trend(): void
+    public function test_utc_stored_timestamps_map_to_damascus_day_buckets(): void
     {
         $this->asAdmin();
 
-        // 00:30 Damascus belongs to 2026-07-25.
+        // 21:30 UTC = 00:30 next Damascus day (2026-07-25).
         $this->makeApplication([
-            'created_at' => CarbonImmutable::parse('2026-07-25 00:30:00', 'Asia/Damascus'),
+            'created_at' => CarbonImmutable::parse('2026-07-24 21:30:00', 'UTC'),
         ]);
-        // 23:30 previous local day belongs to 2026-07-24.
+        // 20:30 UTC = 23:30 Damascus same calendar day (2026-07-24).
         $this->makeApplication([
-            'created_at' => CarbonImmutable::parse('2026-07-24 23:30:00', 'Asia/Damascus'),
+            'created_at' => CarbonImmutable::parse('2026-07-24 20:30:00', 'UTC'),
         ]);
 
         $charts = $this->getJson('/api/dashboard/overview?period=7d')->json('data.charts');
@@ -660,7 +679,8 @@ class DashboardOverviewTest extends TestCase
             'appointment_slot_id' => $slot->id,
             'test_type_id' => $testType->id,
             'status' => AppointmentStatus::Booked,
-            'scheduled_at' => CarbonImmutable::parse('2026-07-25 00:15:00', 'Asia/Damascus'),
+            // 00:15 Damascus = 21:15 previous UTC day → still Damascus "today".
+            'scheduled_at' => CarbonImmutable::parse('2026-07-25 00:15:00', 'Asia/Damascus')->utc(),
         ]);
         TestAppointment::query()->create([
             'application_id' => $app->id,
@@ -668,7 +688,8 @@ class DashboardOverviewTest extends TestCase
             'appointment_slot_id' => $slot->id,
             'test_type_id' => $testType->id,
             'status' => AppointmentStatus::Booked,
-            'scheduled_at' => CarbonImmutable::parse('2026-07-24 23:45:00', 'Asia/Damascus'),
+            // 23:45 previous Damascus day = 20:45 UTC → previous business day.
+            'scheduled_at' => CarbonImmutable::parse('2026-07-24 23:45:00', 'Asia/Damascus')->utc(),
         ]);
 
         $kpi = $this->getJson('/api/dashboard/overview')->json('data.kpis.appointments');
@@ -676,14 +697,14 @@ class DashboardOverviewTest extends TestCase
         $this->assertSame(1, $kpi['today']);
     }
 
-    public function test_12m_monthly_buckets_use_application_timezone(): void
+    public function test_12m_monthly_buckets_use_business_timezone(): void
     {
         $this->asAdmin();
         $this->makeApplication([
-            'created_at' => CarbonImmutable::parse('2026-07-01 00:30:00', 'Asia/Damascus'),
+            'created_at' => CarbonImmutable::parse('2026-07-01 00:30:00', 'Asia/Damascus')->utc(),
         ]);
         $this->makeApplication([
-            'created_at' => CarbonImmutable::parse('2026-06-30 23:30:00', 'Asia/Damascus'),
+            'created_at' => CarbonImmutable::parse('2026-06-30 23:30:00', 'Asia/Damascus')->utc(),
         ]);
 
         $trend = $this->getJson('/api/dashboard/overview?period=12m')->json('data.charts.applications_trend');
@@ -849,5 +870,69 @@ class DashboardOverviewTest extends TestCase
 
         $this->postJson("/api/admin/applications/{$application->id}/issue-license")
             ->assertStatus(422);
+    }
+
+    public function test_license_unblock_is_excluded_from_ready_and_issue_license(): void
+    {
+        $this->asAdmin();
+        $unblock = ServiceType::query()->where('code', 'license_unblock')->firstOrFail();
+        $application = $this->makeIssuableApplication([
+            'skip_tests' => true,
+            'service_type_id' => $unblock->id,
+        ]);
+
+        $this->assertSame(0, $this->getJson('/api/dashboard/overview')->json('data.operational_queues.licenses_ready_for_issuance'));
+
+        Sanctum::actingAs(User::factory()->dashboardEmployee('license_employee')->create());
+        $before = License::query()->count();
+        $this->postJson("/api/admin/applications/{$application->id}/issue-license")->assertStatus(422);
+        $this->assertSame($before, License::query()->count());
+        $this->assertSame(ApplicationStatus::Approved->value, $application->fresh()->status->value);
+    }
+
+    public function test_unknown_custom_service_code_is_not_issuable(): void
+    {
+        $this->asAdmin();
+        $custom = ServiceType::query()->create([
+            'name' => 'خدمة مخصصة',
+            'code' => 'custom_dashboard_service',
+            'description' => 'اختبار',
+            'is_active' => true,
+        ]);
+
+        $application = $this->makeIssuableApplication([
+            'skip_tests' => true,
+            'skip_payment' => true,
+            'skip_documents' => true,
+            'service_type_id' => $custom->id,
+        ]);
+
+        $this->assertSame(0, $this->getJson('/api/dashboard/overview')->json('data.operational_queues.licenses_ready_for_issuance'));
+
+        Sanctum::actingAs(User::factory()->dashboardEmployee('license_employee')->create());
+        $beforeLicenses = License::query()->count();
+        $beforeAudits = AuditLog::query()->where('action', 'license.issued')->count();
+
+        $this->postJson("/api/admin/applications/{$application->id}/issue-license")->assertStatus(422);
+
+        $this->assertSame($beforeLicenses, License::query()->count());
+        $this->assertSame($beforeAudits, AuditLog::query()->where('action', 'license.issued')->count());
+        $this->assertSame(ApplicationStatus::Approved->value, $application->fresh()->status->value);
+    }
+
+    public function test_duplicate_issue_license_is_prevented_after_success(): void
+    {
+        $this->asAdmin();
+        $application = $this->makeIssuableApplication();
+        $this->assertSame(1, $this->getJson('/api/dashboard/overview')->json('data.operational_queues.licenses_ready_for_issuance'));
+
+        $issuer = User::factory()->dashboardEmployee('license_employee')->create();
+        Sanctum::actingAs($issuer);
+        $this->postJson("/api/admin/applications/{$application->id}/issue-license")->assertOk();
+        $this->postJson("/api/admin/applications/{$application->id}/issue-license")->assertStatus(422);
+
+        Sanctum::actingAs(User::factory()->dashboardAdmin('super_admin')->create());
+        $this->assertSame(0, $this->getJson('/api/dashboard/overview')->json('data.operational_queues.licenses_ready_for_issuance'));
+        $this->assertSame(1, License::query()->where('application_id', $application->id)->count());
     }
 }

@@ -68,6 +68,9 @@ class DashboardApplicationDetailsTest extends TestCase
             ->assertJsonPath('data.application_number', $application->application_number)
             ->assertJsonPath('data.extra_details.rejection_reason', null)
             ->assertJsonPath('data.audit_logs.0.changes.0.field', 'status')
+            ->assertJsonPath('data.audit_logs.0.changes.0.field_label', 'الحالة')
+            ->assertJsonPath('data.audit_logs.0.changes.0.old', 'documents_under_review')
+            ->assertJsonPath('data.audit_logs.0.changes.0.new', 'documents_rejected')
             ->assertJsonPath('data.audit_logs.0.changes.0.old_label', 'مراجعة الوثائق')
             ->assertJsonPath('data.audit_logs.0.changes.0.new_label', 'رفض الوثائق');
 

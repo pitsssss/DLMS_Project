@@ -36,8 +36,8 @@ class EmployeeMessageTranslator
             $code = substr($suffix, strlen('employee.statuses.'));
             return match ($code) {
                 'draft'                  => 'مسودة',
-                'documents_under_review' => 'المستندات قيد المراجعة',
-                'documents_rejected'     => 'المستندات مرفوضة',
+                'documents_under_review' => 'مراجعة الوثائق',
+                'documents_rejected'     => 'رفض الوثائق',
                 'payment_pending'        => 'بانتظار الدفع',
                 'payment_completed'      => 'تم الدفع بنجاح',
                 'appointment_pending'    => 'بانتظار حجز موعد',
@@ -66,11 +66,11 @@ class EmployeeMessageTranslator
         if (str_starts_with($suffix, 'employee.services.')) {
             $code = substr($suffix, strlen('employee.services.'));
             return match ($code) {
-                'new_license'         => 'رخصة جديدة',
+                'new_license'         => 'إصدار رخصة جديدة',
                 'renew_license'       => 'تجديد رخصة',
-                'lost_replacement'    => 'بدل ضائع',
+                'lost_replacement'    => 'بدل فاقد',
                 'damaged_replacement' => 'بدل تالف',
-                'license_unblock'     => 'فك حظر الرخصة',
+                'license_unblock'     => 'فك حظر رخصة',
                 default               => $code,
             };
         }

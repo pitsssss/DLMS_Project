@@ -20,6 +20,7 @@ use App\Models\TestAppointment;
 use App\Models\TestResult;
 use App\Models\User;
 use App\Modules\Licenses\Services\LicenseIssuanceEligibilityService;
+use App\Support\BusinessClock;
 use App\Support\EmployeeMessageTranslator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ class DashboardOverviewService
 {
     public function __construct(
         private readonly LicenseIssuanceEligibilityService $issuanceEligibility,
+        private readonly BusinessClock $clock,
     ) {}
 
     /**
@@ -49,7 +51,7 @@ class DashboardOverviewService
     public function build(User $user, array $filters): array
     {
         $visibility = $this->visibility($user);
-        $periodMeta = $this->resolvePeriod($filters['period']);
+        $periodMeta = $this->clock->resolvePeriod($filters['period']);
 
         $kpis = [
             'applications' => null,
@@ -145,7 +147,7 @@ class DashboardOverviewService
                 'previous_date_to' => $periodMeta['previous_to']->toIso8601String(),
                 'trend_granularity' => $periodMeta['granularity'],
                 'timezone' => $periodMeta['timezone'],
-                'generated_at' => CarbonImmutable::now($periodMeta['timezone'])->toIso8601String(),
+                'generated_at' => $this->clock->now()->toIso8601String(),
             ],
             'visibility' => [
                 'applications' => $visibility['applications'],
@@ -187,51 +189,6 @@ class DashboardOverviewService
     }
 
     /**
-     * @return array{
-     *     period: string,
-     *     timezone: string,
-     *     granularity: string,
-     *     current_from: CarbonImmutable,
-     *     current_to: CarbonImmutable,
-     *     previous_from: CarbonImmutable,
-     *     previous_to: CarbonImmutable
-     * }
-     */
-    private function resolvePeriod(string $period): array
-    {
-        $timezone = (string) config('app.timezone');
-        $now = CarbonImmutable::now($timezone);
-        $granularity = $period === '12m' ? 'month' : 'day';
-
-        if ($period === '12m') {
-            $currentFrom = $now->startOfMonth()->subMonths(11);
-            $currentTo = $now->endOfDay();
-            $previousTo = $currentFrom->subSecond();
-            $previousFrom = $previousTo->startOfMonth()->subMonths(11);
-        } else {
-            $days = match ($period) {
-                '7d' => 7,
-                '90d' => 90,
-                default => 30,
-            };
-            $currentTo = $now->endOfDay();
-            $currentFrom = $now->startOfDay()->subDays($days - 1);
-            $previousTo = $currentFrom->subSecond();
-            $previousFrom = $previousTo->startOfDay()->subDays($days - 1);
-        }
-
-        return [
-            'period' => $period,
-            'timezone' => $timezone,
-            'granularity' => $granularity,
-            'current_from' => $currentFrom,
-            'current_to' => $currentTo,
-            'previous_from' => $previousFrom,
-            'previous_to' => $previousTo,
-        ];
-    }
-
-    /**
      * @param  array<string, mixed>  $period
      * @return array<string, mixed>
      */
@@ -239,26 +196,27 @@ class DashboardOverviewService
     {
         $total = LicenseApplication::query()->count();
         $current = LicenseApplication::query()
-            ->whereBetween('created_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('created_at', [$period['query_current_from'], $period['query_current_to']])
             ->count();
         $previous = LicenseApplication::query()
-            ->whereBetween('created_at', [$period['previous_from'], $period['previous_to']])
+            ->whereBetween('created_at', [$period['query_previous_from'], $period['query_previous_to']])
             ->count();
 
         $comparison = $this->compare($current, $previous);
 
+        // Broader operational queue than licenses_ready_for_issuance (approved ⊂ pending_action).
         $pendingAction = LicenseApplication::query()
             ->whereIn('status', array_map(fn (ApplicationStatus $s) => $s->value, self::PENDING_ACTION_STATUSES))
             ->count();
 
         $approved = LicenseApplication::query()
             ->whereNotNull('approved_at')
-            ->whereBetween('approved_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('approved_at', [$period['query_current_from'], $period['query_current_to']])
             ->count();
 
         $rejected = LicenseApplication::query()
             ->where('status', ApplicationStatus::Rejected)
-            ->whereBetween('updated_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('updated_at', [$period['query_current_from'], $period['query_current_to']])
             ->count();
 
         return [
@@ -290,7 +248,7 @@ class DashboardOverviewService
             'complete_profiles' => (clone $base)->where('profile_completed', true)->count(),
             'incomplete_profiles' => (clone $base)->where('profile_completed', false)->count(),
             'registered_current_period' => (clone $base)
-                ->whereBetween('created_at', [$period['current_from'], $period['current_to']])
+                ->whereBetween('created_at', [$period['query_current_from'], $period['query_current_to']])
                 ->count(),
         ];
     }
@@ -350,10 +308,10 @@ class DashboardOverviewService
         $current = Payment::query()
             ->where('status', PaymentStatus::Completed)
             ->where(function (Builder $q) use ($period): void {
-                $q->whereBetween('paid_at', [$period['current_from'], $period['current_to']])
+                $q->whereBetween('paid_at', [$period['query_current_from'], $period['query_current_to']])
                     ->orWhere(function (Builder $inner) use ($period): void {
                         $inner->whereNull('paid_at')
-                            ->whereBetween('updated_at', [$period['current_from'], $period['current_to']]);
+                            ->whereBetween('updated_at', [$period['query_current_from'], $period['query_current_to']]);
                     });
             })
             ->selectRaw('count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
@@ -362,10 +320,10 @@ class DashboardOverviewService
         $previous = Payment::query()
             ->where('status', PaymentStatus::Completed)
             ->where(function (Builder $q) use ($period): void {
-                $q->whereBetween('paid_at', [$period['previous_from'], $period['previous_to']])
+                $q->whereBetween('paid_at', [$period['query_previous_from'], $period['query_previous_to']])
                     ->orWhere(function (Builder $inner) use ($period): void {
                         $inner->whereNull('paid_at')
-                            ->whereBetween('updated_at', [$period['previous_from'], $period['previous_to']]);
+                            ->whereBetween('updated_at', [$period['query_previous_from'], $period['query_previous_to']]);
                     });
             })
             ->selectRaw('count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
@@ -394,9 +352,8 @@ class DashboardOverviewService
      */
     private function appointmentsKpi(array $period): array
     {
-        $tz = $period['timezone'];
-        $todayStart = CarbonImmutable::now($tz)->startOfDay();
-        $todayEnd = CarbonImmutable::now($tz)->endOfDay();
+        $todayStart = $this->clock->now()->startOfDay();
+        $todayEnd = $this->clock->now()->endOfDay();
         $weekEnd = $todayStart->addDays(6)->endOfDay();
 
         $active = [AppointmentStatus::Booked];
@@ -404,11 +361,11 @@ class DashboardOverviewService
         return [
             'today' => TestAppointment::query()
                 ->whereIn('status', $active)
-                ->whereBetween('scheduled_at', [$todayStart, $todayEnd])
+                ->whereBetween('scheduled_at', [$this->clock->toUtc($todayStart), $this->clock->toUtc($todayEnd)])
                 ->count(),
             'upcoming_7_days' => TestAppointment::query()
                 ->whereIn('status', $active)
-                ->whereBetween('scheduled_at', [$todayStart, $weekEnd])
+                ->whereBetween('scheduled_at', [$this->clock->toUtc($todayStart), $this->clock->toUtc($weekEnd)])
                 ->count(),
             // No pending_confirmation status exists in AppointmentStatus.
             'pending_confirmation' => 0,
@@ -423,16 +380,16 @@ class DashboardOverviewService
     {
         $completedQuery = TestResult::query()
             ->whereIn('result', [TestResultStatus::Passed, TestResultStatus::Failed])
-            ->whereBetween('recorded_at', [$period['current_from'], $period['current_to']]);
+            ->whereBetween('recorded_at', [$period['query_current_from'], $period['query_current_to']]);
 
         $completed = (clone $completedQuery)->count();
         $passed = TestResult::query()
             ->where('result', TestResultStatus::Passed)
-            ->whereBetween('recorded_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('recorded_at', [$period['query_current_from'], $period['query_current_to']])
             ->count();
         $failed = TestResult::query()
             ->where('result', TestResultStatus::Failed)
-            ->whereBetween('recorded_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('recorded_at', [$period['query_current_from'], $period['query_current_to']])
             ->count();
 
         $awaiting = TestAppointment::query()
@@ -462,7 +419,7 @@ class DashboardOverviewService
 
         $paid = Fine::query()
             ->where('status', FineStatus::Paid)
-            ->whereBetween('paid_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('paid_at', [$period['query_current_from'], $period['query_current_to']])
             ->selectRaw('count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
             ->first();
 
@@ -481,20 +438,13 @@ class DashboardOverviewService
     private function applicationsTrend(array $period): array
     {
         $granularity = $period['granularity'];
-        $driver = DB::connection()->getDriverName();
+        $expr = $granularity === 'month'
+            ? $this->clock->sqlBusinessMonthExpression('created_at')
+            : $this->clock->sqlBusinessDateExpression('created_at');
 
-        if ($granularity === 'month') {
-            $expr = $driver === 'sqlite'
-                ? "strftime('%Y-%m', created_at)"
-                : "DATE_FORMAT(created_at, '%Y-%m')";
-        } else {
-            $expr = $driver === 'sqlite'
-                ? "strftime('%Y-%m-%d', created_at)"
-                : 'DATE(created_at)';
-        }
-
+        // Aggregate UTC-stored created_at into business-local day/month buckets.
         $rows = LicenseApplication::query()
-            ->whereBetween('created_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('created_at', [$period['query_current_from'], $period['query_current_to']])
             ->selectRaw("{$expr} as bucket, count(*) as aggregate_count")
             ->groupBy('bucket')
             ->pluck('aggregate_count', 'bucket')
@@ -561,7 +511,7 @@ class DashboardOverviewService
     private function serviceTypeDistribution(array $period): array
     {
         $rows = LicenseApplication::query()
-            ->whereBetween('created_at', [$period['current_from'], $period['current_to']])
+            ->whereBetween('created_at', [$period['query_current_from'], $period['query_current_to']])
             ->select('service_type_id', DB::raw('count(*) as aggregate_count'))
             ->groupBy('service_type_id')
             ->orderByDesc('aggregate_count')
@@ -672,8 +622,7 @@ class DashboardOverviewService
      */
     private function upcomingAppointments(int $limit): array
     {
-        $tz = (string) config('app.timezone');
-        $from = CarbonImmutable::now($tz);
+        $from = $this->clock->toUtc($this->clock->now());
 
         $appointments = TestAppointment::query()
             ->with([
