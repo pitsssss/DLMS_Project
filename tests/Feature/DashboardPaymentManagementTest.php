@@ -16,6 +16,8 @@ use App\Models\Role;
 use App\Models\ServiceType;
 use App\Models\User;
 use App\Modules\Payments\Services\StripePaymentGatewayService;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
+use App\Modules\Payments\Support\Money;
 use Database\Seeders\FeesSeeder;
 use Database\Seeders\LicenseTypesSeeder;
 use Database\Seeders\ServiceTypesSeeder;
@@ -262,14 +264,14 @@ class DashboardPaymentManagementTest extends TestCase
         [$citizen, $application, $fee] = $this->citizenApplicationFee();
         $this->makePayment($citizen, $application, $fee, [
             'status' => PaymentStatus::Completed,
-            'amount' => '15000.00',
+            'amount' => ApplicationFeeCatalog::amountFor('application_fee'),
             'paid_at' => now(),
             'settled_obligation_key' => Payment::obligationKey($application->id, $fee->id),
             'active_obligation_key' => null,
         ]);
         $this->makePayment($citizen, $application, $fee, [
             'status' => PaymentStatus::Pending,
-            'amount' => '15000.00',
+            'amount' => ApplicationFeeCatalog::amountFor('application_fee'),
             'payment_number' => 'PAY-DP-PEND-'.strtoupper(Str::random(6)),
             'active_obligation_key' => null, // force unique bypass for test stats only
             'settled_obligation_key' => null,
@@ -278,7 +280,7 @@ class DashboardPaymentManagementTest extends TestCase
         // Second pending would violate active key — create without active key for stats sample
         $data = $this->getJson('/api/dashboard/payments/stats')->assertOk()->json('data');
         $this->assertSame(1, $data['completed_operations']);
-        $this->assertSame('15000.00', $data['completed_amount']);
+        $this->assertSame('50.00', $data['completed_amount']);
         $this->assertGreaterThanOrEqual(1, $data['pending_operations']);
     }
 
@@ -372,7 +374,6 @@ class DashboardPaymentManagementTest extends TestCase
     {
         $this->asPaymentManager();
         [$citizen, $application, $fee] = $this->citizenApplicationFee();
-        Fee::query()->whereKey($fee->id)->update(['currency' => 'USD', 'amount' => 10.00]);
         $fee->refresh();
 
         config([
@@ -380,20 +381,21 @@ class DashboardPaymentManagementTest extends TestCase
             'payment.stripe.currency' => 'usd',
         ]);
 
+        $amount = ApplicationFeeCatalog::amountFor('application_fee');
         $payment = $this->makePayment($citizen, $application, $fee, [
             'provider' => 'stripe',
             'provider_reference' => 'cs_verify_1',
-            'amount' => '10.00',
+            'amount' => $amount,
             'currency' => 'USD',
         ]);
 
-        $this->mock(StripePaymentGatewayService::class, function ($mock): void {
+        $this->mock(StripePaymentGatewayService::class, function ($mock) use ($amount): void {
             $mock->shouldReceive('retrieveCheckoutSession')
                 ->andReturn(CheckoutSession::constructFrom([
                     'id' => 'cs_verify_1',
                     'payment_status' => 'paid',
                     'status' => 'complete',
-                    'amount_total' => 1000,
+                    'amount_total' => Money::toMinorUnits($amount, 'USD'),
                     'currency' => 'usd',
                     'payment_intent' => 'pi_1',
                     'url' => null,
@@ -419,6 +421,9 @@ class DashboardPaymentManagementTest extends TestCase
         $data = $this->getJson('/api/dashboard/payments/options')->assertOk()->json('data');
         $this->assertNotEmpty($data['statuses']);
         $this->assertNotEmpty($data['providers']);
+        $usd = collect($data['currencies'])->firstWhere('value', 'USD');
+        $this->assertNotNull($usd);
+        $this->assertSame('دولار أمريكي', $usd['label']);
     }
 
     public function test_no_delete_or_mark_paid_routes(): void

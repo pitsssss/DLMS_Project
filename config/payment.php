@@ -3,12 +3,15 @@
 return [
     'provider' => env('PAYMENT_PROVIDER', 'mock'),
 
+    // Application fees and payments use USD. Comparisons are case-normalized; no conversion.
+    'application_currency' => 'USD',
+
     'stripe' => [
         'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
         'secret_key' => env('STRIPE_SECRET_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         // Must exactly match Fee/Payment currency when Stripe is enabled. No silent conversion.
-        'currency' => env('STRIPE_CURRENCY', 'usd'),
+        'currency' => strtolower((string) env('STRIPE_CURRENCY', 'usd')),
         'success_url' => env('STRIPE_SUCCESS_URL'),
         'cancel_url' => env('STRIPE_CANCEL_URL'),
     ],

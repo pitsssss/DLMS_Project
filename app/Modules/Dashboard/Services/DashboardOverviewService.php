@@ -20,6 +20,7 @@ use App\Models\TestAppointment;
 use App\Models\TestResult;
 use App\Models\User;
 use App\Modules\Licenses\Services\LicenseIssuanceEligibilityService;
+use App\Modules\Payments\Support\Money;
 use App\Support\BusinessClock;
 use App\Support\EmployeeMessageTranslator;
 use Carbon\CarbonImmutable;
@@ -305,7 +306,9 @@ class DashboardOverviewService
      */
     private function paymentsKpi(array $period): array
     {
-        $current = Payment::query()
+        $base = Payment::query()->whereNull('fine_id');
+
+        $currentByCurrency = (clone $base)
             ->where('status', PaymentStatus::Completed)
             ->where(function (Builder $q) use ($period): void {
                 $q->whereBetween('paid_at', [$period['query_current_from'], $period['query_current_to']])
@@ -314,10 +317,11 @@ class DashboardOverviewService
                             ->whereBetween('updated_at', [$period['query_current_from'], $period['query_current_to']]);
                     });
             })
-            ->selectRaw('count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
-            ->first();
+            ->selectRaw('currency, count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
+            ->groupBy('currency')
+            ->get();
 
-        $previous = Payment::query()
+        $previousByCurrency = (clone $base)
             ->where('status', PaymentStatus::Completed)
             ->where(function (Builder $q) use ($period): void {
                 $q->whereBetween('paid_at', [$period['query_previous_from'], $period['query_previous_to']])
@@ -326,21 +330,50 @@ class DashboardOverviewService
                             ->whereBetween('updated_at', [$period['query_previous_from'], $period['query_previous_to']]);
                     });
             })
-            ->selectRaw('count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
-            ->first();
+            ->selectRaw('currency, count(*) as total_count, coalesce(sum(amount), 0) as total_amount')
+            ->groupBy('currency')
+            ->get();
 
-        $currentAmount = (string) ($current->total_amount ?? '0');
-        $previousAmount = (string) ($previous->total_amount ?? '0');
-        $comparison = $this->compare((float) $currentAmount, (float) $previousAmount);
+        $currentCount = (int) $currentByCurrency->sum('total_count');
+        $previousCount = (int) $previousByCurrency->sum('total_count');
+        $currencies = $currentByCurrency->pluck('currency')->merge($previousByCurrency->pluck('currency'))->unique()->values();
+        $singleCurrency = $currencies->count() === 1;
+
+        $currentAmount = $singleCurrency
+            ? (string) ($currentByCurrency->first()->total_amount ?? '0')
+            : '0';
+        $previousAmount = $singleCurrency
+            ? (string) ($previousByCurrency->first()->total_amount ?? '0')
+            : '0';
+
+        $comparison = $singleCurrency
+            ? $this->compareMoney($currentAmount, $previousAmount)
+            : ['change_percentage' => null, 'trend' => 'not_comparable'];
+
+        $amountByCurrencyCurrent = null;
+        $amountByCurrencyPrevious = null;
+        if (! $singleCurrency && $currencies->isNotEmpty()) {
+            $amountByCurrencyCurrent = [];
+            $amountByCurrencyPrevious = [];
+            foreach ($currencies as $currency) {
+                $currentRow = $currentByCurrency->firstWhere('currency', $currency);
+                $previousRow = $previousByCurrency->firstWhere('currency', $currency);
+                $amountByCurrencyCurrent[$currency] = $this->money($currentRow->total_amount ?? 0);
+                $amountByCurrencyPrevious[$currency] = $this->money($previousRow->total_amount ?? 0);
+            }
+        }
 
         return [
-            'paid_count_current_period' => (int) ($current->total_count ?? 0),
-            'paid_amount_current_period' => $this->money($currentAmount),
-            'paid_count_previous_period' => (int) ($previous->total_count ?? 0),
-            'paid_amount_previous_period' => $this->money($previousAmount),
+            'paid_count_current_period' => $currentCount,
+            'paid_amount_current_period' => $singleCurrency ? $this->money($currentAmount) : null,
+            'paid_count_previous_period' => $previousCount,
+            'paid_amount_previous_period' => $singleCurrency ? $this->money($previousAmount) : null,
+            'paid_amount_by_currency_current_period' => $amountByCurrencyCurrent,
+            'paid_amount_by_currency_previous_period' => $amountByCurrencyPrevious,
+            'currency' => $singleCurrency ? $currencies->first() : null,
             'amount_change_percentage' => $comparison['change_percentage'],
             'trend' => $comparison['trend'],
-            'pending_count' => Payment::query()
+            'pending_count' => (clone $base)
                 ->whereIn('status', [PaymentStatus::Pending, PaymentStatus::UnderVerification])
                 ->count(),
         ];
@@ -723,9 +756,42 @@ class DashboardOverviewService
         ];
     }
 
+    /**
+     * @return array{change_percentage: float|null, trend: string}
+     */
+    private function compareMoney(string $current, string $previous): array
+    {
+        $current = Money::format($current);
+        $previous = Money::format($previous);
+
+        if (Money::equals($previous, '0') && Money::equals($current, '0')) {
+            return ['change_percentage' => 0.0, 'trend' => 'flat'];
+        }
+
+        if (Money::equals($previous, '0') && bccomp($current, '0', 2) > 0) {
+            return ['change_percentage' => null, 'trend' => 'not_comparable'];
+        }
+
+        $diff = bcsub($current, $previous, 2);
+        $ratio = bcdiv(bcmul($diff, '100', 4), $previous, 4);
+        $percentage = (float) Money::format($ratio, 2);
+
+        $trend = 'flat';
+        if (bccomp($ratio, '0', 4) > 0) {
+            $trend = 'up';
+        } elseif (bccomp($ratio, '0', 4) < 0) {
+            $trend = 'down';
+        }
+
+        return [
+            'change_percentage' => $percentage,
+            'trend' => $trend,
+        ];
+    }
+
     private function money(mixed $amount): string
     {
-        return number_format((float) $amount, 2, '.', '');
+        return Money::format((string) $amount);
     }
 
     private function appointmentStatusLabel(string $status): string

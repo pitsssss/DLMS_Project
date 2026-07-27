@@ -935,4 +935,69 @@ class DashboardOverviewTest extends TestCase
         $this->assertSame(0, $this->getJson('/api/dashboard/overview')->json('data.operational_queues.licenses_ready_for_issuance'));
         $this->assertSame(1, License::query()->where('application_id', $application->id)->count());
     }
+
+    public function test_overview_payment_kpi_returns_decimal_string_amounts(): void
+    {
+        $this->asAdmin();
+        $citizen = User::factory()->withApprovedProfile()->create(['user_type' => UserType::Citizen]);
+        $app = $this->makeApplication([
+            'citizen' => $citizen,
+            'status' => ApplicationStatus::Approved,
+        ]);
+
+        Payment::query()->create([
+            'payment_number' => 'PAY-OV-PREC-1',
+            'user_id' => $citizen->id,
+            'application_id' => $app->id,
+            'amount' => '9999999999.99',
+            'currency' => 'USD',
+            'status' => PaymentStatus::Completed,
+            'paid_at' => CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Damascus'),
+        ]);
+
+        $payments = $this->getJson('/api/dashboard/overview')->assertOk()->json('data.kpis.payments');
+
+        $this->assertIsString($payments['paid_amount_current_period']);
+        $this->assertSame('9999999999.99', $payments['paid_amount_current_period']);
+        $this->assertSame('USD', $payments['currency']);
+    }
+
+    public function test_overview_payment_kpi_separates_multi_currency_amounts(): void
+    {
+        $this->asAdmin();
+        $citizen = User::factory()->withApprovedProfile()->create(['user_type' => UserType::Citizen]);
+        $app = $this->makeApplication([
+            'citizen' => $citizen,
+            'status' => ApplicationStatus::Approved,
+        ]);
+        $paidAt = CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Damascus');
+
+        Payment::query()->create([
+            'payment_number' => 'PAY-OV-MC-SYP',
+            'user_id' => $citizen->id,
+            'application_id' => $app->id,
+            'amount' => '1000.00',
+            'currency' => 'SYP',
+            'status' => PaymentStatus::Completed,
+            'paid_at' => $paidAt,
+        ]);
+
+        Payment::query()->create([
+            'payment_number' => 'PAY-OV-MC-USD',
+            'user_id' => $citizen->id,
+            'application_id' => $app->id,
+            'amount' => '10.25',
+            'currency' => 'USD',
+            'status' => PaymentStatus::Completed,
+            'paid_at' => $paidAt,
+        ]);
+
+        $payments = $this->getJson('/api/dashboard/overview')->assertOk()->json('data.kpis.payments');
+
+        $this->assertNull($payments['paid_amount_current_period']);
+        $this->assertNull($payments['currency']);
+        $this->assertSame('1000.00', $payments['paid_amount_by_currency_current_period']['SYP']);
+        $this->assertSame('10.25', $payments['paid_amount_by_currency_current_period']['USD']);
+        $this->assertSame('not_comparable', $payments['trend']);
+    }
 }

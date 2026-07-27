@@ -7,6 +7,7 @@ use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Enums\ApplicationStatus;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
 
 class AgentActionReplyBuilder
 {
@@ -94,7 +95,7 @@ class AgentActionReplyBuilder
     {
         $number = (string) ($result['application_number'] ?? '');
         $amount = (string) ($result['fee']['amount'] ?? '');
-        $currency = (string) ($result['fee']['currency'] ?? 'SYP');
+        $currency = (string) ($result['fee']['currency'] ?? ApplicationFeeCatalog::CURRENCY);
 
         return "رسوم طلب {$number} هي {$amount} {$currency}.";
     }

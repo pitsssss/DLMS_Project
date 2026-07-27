@@ -2431,7 +2431,7 @@
     },
     {
       "name": "10 - Dashboard Financial Operations",
-      "description": "Dashboard Financial Operations (application payments only).\n\nAuth: Bearer {{dashboard_token}} — keep empty; no real token.\nPermissions: view_payments OR manage_payments for reads; manage_payments for verify; view_audit_logs for audit-logs.\n\nScope:\n- Application fee payment attempts only (fine_id IS NULL).\n- Fines remain a separate module.\n- No refunds, no mark-paid, no delete, no amount edit, no manual status change.\n\nAmounts are decimal strings (e.g. \"15000.00\").\nCurrency policy: Fee/Payment currency is authoritative; Stripe currency must match exactly — no silent SYP→USD conversion.\n\nVerify = provider reconciliation, not administrative approval.\nunder_verification = financial conflict/uncertain provider result; not collected revenue.",
+      "description": "Dashboard Financial Operations (application payments only).\n\nAuth: Bearer {{dashboard_token}} — keep empty; no real token.\nPermissions: view_payments OR manage_payments for reads; manage_payments for verify; view_audit_logs for audit-logs.\n\nScope:\n- Application fee payment attempts only (fine_id IS NULL).\n- Fines remain a separate module.\n- No refunds, no mark-paid, no delete, no amount edit, no manual status change.\n\nAmounts are decimal strings (e.g. \"50.00\").\nCurrency: USD for new application fees and payments. Historical currencies may appear in legacy rows.\nStripe currency must match Fee/Payment currency exactly — no conversion.\n\nVerify = provider reconciliation, not administrative approval.\nunder_verification = financial conflict/uncertain provider result; not collected revenue.",
       "item": [
         {
           "name": "01 Payment operations list",

@@ -11,6 +11,8 @@ use App\Models\Payment;
 use App\Models\ServiceType;
 use App\Models\User;
 use App\Modules\Payments\Services\StripePaymentGatewayService;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
+use App\Modules\Payments\Support\Money;
 use Database\Seeders\FeesSeeder;
 use Database\Seeders\LicenseTypesSeeder;
 use Database\Seeders\RolesSeeder;
@@ -69,12 +71,6 @@ class PaymentStripeTest extends TestCase
         $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
         $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
 
-        Fee::query()
-            ->where('license_type_id', $licenseType->id)
-            ->where('service_type_id', $serviceType->id)
-            ->where('code', 'application_fee')
-            ->update(['amount' => 10.00, 'currency' => 'USD']);
-
         $application = LicenseApplication::query()->create([
             'application_number' => 'APP-ST-'.strtoupper(Str::random(6)),
             'citizen_id' => $citizen->id,
@@ -97,13 +93,14 @@ class PaymentStripeTest extends TestCase
             $mock->shouldReceive('createCheckoutSession')
                 ->zeroOrMoreTimes()
                 ->andReturnUsing(function ($payment, $fee, $user, $app) {
+                    $minor = Money::toMinorUnits((string) $payment->amount, (string) $payment->currency);
                     $session = CheckoutSession::constructFrom([
                         'id' => 'cs_test_'.$payment->id,
                         'object' => 'checkout.session',
                         'url' => 'https://checkout.stripe.test/pay/'.$payment->id,
                         'payment_status' => 'unpaid',
                         'status' => 'open',
-                        'amount_total' => 1000,
+                        'amount_total' => $minor,
                         'currency' => 'usd',
                         'payment_intent' => 'pi_test_1',
                         'metadata' => [
@@ -123,6 +120,10 @@ class PaymentStripeTest extends TestCase
                 ->zeroOrMoreTimes()
                 ->andReturnUsing(function (string $sessionId) {
                     $id = str_replace('cs_test_', '', $sessionId);
+                    $payment = Payment::query()->find($id);
+                    $minor = $payment
+                        ? Money::toMinorUnits((string) $payment->amount, (string) $payment->currency)
+                        : Money::toMinorUnits(ApplicationFeeCatalog::amountFor('application_fee'), 'USD');
 
                     return CheckoutSession::constructFrom([
                         'id' => $sessionId,
@@ -130,7 +131,7 @@ class PaymentStripeTest extends TestCase
                         'url' => 'https://checkout.stripe.test/pay/'.$id,
                         'payment_status' => 'paid',
                         'status' => 'complete',
-                        'amount_total' => 1000,
+                        'amount_total' => $minor,
                         'currency' => 'usd',
                         'payment_intent' => 'pi_test_paid',
                         'metadata' => [
@@ -192,6 +193,7 @@ class PaymentStripeTest extends TestCase
         Sanctum::actingAs($citizen);
 
         $paymentId = (int) $this->postJson("/api/applications/{$application->id}/payments", [])->json('data.payment.id');
+        $minor = Money::toMinorUnits(ApplicationFeeCatalog::amountFor('application_fee'), 'USD');
 
         $payload = json_encode([
             'id' => 'evt_test_1',
@@ -202,7 +204,7 @@ class PaymentStripeTest extends TestCase
                     'object' => 'checkout.session',
                     'payment_status' => 'paid',
                     'status' => 'complete',
-                    'amount_total' => 1000,
+                    'amount_total' => $minor,
                     'currency' => 'usd',
                     'payment_intent' => 'pi_webhook',
                     'metadata' => [
@@ -239,6 +241,7 @@ class PaymentStripeTest extends TestCase
         Sanctum::actingAs($citizen);
 
         $paymentId = (int) $this->postJson("/api/applications/{$application->id}/payments", [])->json('data.payment.id');
+        $minor = Money::toMinorUnits(ApplicationFeeCatalog::amountFor('application_fee'), 'USD');
 
         $payload = json_encode([
             'id' => 'evt_dup',
@@ -249,7 +252,7 @@ class PaymentStripeTest extends TestCase
                     'object' => 'checkout.session',
                     'payment_status' => 'paid',
                     'status' => 'complete',
-                    'amount_total' => 1000,
+                    'amount_total' => $minor,
                     'currency' => 'usd',
                     'metadata' => ['payment_id' => (string) $paymentId],
                 ],

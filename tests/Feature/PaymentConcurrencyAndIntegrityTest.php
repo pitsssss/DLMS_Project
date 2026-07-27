@@ -41,7 +41,10 @@ class PaymentConcurrencyAndIntegrityTest extends TestCase
 
     public function test_money_to_minor_units_exact_without_float(): void
     {
+        $this->assertSame(1000, Money::toMinorUnits('10.00', 'USD'));
         $this->assertSame(1025, Money::toMinorUnits('10.25', 'USD'));
+        $this->assertSame(50, Money::toMinorUnits('0.50', 'USD'));
+        $this->assertSame(101, Money::toMinorUnits('1.01', 'USD'));
         $this->assertSame(1500000, Money::toMinorUnits('15000.00', 'SYP'));
         $this->assertSame(15000, Money::toMinorUnits('15000', 'JPY'));
         $this->assertTrue(Money::equals('10.25', '10.2500'));

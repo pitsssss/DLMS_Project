@@ -5,12 +5,13 @@ namespace App\Modules\Dashboard\Support;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Support\EmployeeMessageTranslator;
+use App\Modules\Payments\Support\Money;
 
 final class DashboardPaymentPresenter
 {
     public static function money(mixed $amount): string
     {
-        return number_format((float) (string) $amount, 2, '.', '');
+        return Money::format((string) $amount);
     }
 
     /**
@@ -55,5 +56,15 @@ final class DashboardPaymentPresenter
             'value' => $value,
             'label' => EmployeeMessageTranslator::get('employee.statuses.'.$value),
         ];
+    }
+
+    public static function currencyLabel(string $currency): string
+    {
+        $code = strtoupper(trim($currency));
+
+        return match ($code) {
+            'USD' => __('messages.payments.currencies.usd'),
+            default => $code,
+        };
     }
 }

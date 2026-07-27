@@ -252,6 +252,9 @@ return [
             'mock' => 'محاكاة',
             'stripe' => 'Stripe',
         ],
+        'currencies' => [
+            'usd' => 'دولار أمريكي',
+        ],
     ],
 
     'appointments' => [

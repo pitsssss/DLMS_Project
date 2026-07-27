@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
 use App\Modules\Payments\Services\PaymentReconciliationService;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
 use App\Modules\Payments\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -72,6 +73,7 @@ class DashboardPaymentService
             ->first();
 
         $currencies = (clone $base)->distinct()->pluck('currency')->filter()->values();
+        $singleCurrency = $currencies->count() === 1;
         $byCurrency = [];
         if ($currencies->count() > 1) {
             foreach ($currencies as $currency) {
@@ -92,12 +94,14 @@ class DashboardPaymentService
             'pending_operations' => $count(PaymentStatus::Pending),
             'failed_operations' => $count(PaymentStatus::Failed),
             'under_verification_operations' => $count(PaymentStatus::UnderVerification),
-            'completed_amount' => $amount(PaymentStatus::Completed),
-            'pending_amount' => $amount(PaymentStatus::Pending),
-            'failed_amount' => $amount(PaymentStatus::Failed),
-            'under_verification_amount' => $amount(PaymentStatus::UnderVerification),
+            'completed_amount' => $singleCurrency ? $amount(PaymentStatus::Completed) : null,
+            'pending_amount' => $singleCurrency ? $amount(PaymentStatus::Pending) : null,
+            'failed_amount' => $singleCurrency ? $amount(PaymentStatus::Failed) : null,
+            'under_verification_amount' => $singleCurrency ? $amount(PaymentStatus::UnderVerification) : null,
             'today_completed_operations' => (int) ($todayCompleted->cnt ?? 0),
-            'today_completed_amount' => DashboardPaymentPresenter::money($todayCompleted->total_amount ?? 0),
+            'today_completed_amount' => $singleCurrency
+                ? DashboardPaymentPresenter::money($todayCompleted->total_amount ?? 0)
+                : null,
             'due_obligations' => $due['count'],
             'due_amount' => $due['amount'],
             'completed_amount_by_currency' => $byCurrency ?: null,
@@ -129,13 +133,18 @@ class DashboardPaymentService
             ->orderBy('currency')
             ->pluck('currency')
             ->filter()
-            ->values()
-            ->map(fn ($c) => ['value' => $c, 'label' => $c === 'SYP' ? 'ليرة سورية' : $c])
-            ->all();
+            ->values();
 
-        if ($currencies === []) {
-            $currencies = [['value' => 'SYP', 'label' => 'ليرة سورية']];
+        if ($currencies->isEmpty()) {
+            $currencies = collect([ApplicationFeeCatalog::CURRENCY]);
         }
+
+        $currencyOptions = $currencies
+            ->map(fn ($c) => [
+                'value' => $c,
+                'label' => DashboardPaymentPresenter::currencyLabel((string) $c),
+            ])
+            ->all();
 
         $feeTypes = Fee::query()
             ->whereIn('code', [
@@ -156,7 +165,7 @@ class DashboardPaymentService
         return [
             'statuses' => $statuses,
             'providers' => $providers,
-            'currencies' => $currencies,
+            'currencies' => $currencyOptions,
             'fee_types' => $feeTypes,
         ];
     }

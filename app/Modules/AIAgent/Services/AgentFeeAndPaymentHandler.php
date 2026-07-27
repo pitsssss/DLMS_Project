@@ -8,6 +8,7 @@ use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use App\Modules\Payments\Services\ApplicationPaymentService;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
 
 class AgentFeeAndPaymentHandler
 {
@@ -67,7 +68,7 @@ class AgentFeeAndPaymentHandler
         try {
             $feeData = $this->payments->getFeeForApplication($context->citizen, $application->id);
             $amount = (string) ($feeData['fee']->amount ?? '');
-            $currency = (string) ($feeData['fee']->currency ?? 'SYP');
+            $currency = (string) ($feeData['fee']->currency ?? ApplicationFeeCatalog::CURRENCY);
 
             return $this->responseBuilder->basePayload(AgentIntent::GetApplicationFee, $context->language, [
                 'reply' => "رسوم طلبك {$application->application_number} هي {$amount} {$currency}. يمكنك المتابعة للدفع عندما تكون جاهزاً.",
