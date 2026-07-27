@@ -2,13 +2,20 @@
 
 namespace App\Modules\Payments\Support;
 
+/**
+ * @deprecated Use Money::toMinorUnits() — kept as a thin adapter for existing call sites.
+ */
 final class StripeMoney
 {
-    /**
-     * Convert a decimal major-unit amount to Stripe's smallest currency unit (e.g. USD cents).
-     */
-    public static function toStripeAmount(float|string $amount): int
+    public static function toStripeAmount(float|string $amount, ?string $currency = null): int
     {
-        return (int) round(((float) $amount) * 100);
+        if (is_float($amount)) {
+            // Legacy signature accepted float; convert via decimal string only.
+            $amount = number_format($amount, 2, '.', '');
+        }
+
+        $currency ??= (string) config('payment.stripe.currency', 'usd');
+
+        return Money::toMinorUnits((string) $amount, strtoupper($currency));
     }
 }

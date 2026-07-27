@@ -3,6 +3,7 @@
 namespace App\Modules\Payments\Services;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\PaymentFailureCode;
 use App\Enums\PaymentStatus;
 use App\Exceptions\ApiException;
 use App\Models\Fee;
@@ -10,14 +11,14 @@ use App\Models\LicenseApplication;
 use App\Models\Payment;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
-use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Payments\Support\ApplicationFeeResolver;
-use App\Modules\Payments\Support\StripeMoney;
+use App\Modules\Payments\Support\Money;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Stripe\Checkout\Session as CheckoutSession;
+use Throwable;
 
 class ApplicationPaymentService
 {
@@ -26,7 +27,10 @@ class ApplicationPaymentService
         private readonly PaymentProviderManager $providerManager,
         private readonly StripePaymentGatewayService $stripeGateway,
         private readonly ApplicationFeeResolver $feeResolver,
-        private readonly AuditLogService $auditLogs
+        private readonly AuditLogService $auditLogs,
+        private readonly PaymentLifecycleService $lifecycle,
+        private readonly PaymentReconciliationService $reconciliation,
+        private readonly PaymentGatewayEventService $gatewayEvents,
     ) {}
 
     /**
@@ -50,6 +54,7 @@ class ApplicationPaymentService
         return Payment::query()
             ->where('application_id', $application->id)
             ->where('user_id', $citizen->id)
+            ->whereNull('fine_id')
             ->with('fee')
             ->orderByDesc('id')
             ->get();
@@ -60,50 +65,53 @@ class ApplicationPaymentService
      */
     public function createPendingPayment(User $citizen, int $applicationId, ?array $metadata = null): array
     {
-        $application = $this->requireOwnedApplication($citizen, $applicationId);
-
-        if ($application->status !== ApplicationStatus::PaymentPending) {
-            throw new ApiException('messages.payments.not_awaiting_payment', 422);
-        }
-
-        $fee = $this->resolveApplicationFee($application);
-
-        $existingCompleted = Payment::query()
-            ->where('application_id', $application->id)
-            ->where('fee_id', $fee->id)
-            ->where('status', PaymentStatus::Completed)
-            ->exists();
-
-        if ($existingCompleted) {
-            throw new ApiException('messages.payments.already_completed', 422);
-        }
-
         $provider = $this->providerManager->isStripe() ? 'stripe' : 'mock';
 
-        $existingPending = Payment::query()
-            ->where('application_id', $application->id)
-            ->where('fee_id', $fee->id)
-            ->where('status', PaymentStatus::Pending)
-            ->first();
+        /** @var array{payment: Payment, created: bool} $prepared */
+        $prepared = DB::transaction(function () use ($citizen, $applicationId, $metadata, $provider) {
+            $application = LicenseApplication::query()
+                ->whereKey($applicationId)
+                ->where('citizen_id', $citizen->id)
+                ->lockForUpdate()
+                ->first();
 
-        if ($existingPending !== null) {
-            if ($provider === 'stripe' && $existingPending->provider === 'stripe') {
-                $checkoutUrl = $existingPending->metadata['checkout_url'] ?? null;
-                if (is_string($checkoutUrl) && $checkoutUrl !== '' && $existingPending->provider_reference) {
-                    return [
-                        'payment' => $existingPending->load('fee'),
-                        'checkout_url' => $checkoutUrl,
-                        'publishable_key' => (string) config('payment.stripe.publishable_key'),
-                    ];
-                }
+            if ($application === null) {
+                throw new ApiException('messages.applications.not_found', 404);
             }
 
-            if ($existingPending->provider === $provider) {
-                return ['payment' => $existingPending->load('fee')];
+            if ($application->status !== ApplicationStatus::PaymentPending) {
+                throw new ApiException('messages.payments.not_awaiting_payment', 422);
             }
-        }
 
-        return DB::transaction(function () use ($citizen, $application, $fee, $metadata, $provider) {
+            $fee = $this->resolveApplicationFee($application);
+            $obligationKey = Payment::obligationKey($application->id, $fee->id);
+
+            $existingCompleted = Payment::query()
+                ->where(function ($q) use ($obligationKey, $application, $fee): void {
+                    $q->where('settled_obligation_key', $obligationKey)
+                        ->orWhere(function ($inner) use ($application, $fee): void {
+                            $inner->where('application_id', $application->id)
+                                ->where('fee_id', $fee->id)
+                                ->whereNull('fine_id')
+                                ->where('status', PaymentStatus::Completed);
+                        });
+                })
+                ->lockForUpdate()
+                ->exists();
+
+            if ($existingCompleted) {
+                throw new ApiException('messages.payments.already_completed', 422);
+            }
+
+            $existingActive = Payment::query()
+                ->where('active_obligation_key', $obligationKey)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingActive !== null) {
+                return ['payment' => $existingActive->load('fee'), 'created' => false];
+            }
+
             $payment = Payment::query()->create([
                 'payment_number' => $this->generateUniquePaymentNumber(),
                 'user_id' => $citizen->id,
@@ -112,31 +120,104 @@ class ApplicationPaymentService
                 'fee_id' => $fee->id,
                 'payable_type' => null,
                 'payable_id' => null,
-                'amount' => $fee->amount,
-                'currency' => $fee->currency,
+                'amount' => Money::format((string) $fee->amount),
+                'currency' => strtoupper((string) $fee->currency),
                 'status' => PaymentStatus::Pending,
                 'provider' => $provider,
                 'provider_reference' => null,
                 'paid_at' => null,
                 'metadata' => $metadata,
+                'active_obligation_key' => $obligationKey,
+                'settled_obligation_key' => null,
             ]);
 
-            if ($provider === 'stripe') {
-                $session = $this->stripeGateway->createCheckoutSession($payment, $fee, $citizen, $application);
-                $stripeMeta = $this->stripeSessionMetadata($session['session']);
-                $payment->provider_reference = $session['session_id'];
-                $payment->metadata = array_merge($payment->metadata ?? [], $stripeMeta);
-                $payment->save();
+            $this->auditLogs->log(
+                $citizen,
+                'payment.created',
+                'payment',
+                $payment->id,
+                null,
+                [
+                    'status' => PaymentStatus::Pending->value,
+                    'amount' => Money::format((string) $payment->amount),
+                    'currency' => $payment->currency,
+                    'provider' => $provider,
+                    'payment_number' => $payment->payment_number,
+                    'application_id' => $application->id,
+                    'source' => 'citizen',
+                ]
+            );
 
+            return ['payment' => $payment->load('fee'), 'created' => true];
+        });
+
+        $payment = $prepared['payment'];
+
+        if ($provider !== 'stripe') {
+            return ['payment' => $payment];
+        }
+
+        // Reuse existing Stripe checkout when still valid.
+        if (! $prepared['created'] && $payment->provider === 'stripe') {
+            $checkoutUrl = $payment->metadata['checkout_url'] ?? null;
+            if (is_string($checkoutUrl) && $checkoutUrl !== '' && $payment->provider_reference) {
                 return [
-                    'payment' => $payment->fresh(['fee']),
-                    'checkout_url' => $session['url'],
+                    'payment' => $payment,
+                    'checkout_url' => $checkoutUrl,
                     'publishable_key' => (string) config('payment.stripe.publishable_key'),
                 ];
             }
+        }
 
-            return ['payment' => $payment->load('fee')];
+        $this->assertStripeCurrencyCompatible($payment);
+
+        try {
+            $session = $this->stripeGateway->createCheckoutSession(
+                $payment,
+                $payment->fee ?? Fee::query()->findOrFail($payment->fee_id),
+                $citizen,
+                LicenseApplication::query()->findOrFail($payment->application_id)
+            );
+        } catch (ApiException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            report($e);
+            $this->lifecycle->markFailed(
+                $payment->id,
+                PaymentFailureCode::CheckoutCreationFailed,
+                ['stripe_event_source' => 'checkout_create'],
+                $citizen,
+                'citizen'
+            );
+            throw new ApiException('messages.payments.provider_unavailable', 503);
+        }
+
+        DB::transaction(function () use ($payment, $session, $citizen): void {
+            $locked = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
+            $locked->provider_reference = $session['session_id'];
+            $locked->metadata = array_merge($locked->metadata ?? [], $this->stripeSessionMetadata($session['session']));
+            $locked->save();
+
+            $this->auditLogs->log(
+                $citizen,
+                'payment.initiated',
+                'payment',
+                $locked->id,
+                null,
+                [
+                    'provider' => 'stripe',
+                    'provider_reference' => $locked->provider_reference,
+                    'payment_number' => $locked->payment_number,
+                    'source' => 'citizen',
+                ]
+            );
         });
+
+        return [
+            'payment' => $payment->fresh(['fee']),
+            'checkout_url' => $session['url'],
+            'publishable_key' => (string) config('payment.stripe.publishable_key'),
+        ];
     }
 
     public function confirmMockPayment(User $citizen, int $applicationId, int $paymentId): Payment
@@ -151,6 +232,7 @@ class ApplicationPaymentService
             ->whereKey($paymentId)
             ->where('application_id', $applicationId)
             ->where('user_id', $citizen->id)
+            ->whereNull('fine_id')
             ->first();
 
         if ($payment === null) {
@@ -174,84 +256,29 @@ class ApplicationPaymentService
             throw new ApiException('messages.payments.cannot_confirm_state', 422);
         }
 
-        $mockRef = 'mock-'.Str::uuid()->toString();
-
-        return $this->completePayment(
-            $paymentId,
+        return $this->lifecycle->completeVerifiedPayment(
+            $payment->id,
             $citizen,
             ['source' => 'mock_confirm'],
-            $mockRef
+            'mock-'.Str::uuid()->toString(),
+            'citizen'
         );
     }
 
     /**
-     * Centralized successful completion (mock confirm, Stripe status poll, Stripe webhook).
+     * @deprecated Prefer PaymentLifecycleService::completeVerifiedPayment
+     *
+     * @param  array<string, mixed>  $mergeMetadata
      */
     public function completePayment(int $paymentId, ?User $actor, array $mergeMetadata = [], ?string $providerReference = null): Payment
     {
-        return DB::transaction(function () use ($paymentId, $actor, $mergeMetadata, $providerReference) {
-            $payment = Payment::query()->whereKey($paymentId)->lockForUpdate()->firstOrFail();
-
-            if ($payment->status === PaymentStatus::Completed) {
-                return $payment->fresh(['fee', 'application']);
-            }
-
-            if ($payment->status !== PaymentStatus::Pending) {
-                throw new ApiException('messages.payments.cannot_complete_state', 422);
-            }
-
-            $application = LicenseApplication::query()
-                ->whereKey($payment->application_id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $payment->status = PaymentStatus::Completed;
-            $payment->paid_at = now();
-            if ($providerReference !== null && $providerReference !== '') {
-                $payment->provider_reference = $providerReference;
-            }
-            $payment->metadata = array_merge($payment->metadata ?? [], $mergeMetadata);
-            $payment->save();
-
-            $this->auditLogs->log(
-                $actor,
-                'payment.completed',
-                'payment',
-                $payment->id,
-                ['status' => PaymentStatus::Pending->value],
-                ['status' => PaymentStatus::Completed->value, 'amount' => $payment->amount]
-            );
-
-            if ($application->status === ApplicationStatus::PaymentPending) {
-                $this->applications->transitionStatus(
-                    $application,
-                    ApplicationStatus::PaymentCompleted,
-                    $actor,
-                    __('messages.payments.note_fee_completed')
-                );
-
-                $application = $application->fresh();
-                if ($application === null) {
-                    throw new ApiException('messages.applications.not_found', 404);
-                }
-
-                $application->loadMissing('serviceType');
-                $nextStatus = ServiceWorkflow::requiresTests($application->serviceType?->code)
-                    ? ApplicationStatus::AppointmentPending
-                    : ApplicationStatus::Approved;
-
-                $this->applications->transitionStatus(
-                    $application,
-                    $nextStatus,
-                    $actor,
-                    $nextStatus === ApplicationStatus::Approved
-                        ? __('messages.payments.note_ready_for_issuance')
-                        : __('messages.payments.note_payment_cleared')
-                );
-            }
-
-            return $payment->fresh(['fee', 'application']);
-        });
+        return $this->lifecycle->completeVerifiedPayment(
+            $paymentId,
+            $actor,
+            $mergeMetadata,
+            $providerReference,
+            'system'
+        );
     }
 
     /**
@@ -265,6 +292,7 @@ class ApplicationPaymentService
             ->whereKey($paymentId)
             ->where('application_id', $application->id)
             ->where('user_id', $citizen->id)
+            ->whereNull('fine_id')
             ->with('fee')
             ->first();
 
@@ -284,22 +312,33 @@ class ApplicationPaymentService
                 $payment->metadata = array_merge($payment->metadata ?? [], $this->stripeSessionMetadata($session));
                 $payment->save();
 
-                if ($session->payment_status === 'paid' && $payment->status === PaymentStatus::Pending) {
-                    if ((int) ($session->amount_total ?? 0) > 0) {
-                        $this->verifyStripeAmountMatchesPayment($session, $payment);
+                if ($session->payment_status === 'paid' && $payment->status !== PaymentStatus::Completed) {
+                    $mismatch = $this->reconciliation->validateStripeSession($session, $payment);
+                    if ($mismatch !== null) {
+                        $payment = $this->lifecycle->markUnderVerification(
+                            $payment->id,
+                            $mismatch,
+                            array_merge($this->stripeSessionMetadata($session), [
+                                'stripe_event_source' => 'status_poll',
+                            ]),
+                            $citizen,
+                            'status_poll'
+                        );
+                    } else {
+                        $payment = $this->lifecycle->completeVerifiedPayment(
+                            $payment->id,
+                            $citizen,
+                            array_merge($this->stripeSessionMetadata($session), [
+                                'stripe_event_source' => 'status_poll',
+                            ]),
+                            $session->id,
+                            'status_poll'
+                        );
                     }
-                    $payment = $this->completePayment(
-                        $payment->id,
-                        $citizen,
-                        array_merge($this->stripeSessionMetadata($session), [
-                            'stripe_event_source' => 'status_poll',
-                        ]),
-                        $session->id
-                    );
                 }
             } catch (ApiException $e) {
                 throw $e;
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // Stripe unreachable: return last known state
             }
         }
@@ -331,6 +370,7 @@ class ApplicationPaymentService
         return Payment::query()
             ->where('provider', 'stripe')
             ->where('provider_reference', $sessionId)
+            ->whereNull('fine_id')
             ->first();
     }
 
@@ -348,22 +388,13 @@ class ApplicationPaymentService
         return Payment::query()
             ->whereKey((int) $paymentId)
             ->where('provider', 'stripe')
+            ->whereNull('fine_id')
             ->first();
     }
 
-    public function markStripePaymentFailed(Payment $payment, array $mergeMetadata): void
+    public function markStripePaymentFailed(Payment $payment, array $mergeMetadata, PaymentFailureCode $code = PaymentFailureCode::AsyncPaymentFailed): void
     {
-        DB::transaction(function () use ($payment, $mergeMetadata) {
-            $payment = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
-
-            if ($payment->status !== PaymentStatus::Pending) {
-                return;
-            }
-
-            $payment->status = PaymentStatus::Failed;
-            $payment->metadata = array_merge($payment->metadata ?? [], $mergeMetadata);
-            $payment->save();
-        });
+        $this->lifecycle->markFailed($payment->id, $code, $mergeMetadata, null, 'gateway');
     }
 
     public function completeStripePaymentFromSession(CheckoutSession $session, ?string $stripeEventId): void
@@ -379,28 +410,31 @@ class ApplicationPaymentService
             return;
         }
 
-        if ($payment->status !== PaymentStatus::Pending) {
+        $mismatch = $this->reconciliation->validateStripeSession($session, $payment);
+        if ($mismatch !== null) {
+            $this->lifecycle->markUnderVerification(
+                $payment->id,
+                $mismatch,
+                array_merge($this->stripeSessionMetadata($session), [
+                    'stripe_event_source' => 'webhook',
+                    'stripe_event_id' => $stripeEventId,
+                ]),
+                null,
+                'gateway'
+            );
+
             return;
         }
 
-        try {
-            if ((int) ($session->amount_total ?? 0) > 0) {
-                $this->verifyStripeAmountMatchesPayment($session, $payment);
-            }
-
-            $actor = User::query()->find($payment->user_id);
-
-            $meta = array_merge($this->stripeSessionMetadata($session), [
-                'stripe_event_source' => 'webhook',
-            ]);
-            if ($stripeEventId !== null && $stripeEventId !== '') {
-                $meta['stripe_event_id'] = $stripeEventId;
-            }
-
-            $this->completePayment($payment->id, $actor, $meta, $session->id);
-        } catch (ApiException $e) {
-            report($e);
+        $actor = User::query()->find($payment->user_id);
+        $meta = array_merge($this->stripeSessionMetadata($session), [
+            'stripe_event_source' => 'webhook',
+        ]);
+        if ($stripeEventId !== null && $stripeEventId !== '') {
+            $meta['stripe_event_id'] = $stripeEventId;
         }
+
+        $this->lifecycle->completeVerifiedPayment($payment->id, $actor, $meta, $session->id, 'gateway');
     }
 
     public function handleStripeCheckoutSessionFailed(CheckoutSession $session, string $reason, ?string $stripeEventId): void
@@ -412,6 +446,10 @@ class ApplicationPaymentService
             return;
         }
 
+        $code = $reason === 'expired'
+            ? PaymentFailureCode::SessionExpired
+            : PaymentFailureCode::AsyncPaymentFailed;
+
         $meta = [
             'stripe_session_status' => $session->status,
             'stripe_failure_reason' => $reason,
@@ -420,22 +458,21 @@ class ApplicationPaymentService
             $meta['stripe_event_id'] = $stripeEventId;
         }
 
-        $this->markStripePaymentFailed($payment, $meta);
+        $this->markStripePaymentFailed($payment, $meta, $code);
     }
 
-    private function verifyStripeAmountMatchesPayment(CheckoutSession $session, Payment $payment): void
+    public function gatewayEvents(): PaymentGatewayEventService
     {
-        $expectedMinor = StripeMoney::toStripeAmount((float) $payment->amount);
-        $actual = (int) ($session->amount_total ?? 0);
-        $currency = strtolower((string) ($session->currency ?? ''));
-        $expectedCurrency = strtolower((string) config('payment.stripe.currency', 'usd'));
+        return $this->gatewayEvents;
+    }
 
-        if ($currency !== '' && $currency !== $expectedCurrency) {
-            throw new ApiException('messages.payments.stripe_currency_mismatch', 422);
-        }
+    private function assertStripeCurrencyCompatible(Payment $payment): void
+    {
+        $paymentCurrency = strtoupper((string) $payment->currency);
+        $stripeCurrency = strtoupper((string) config('payment.stripe.currency', 'usd'));
 
-        if ($actual > 0 && $actual !== $expectedMinor) {
-            throw new ApiException('messages.payments.stripe_amount_mismatch', 422);
+        if ($paymentCurrency !== $stripeCurrency) {
+            throw new ApiException('messages.payments.provider_currency_unsupported', 422);
         }
     }
 

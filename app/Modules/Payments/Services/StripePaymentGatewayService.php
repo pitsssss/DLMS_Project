@@ -42,38 +42,48 @@ class StripePaymentGatewayService
             $description .= ' / '.$application->serviceType->name;
         }
 
-        $unitAmount = StripeMoney::toStripeAmount((float) $fee->amount);
+        $paymentCurrency = strtoupper((string) $payment->currency);
+        if ($paymentCurrency !== strtoupper($currency)) {
+            throw new \RuntimeException('Stripe currency does not match payment currency.');
+        }
+
+        $unitAmount = StripeMoney::toStripeAmount((string) $payment->amount, $paymentCurrency);
 
         try {
-            $session = $this->client()->checkout->sessions->create([
-                'mode' => 'payment',
-                'payment_method_types' => ['card'],
-                'line_items' => [
-                    [
-                        'price_data' => [
-                            'currency' => $currency,
-                            'product_data' => [
-                                'name' => 'DLMS Application Fee',
-                                'description' => $description,
+            $session = $this->client()->checkout->sessions->create(
+                [
+                    'mode' => 'payment',
+                    'payment_method_types' => ['card'],
+                    'line_items' => [
+                        [
+                            'price_data' => [
+                                'currency' => strtolower($paymentCurrency),
+                                'product_data' => [
+                                    'name' => 'DLMS Application Fee',
+                                    'description' => $description,
+                                ],
+                                'unit_amount' => $unitAmount,
                             ],
-                            'unit_amount' => $unitAmount,
+                            'quantity' => 1,
                         ],
-                        'quantity' => 1,
+                    ],
+                    'success_url' => $successUrl,
+                    'cancel_url' => $cancelUrl,
+                    'customer_email' => $user->email,
+                    'client_reference_id' => (string) $payment->id,
+                    'metadata' => [
+                        'payment_id' => (string) $payment->id,
+                        'application_id' => (string) $application->id,
+                        'user_id' => (string) $user->id,
+                        'application_number' => $application->application_number,
                     ],
                 ],
-                'success_url' => $successUrl,
-                'cancel_url' => $cancelUrl,
-                'customer_email' => $user->email,
-                'client_reference_id' => (string) $payment->id,
-                'metadata' => [
-                    'payment_id' => (string) $payment->id,
-                    'application_id' => (string) $application->id,
-                    'user_id' => (string) $user->id,
-                    'application_number' => $application->application_number,
-                ],
-            ]);
+                [
+                    'idempotency_key' => 'dlms-payment-'.$payment->payment_number,
+                ]
+            );
         } catch (ApiErrorException $e) {
-            throw new \RuntimeException('Stripe Checkout could not be created: '.$e->getMessage(), 0, $e);
+            throw new \RuntimeException('Stripe Checkout could not be created.', 0, $e);
         }
 
         return [

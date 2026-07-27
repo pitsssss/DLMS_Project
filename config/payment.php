@@ -7,8 +7,14 @@ return [
         'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
         'secret_key' => env('STRIPE_SECRET_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Must exactly match Fee/Payment currency when Stripe is enabled. No silent conversion.
         'currency' => env('STRIPE_CURRENCY', 'usd'),
         'success_url' => env('STRIPE_SUCCESS_URL'),
         'cancel_url' => env('STRIPE_CANCEL_URL'),
+    ],
+
+    'reconciliation' => [
+        'stale_pending_minutes' => (int) env('PAYMENT_STALE_PENDING_MINUTES', 60),
+        'batch_size' => (int) env('PAYMENT_RECONCILE_BATCH_SIZE', 50),
     ],
 ];

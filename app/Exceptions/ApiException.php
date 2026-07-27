@@ -33,6 +33,11 @@ class ApiException extends Exception
         return $message;
     }
 
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+
     public function render(Request $request): ?JsonResponse
     {
         if (! $request->is('api/*')) {

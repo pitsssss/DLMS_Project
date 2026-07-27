@@ -27,6 +27,12 @@ class Payment extends Model
         'provider_reference',
         'paid_at',
         'metadata',
+        'failure_code',
+        'failure_message',
+        'failed_at',
+        'last_verified_at',
+        'settled_obligation_key',
+        'active_obligation_key',
     ];
 
     protected function casts(): array
@@ -35,6 +41,8 @@ class Payment extends Model
             'amount' => 'decimal:2',
             'status' => PaymentStatus::class,
             'paid_at' => 'datetime',
+            'failed_at' => 'datetime',
+            'last_verified_at' => 'datetime',
             'metadata' => 'array',
         ];
     }
@@ -62,5 +70,25 @@ class Payment extends Model
     public function payable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public static function obligationKey(int $applicationId, int $feeId): string
+    {
+        return "application:{$applicationId}:fee:{$feeId}";
+    }
+
+    public function isApplicationPayment(): bool
+    {
+        return $this->fine_id === null && $this->application_id !== null;
+    }
+
+    public function isTerminalCompleted(): bool
+    {
+        return $this->status === PaymentStatus::Completed;
+    }
+
+    public function isActiveAttempt(): bool
+    {
+        return in_array($this->status, [PaymentStatus::Pending, PaymentStatus::UnderVerification], true);
     }
 }

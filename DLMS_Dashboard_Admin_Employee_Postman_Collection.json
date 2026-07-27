@@ -75,6 +75,14 @@
       "value": "payment.employee@syrtak.gov.sy"
     },
     {
+      "key": "payment_id",
+      "value": ""
+    },
+    {
+      "key": "citizen_id",
+      "value": ""
+    },
+    {
       "key": "employee_id",
       "value": ""
     },
@@ -2417,6 +2425,179 @@
             "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
             "url": { "raw": "{{base_url}}/dashboard/citizens/search?search_term=محمد", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "search"], "query": [{ "key": "search_term", "value": "محمد" }] },
             "description": "DEPRECATED. Kept for backward compatibility only. Use GET /dashboard/citizens?search= instead. Returns up to 50 results, not paginated."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Dashboard Financial Operations",
+      "description": "Dashboard Financial Operations (application payments only).\n\nAuth: Bearer {{dashboard_token}} — keep empty; no real token.\nPermissions: view_payments OR manage_payments for reads; manage_payments for verify; view_audit_logs for audit-logs.\n\nScope:\n- Application fee payment attempts only (fine_id IS NULL).\n- Fines remain a separate module.\n- No refunds, no mark-paid, no delete, no amount edit, no manual status change.\n\nAmounts are decimal strings (e.g. \"15000.00\").\nCurrency policy: Fee/Payment currency is authoritative; Stripe currency must match exactly — no silent SYP→USD conversion.\n\nVerify = provider reconciliation, not administrative approval.\nunder_verification = financial conflict/uncertain provider result; not collected revenue.",
+      "item": [
+        {
+          "name": "01 Payment operations list",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments",
+            "description": "Paginated application-payment attempts. Excludes fines."
+          }
+        },
+        {
+          "name": "02 Search by payment number",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?search=PAY-2026"
+          }
+        },
+        {
+          "name": "03 Search by application number",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?search=APP-"
+          }
+        },
+        {
+          "name": "04 Filter pending",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?status=pending"
+          }
+        },
+        {
+          "name": "05 Filter completed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?status=completed"
+          }
+        },
+        {
+          "name": "06 Filter failed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?status=failed"
+          }
+        },
+        {
+          "name": "07 Filter under verification",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?status=under_verification"
+          }
+        },
+        {
+          "name": "08 Filter provider + fee + dates",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?provider=stripe&fee_code=application_fee&date_from=2026-01-01&date_to=2026-12-31&per_page=20"
+          }
+        },
+        {
+          "name": "09 Payment statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/stats",
+            "description": "completed_amount is collected revenue only. pending/failed/under_verification are not revenue. Fines excluded."
+          }
+        },
+        {
+          "name": "10 Payment options",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/options"
+          }
+        },
+        {
+          "name": "11 Due fees list",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/due-fees",
+            "description": "Applications in payment_pending with unresolved fee obligation (no completed payment for that application+fee)."
+          }
+        },
+        {
+          "name": "12 Payment details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}",
+            "description": "Privacy-safe details. No metadata/checkout URL/secrets. Fine-linked IDs → 404."
+          }
+        },
+        {
+          "name": "13 Payment attempts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}/attempts?per_page=20"
+          }
+        },
+        {
+          "name": "14 Payment audit logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}/audit-logs",
+            "description": "Requires view_audit_logs in addition to payment read permission."
+          }
+        },
+        {
+          "name": "15 Verify payment (provider reconcile)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}/verify",
+            "description": "Requires manage_payments. No body. Asks Stripe for authoritative status. Mock returns 422 unsupported."
+          }
+        },
+        {
+          "name": "16 Unauthenticated (401)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/dashboard/payments"
+          }
+        },
+        {
+          "name": "17 Forbidden verify without manage_payments (403)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}/verify",
+            "description": "Use a token with view_payments only."
+          }
+        },
+        {
+          "name": "18 Invalid status (422)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments?status=invalid"
+          }
+        },
+        {
+          "name": "19 No delete route (405)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}"
+          }
+        },
+        {
+          "name": "20 No mark-paid route (404)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": "{{base_url}}/dashboard/payments/{{payment_id}}/mark-paid"
           }
         }
       ]

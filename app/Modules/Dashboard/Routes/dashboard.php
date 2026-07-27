@@ -8,6 +8,7 @@ use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardOverviewController;
+use App\Modules\Dashboard\Controllers\DashboardPaymentController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use App\Modules\Dashboard\Controllers\DashboardServiceTypeController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,23 @@ Route::prefix('dashboard')
         Route::middleware('permission:manage_contact_messages')->group(function (): void {
             Route::patch('/contact-messages/{contactMessage}/status', [DashboardContactMessageController::class, 'updateStatus'])
                 ->whereNumber('contactMessage');
+        });
+
+        // Financial operations — application payments only (fines remain separate)
+        Route::middleware('permission:view_payments,manage_payments')->group(function (): void {
+            Route::get('/payments', [DashboardPaymentController::class, 'index']);
+            Route::get('/payments/stats', [DashboardPaymentController::class, 'stats']);
+            Route::get('/payments/options', [DashboardPaymentController::class, 'options']);
+            Route::get('/payments/due-fees', [DashboardPaymentController::class, 'dueFees']);
+            Route::get('/payments/{payment}', [DashboardPaymentController::class, 'show'])->whereNumber('payment');
+            Route::get('/payments/{payment}/attempts', [DashboardPaymentController::class, 'attempts'])->whereNumber('payment');
+            Route::get('/payments/{payment}/audit-logs', [DashboardPaymentController::class, 'auditLogs'])->whereNumber('payment');
+        });
+
+        Route::middleware('permission:manage_payments')->group(function (): void {
+            Route::post('/payments/{payment}/verify', [DashboardPaymentController::class, 'verify'])
+                ->whereNumber('payment')
+                ->middleware('throttle:30,1');
         });
 
         // Citizen management (citizens register themselves; Dashboard can view, update status and audit)
