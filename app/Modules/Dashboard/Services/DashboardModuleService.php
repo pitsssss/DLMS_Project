@@ -13,6 +13,7 @@ class DashboardModuleService
     {
         $definitions = [
             ['key' => 'overview', 'label' => 'نظرة عامة', 'permission' => 'access_dashboard'],
+            ['key' => 'citizens', 'label' => 'إدارة المواطنين', 'permission' => 'manage_users'],
             ['key' => 'employees', 'label' => 'إدارة الموظفين', 'permission' => 'manage_employees'],
             ['key' => 'roles_permissions', 'label' => 'الأدوار والصلاحيات', 'permission' => 'manage_roles'],
             ['key' => 'profile_reviews', 'label' => 'مراجعة الملفات الشخصية', 'permission' => 'review_profiles'],

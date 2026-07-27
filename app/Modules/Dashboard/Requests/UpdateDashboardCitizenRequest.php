@@ -17,17 +17,16 @@ class UpdateDashboardCitizenRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('user');
+        $userId = $this->route('citizen') ?? $this->route('user');
 
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($userId)],
-            'national_id' => ['sometimes', 'nullable', 'string', 'max:64', Rule::unique('users', 'national_id')->ignore($userId)],
-            'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
+            'name'        => ['sometimes', 'string', 'max:255'],
+            'email'       => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)->whereNull('deleted_at')],
+            'phone'       => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($userId)->whereNull('deleted_at')],
+            'national_id' => ['sometimes', 'nullable', 'string', 'max:64', Rule::unique('users', 'national_id')->ignore($userId)->whereNull('deleted_at')],
+            'birth_date'  => ['sometimes', 'nullable', 'date', 'before:today'],
             'governorate' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'address' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'is_active' => ['sometimes', 'boolean'],
+            'address'     => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }
 }

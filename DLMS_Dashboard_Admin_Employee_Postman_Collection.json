@@ -2219,6 +2219,207 @@
           }
         }
       ]
+    },
+    {
+      "name": "09 - Dashboard Citizen Management",
+      "description": "Dashboard Citizen Management APIs (auth:sanctum + dashboard + permission:manage_users).\n\nScope: Citizens only (user_type=citizen). Employees and admins are NEVER returned — use 404 instead of 403 to avoid disclosing account type.\n\nAuth: Bearer {{dashboard_token}} — keep empty; do not store a real token.\n\nSearch fields (unified): name, national_id, phone, email — OR grouped, always within citizen scope.\n\nFilters: is_active (0/1/true/false), profile_status (incomplete|pending_review|approved|rejected).\n\nPagination: page + per_page (1-100, default 20). Server-side deterministic order: id DESC.\n\nStats: global citizen aggregation counts — not filter-scoped.\n\nDeactivation effects:\n- is_active → false\n- deactivated_at, deactivated_by, deactivation_reason stored\n- All citizen Sanctum tokens deleted immediately\n- Citizen cannot login until reactivated\n- Pending applications/licenses/fines remain unchanged\n\nActivation effects:\n- is_active → true, deactivation metadata cleared\n- No token is issued automatically — citizen must log in again\n\nIdempotency:\n- Deactivating already-inactive citizen → 200 (no new audit, no new notification, remaining tokens revoked)\n- Activating already-active citizen → 200 (no new audit, no new notification)\n\nAudit logs (GET /{citizen}/audit-logs) additionally requires view_audit_logs permission.\n\nRemoved routes (do not document):\n- POST /dashboard/citizens (create — citizens self-register)\n- DELETE /dashboard/citizens/{id} (hard-delete — not supported)",
+      "item": [
+        {
+          "name": "01 List citizens",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "description": "Returns paginated list of citizens.\n\nResponse shape per item:\n{\n  id, name, national_id, phone, email,\n  is_active (bool),\n  account_status: { value: 'active'|'inactive', label },\n  profile_status (raw string),\n  profile_status_info: { value, label },\n  created_at\n}\n\nPagination: { current_page, per_page, total, last_page }"
+          }
+        },
+        {
+          "name": "02 Search citizens by name",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?search=محمد", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "search", "value": "محمد" }] },
+            "description": "Searches name, national_id, phone, email — OR grouped, always citizen-scoped."
+          }
+        },
+        {
+          "name": "03 Active citizens",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=1", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "1" }] }
+          }
+        },
+        {
+          "name": "04 Inactive citizens",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=0", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "0" }] }
+          }
+        },
+        {
+          "name": "05 Filter by profile status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?profile_status=approved", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "profile_status", "value": "approved" }] },
+            "description": "Valid values: incomplete | pending_review | approved | rejected"
+          }
+        },
+        {
+          "name": "06 Combined filters + pagination",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=1&profile_status=approved&per_page=10&page=1", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "1" }, { "key": "profile_status", "value": "approved" }, { "key": "per_page", "value": "10" }, { "key": "page", "value": "1" }] }
+          }
+        },
+        {
+          "name": "07 Citizen statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/stats", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "stats"] },
+            "description": "Global citizen aggregation. Response:\n{\n  total, active, inactive,\n  profileStatuses: { incomplete, pending_review, approved, rejected }\n}"
+          }
+        },
+        {
+          "name": "08 Profile status options",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/profile-statuses", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "profile-statuses"] },
+            "description": "Returns [{ value, label }] for all ProfileStatus enum values."
+          }
+        },
+        {
+          "name": "09 Citizen details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}"] },
+            "description": "Returns full citizen profile with counts and actions.\n\ndeactivation: null when active. When inactive:\n{ reason, deactivated_at, deactivated_by: { id, name } }\n\ncounts: { applications, licenses, fines, unpaid_fines }\n\nactions: { can_activate, can_deactivate, can_edit, can_view_applications, can_view_licenses, can_view_fines, can_view_audit_logs }\n\nEmployee/Admin id → 404 (does not disclose account type)."
+          }
+        },
+        {
+          "name": "10 Update citizen",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"اسم محدث\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"0912345678\",\n  \"national_id\": \"01234567890\",\n  \"birth_date\": \"1995-05-20\",\n  \"governorate\": \"دمشق\",\n  \"address\": \"عنوان جديد\"\n}" },
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}"] },
+            "description": "Allowed fields: name, email, phone, national_id, birth_date, governorate, address.\n\nNOT allowed (silently ignored or rejected):\n- is_active (use /activate or /deactivate)\n- user_type\n- password\n- roles / permissions\n- deactivation metadata\n\nUnique validation ignores the current citizen (but collisions with other users return 422).\n\nReturns the updated citizen details."
+          }
+        },
+        {
+          "name": "11 Activate citizen",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/activate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "activate"] },
+            "description": "No body required.\n\nTransactional + lockForUpdate.\n\nIdempotent: already-active citizen returns 200 without audit or notification.\n\nDoes NOT issue a new token — citizen must log in again."
+          }
+        },
+        {
+          "name": "12 Deactivate citizen",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"سبب إداري واضح لتعطيل الحساب.\"\n}" },
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "deactivate"] },
+            "description": "Payload: { reason: required string max 1000 }\n\nTransactional + lockForUpdate.\n\nEffects:\n- is_active → false\n- deactivated_at, deactivated_by, deactivation_reason stored\n- ALL citizen Sanctum tokens deleted\n- citizen.deactivated audit created\n- Activation notification sent after commit\n\nIdempotent: already-inactive citizen returns 200, remaining tokens revoked, no new audit/notification, original reason preserved."
+          }
+        },
+        {
+          "name": "13 Citizen applications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/applications?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "applications"], "query": [{ "key": "per_page", "value": "20" }] }
+          }
+        },
+        {
+          "name": "14 Citizen licenses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/licenses?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "licenses"], "query": [{ "key": "per_page", "value": "20" }] }
+          }
+        },
+        {
+          "name": "15 Citizen fines",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/fines?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "fines"], "query": [{ "key": "per_page", "value": "20" }] }
+          }
+        },
+        {
+          "name": "16 Citizen audit logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/audit-logs?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "audit-logs"], "query": [{ "key": "per_page", "value": "20" }] },
+            "description": "Requires manage_users AND view_audit_logs permissions.\n\nReturns citizen-management actions only:\n- citizen.updated\n- citizen.activated\n- citizen.deactivated\n\nPaginated (default 20, max 100)."
+          }
+        },
+        {
+          "name": "17 Invalid profile status (422)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens?profile_status=invalid", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "profile_status", "value": "invalid" }] },
+            "description": "Expect HTTP 422 with validation error on profile_status."
+          }
+        },
+        {
+          "name": "18 Invalid deactivation reason (422)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "deactivate"] },
+            "description": "Missing reason → 422. Blank reason → 422."
+          }
+        },
+        {
+          "name": "19 Unauthenticated (401)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "description": "No Authorization header. Expect HTTP 401."
+          }
+        },
+        {
+          "name": "20 Forbidden — employee without manage_users (403)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "description": "Use a dashboard token with no manage_users permission. Expect HTTP 403."
+          }
+        },
+        {
+          "name": "21 Employee target rejected (404)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/{{employee_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{employee_id}}"] },
+            "description": "Accessing an employee or admin ID through the citizen endpoint returns 404. Avoids disclosing account type."
+          }
+        },
+        {
+          "name": "22 Deprecated — search (backward compat)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/citizens/search?search_term=محمد", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "search"], "query": [{ "key": "search_term", "value": "محمد" }] },
+            "description": "DEPRECATED. Kept for backward compatibility only. Use GET /dashboard/citizens?search= instead. Returns up to 50 results, not paginated."
+          }
+        }
+      ]
     }
   ]
 }

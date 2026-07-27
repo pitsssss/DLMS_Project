@@ -48,18 +48,20 @@ Route::prefix('dashboard')
                 ->whereNumber('contactMessage');
         });
 
-        // Partner: citizens management
+        // Citizen management (citizens register themselves; Dashboard can view, update status and audit)
         Route::middleware('permission:manage_users')->group(function (): void {
             Route::get('/citizens', [DashboardCitizenController::class, 'index']);
-            Route::post('/citizens', [DashboardCitizenController::class, 'store']);
-            Route::get('/citizens/search', [DashboardCitizenController::class, 'search']);
+            Route::get('/citizens/stats', [DashboardCitizenController::class, 'stats']);
+            Route::get('/citizens/search', [DashboardCitizenController::class, 'search']); // deprecated – use ?search= on /citizens
             Route::get('/citizens/profile-statuses', [DashboardCitizenController::class, 'profileStatuses']);
-            Route::get('/citizens/{user}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('user');
-            Route::get('/citizens/{user}/licenses', [DashboardCitizenController::class, 'licenses'])->whereNumber('user');
-            Route::get('/citizens/{user}/fines', [DashboardCitizenController::class, 'fines'])->whereNumber('user');
-            Route::get('/citizens/{user}', [DashboardCitizenController::class, 'show'])->whereNumber('user');
-            Route::put('/citizens/{user}', [DashboardCitizenController::class, 'update'])->whereNumber('user');
-            Route::delete('/citizens/{user}', [DashboardCitizenController::class, 'destroy'])->whereNumber('user');
+            Route::get('/citizens/{citizen}', [DashboardCitizenController::class, 'show'])->whereNumber('citizen');
+            Route::put('/citizens/{citizen}', [DashboardCitizenController::class, 'update'])->whereNumber('citizen');
+            Route::post('/citizens/{citizen}/activate', [DashboardCitizenController::class, 'activate'])->whereNumber('citizen');
+            Route::post('/citizens/{citizen}/deactivate', [DashboardCitizenController::class, 'deactivate'])->whereNumber('citizen');
+            Route::get('/citizens/{citizen}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('citizen');
+            Route::get('/citizens/{citizen}/licenses', [DashboardCitizenController::class, 'licenses'])->whereNumber('citizen');
+            Route::get('/citizens/{citizen}/fines', [DashboardCitizenController::class, 'fines'])->whereNumber('citizen');
+            Route::get('/citizens/{citizen}/audit-logs', [DashboardCitizenController::class, 'auditLogs'])->whereNumber('citizen');
         });
 
         // Partner: document reviews

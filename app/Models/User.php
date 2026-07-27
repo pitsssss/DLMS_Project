@@ -39,6 +39,9 @@ class User extends Authenticatable
         'is_active',
         'phone_verified_at',
         'email_verified_at',
+        'deactivated_at',
+        'deactivated_by',
+        'deactivation_reason',
     ];
 
     protected $hidden = [
@@ -59,12 +62,18 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'deactivated_at' => 'datetime',
         ];
     }
 
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function deactivatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deactivated_by');
     }
 
     public function licenseApplications(): HasMany
@@ -114,7 +123,7 @@ class User extends Authenticatable
 
     public function isCitizen(): bool
     {
-        return $this->hasRole('citizen');
+        return $this->user_type === UserType::Citizen;
     }
 
     public function isDashboardUser(): bool
