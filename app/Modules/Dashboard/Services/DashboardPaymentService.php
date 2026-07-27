@@ -390,27 +390,27 @@ class DashboardPaymentService
      */
     private function dueObligationsAggregate(): array
     {
-        $applications = LicenseApplication::query()
-            ->where('status', ApplicationStatus::PaymentPending)
-            ->with('serviceType:id,code')
-            ->get(['id', 'service_type_id', 'license_type_id']);
-
-        if ($applications->isEmpty()) {
-            return ['count' => 0, 'amount' => '0.00'];
-        }
-
         $feeMap = $this->preloadFeeMap();
         $completed = Payment::query()
             ->whereNull('fine_id')
             ->where('status', PaymentStatus::Completed)
-            ->whereIn('application_id', $applications->pluck('id'))
+            ->whereIn('application_id', function ($sub): void {
+                $sub->select('id')
+                    ->from('license_applications')
+                    ->where('status', ApplicationStatus::PaymentPending->value)
+                    ->whereNull('deleted_at');
+            })
             ->get(['application_id', 'fee_id'])
             ->map(fn (Payment $p) => Payment::obligationKey((int) $p->application_id, (int) $p->fee_id))
             ->all();
 
         $count = 0;
         $sum = '0.00';
-        foreach ($applications as $application) {
+        foreach (LicenseApplication::query()
+            ->where('status', ApplicationStatus::PaymentPending)
+            ->with('serviceType:id,code')
+            ->select(['id', 'service_type_id', 'license_type_id'])
+            ->lazy(100) as $application) {
             $code = ServiceWorkflow::feeCode($application->serviceType?->code);
             $fee = $this->resolveFeeFromMap($feeMap, $application, $code);
             if ($fee === null) {

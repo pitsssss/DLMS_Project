@@ -106,4 +106,21 @@ class BusinessClock
             ? "strftime('%Y-%m', datetime({$column}, '+3 hours'))"
             : "DATE_FORMAT(CONVERT_TZ({$column}, '+00:00', '+03:00'), '%Y-%m')";
     }
+
+    /**
+     * SQL expression that maps a UTC-stored DATETIME column to a business local ISO week (Y-Www).
+     */
+    public function sqlBusinessWeekExpression(string $column): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        return $driver === 'sqlite'
+            ? "strftime('%Y-W%W', datetime({$column}, '+3 hours'))"
+            : "CONCAT(DATE_FORMAT(CONVERT_TZ({$column}, '+00:00', '+03:00'), '%x'), '-W', DATE_FORMAT(CONVERT_TZ({$column}, '+00:00', '+03:00'), '%v'))";
+    }
+
+    public function applyUtcRange($query, string $column, CarbonImmutable $from, CarbonImmutable $toExclusive): void
+    {
+        $query->where($column, '>=', $from)->where($column, '<', $toExclusive);
+    }
 }

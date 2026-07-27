@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Modules\Dashboard\Services\Reports;
+
+use App\Enums\AppointmentStatus;
+use App\Enums\ApplicationStatus;
+use App\Enums\DocumentStatus;
+use App\Enums\FineStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\TestResultStatus;
+use App\Enums\UserType;
+use App\Models\LicenseType;
+use App\Models\ServiceType;
+use App\Models\TestType;
+use App\Models\User;
+use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
+use App\Modules\Dashboard\Support\Reports\ReportVisibility;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
+use App\Support\EmployeeMessageTranslator;
+
+class DashboardReportOptionsService
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function build(User $user): array
+    {
+        $visibility = ReportVisibility::for($user);
+
+        $periods = [
+            ['value' => '7d', 'label' => '7 أيام'],
+            ['value' => '30d', 'label' => '30 يوماً'],
+            ['value' => '90d', 'label' => '90 يوماً'],
+            ['value' => '12m', 'label' => '12 شهراً'],
+            ['value' => 'custom', 'label' => 'مخصص'],
+        ];
+
+        $grouping = [
+            ['value' => 'auto', 'label' => 'تلقائي'],
+            ['value' => 'day', 'label' => 'يومي'],
+            ['value' => 'week', 'label' => 'أسبوعي'],
+            ['value' => 'month', 'label' => 'شهري'],
+        ];
+
+        $options = [
+            'periods' => $periods,
+            'grouping' => $grouping,
+        ];
+
+        if ($visibility['applications']) {
+            $options['application_statuses'] = $this->enumOptions(
+                ApplicationStatus::cases(),
+                'messages.employee.statuses.'
+            );
+            $options['service_types'] = $this->catalog(ServiceType::query()->orderBy('name')->get(['code', 'name']));
+            $options['license_types'] = $this->catalog(LicenseType::query()->orderBy('name')->get(['code', 'name']));
+            $options['test_types'] = $this->catalog(TestType::query()->orderBy('name')->get(['code', 'name']));
+        }
+
+        if ($visibility['tests'] || $visibility['appointments']) {
+            $options['test_results'] = array_map(
+                fn (TestResultStatus $s) => ['value' => $s->value, 'label' => $s->value],
+                TestResultStatus::cases()
+            );
+            $options['test_types'] ??= $this->catalog(TestType::query()->orderBy('name')->get(['code', 'name']));
+        }
+
+        if ($visibility['appointments']) {
+            $options['appointment_statuses'] = array_map(
+                fn (AppointmentStatus $s) => ['value' => $s->value, 'label' => $s->value],
+                AppointmentStatus::cases()
+            );
+        }
+
+        if ($visibility['document_reviews']) {
+            $options['document_statuses'] = array_map(
+                fn (DocumentStatus $s) => ['value' => $s->value, 'label' => $s->value],
+                DocumentStatus::cases()
+            );
+        }
+
+        if ($visibility['payments']) {
+            $options['payment_statuses'] = array_map(
+                fn (PaymentStatus $s) => [
+                    'value' => $s->value,
+                    'label' => __('messages.payments.statuses.'.$s->value),
+                ],
+                PaymentStatus::cases()
+            );
+            $options['currencies'] = [
+                ['value' => ApplicationFeeCatalog::CURRENCY, 'label' => DashboardPaymentPresenter::currencyLabel(ApplicationFeeCatalog::CURRENCY)],
+            ];
+        }
+
+        if ($visibility['fines']) {
+            $options['fine_statuses'] = array_map(
+                fn (FineStatus $s) => ['value' => $s->value, 'label' => $s->value],
+                FineStatus::cases()
+            );
+        }
+
+        if ($visibility['employees']) {
+            $options['employees'] = User::query()
+                ->whereIn('user_type', [UserType::Employee, UserType::Admin])
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (User $u) => ['value' => $u->id, 'label' => $u->name])
+                ->values()
+                ->all();
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param  iterable<object>  $rows
+     * @return list<array{value: string, label: string}>
+     */
+    private function catalog(iterable $rows): array
+    {
+        $items = [];
+        foreach ($rows as $row) {
+            $items[] = ['value' => (string) $row->code, 'label' => (string) $row->name];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param  array<int, \BackedEnum>  $cases
+     * @return list<array{value: string, label: string}>
+     */
+    private function enumOptions(array $cases, string $labelPrefix): array
+    {
+        return array_map(
+            fn (\BackedEnum $case) => [
+                'value' => $case->value,
+                'label' => EmployeeMessageTranslator::get($labelPrefix.$case->value),
+            ],
+            $cases
+        );
+    }
+}

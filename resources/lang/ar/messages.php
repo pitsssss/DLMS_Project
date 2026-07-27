@@ -403,6 +403,9 @@ return [
 
     'reports' => [
         'overview' => 'تم جلب ملخص التقارير بنجاح.',
+        'retrieved' => 'تم جلب التقرير بنجاح.',
+        'options_retrieved' => 'تم جلب خيارات التقارير بنجاح.',
+        'invalid_period' => 'فترة التقرير غير صالحة.',
     ],
 
     'audit' => [

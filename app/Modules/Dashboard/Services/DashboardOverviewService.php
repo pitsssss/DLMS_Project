@@ -109,6 +109,7 @@ class DashboardOverviewService
         if ($visibility['payments']) {
             $kpis['payments'] = $this->paymentsKpi($periodMeta);
             $queues['payments_pending'] = Payment::query()
+                ->whereNull('fine_id')
                 ->whereIn('status', [PaymentStatus::Pending, PaymentStatus::UnderVerification])
                 ->count();
         }

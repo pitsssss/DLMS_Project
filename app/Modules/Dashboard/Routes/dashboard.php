@@ -9,6 +9,7 @@ use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardOverviewController;
 use App\Modules\Dashboard\Controllers\DashboardPaymentController;
+use App\Modules\Dashboard\Controllers\DashboardReportController;
 use App\Modules\Dashboard\Controllers\DashboardRoleController;
 use App\Modules\Dashboard\Controllers\DashboardServiceTypeController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,37 @@ Route::prefix('dashboard')
     ->middleware(['auth:sanctum', 'dashboard'])
     ->group(function (): void {
         Route::get('/overview', DashboardOverviewController::class);
+
+        Route::prefix('reports')
+            ->middleware('permission:view_reports')
+            ->group(function (): void {
+                Route::get('/options', [DashboardReportController::class, 'options']);
+                Route::get('/summary', [DashboardReportController::class, 'summary']);
+
+                Route::middleware('permission:view_applications,manage_applications')->group(function (): void {
+                    Route::get('/applications', [DashboardReportController::class, 'applications']);
+                });
+
+                Route::middleware('permission:record_test_result,manage_appointments,view_appointments')->group(function (): void {
+                    Route::get('/tests', [DashboardReportController::class, 'tests']);
+                });
+
+                Route::middleware('permission:view_appointments,manage_appointments')->group(function (): void {
+                    Route::get('/appointments', [DashboardReportController::class, 'appointments']);
+                });
+
+                Route::middleware('permission:view_licenses,manage_licenses,issue_license')->group(function (): void {
+                    Route::get('/licenses', [DashboardReportController::class, 'licenses']);
+                });
+
+                Route::middleware('permission:view_fines,manage_fines')->group(function (): void {
+                    Route::get('/fines', [DashboardReportController::class, 'fines']);
+                });
+
+                Route::middleware('permission:manage_employees,view_employees')->group(function (): void {
+                    Route::get('/employees', [DashboardReportController::class, 'employees']);
+                });
+            });
 
         Route::middleware('permission:view_roles')->group(function (): void {
             Route::get('/roles', [DashboardRoleController::class, 'index']);

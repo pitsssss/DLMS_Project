@@ -1918,6 +1918,140 @@
       ]
     },
     {
+      "name": "Reports & Statistics",
+      "description": "Dashboard Reports API under /dashboard/reports.\n\nAuth: Bearer {{dashboard_token}} — keep empty; no real token.\nBase permission: view_reports + access_dashboard.\nDomain permissions apply per endpoint (applications, payments, fines, etc.).\n\nShared query params:\n- period: 7d|30d|90d|12m|custom\n- date_from, date_to (required when period=custom; max 366 days)\n- group_by: auto|day|week|month\n- page, per_page (max 100) on drill-down endpoints\n\nFinancial sections: application payments only (fine_id IS NULL, status=completed). Amounts are decimal strings. Currencies are never mixed.\nFines report is separate from application payment revenue.\n\nLegacy GET /admin/reports/overview remains for backward compatibility (deprecated).",
+      "item": [
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/options",
+            "description": "Authoritative filter labels. Options are permission-filtered."
+          }
+        },
+        {
+          "name": "Summary (30d)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/summary?period=30d",
+            "description": "Permission-aware KPI sections with visibility object."
+          }
+        },
+        {
+          "name": "Summary (custom dates)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/summary?period=custom&date_from=2026-07-01&date_to=2026-07-25&group_by=day"
+          }
+        },
+        {
+          "name": "Applications report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/applications?period=30d&application_status=approved&page=1&per_page=20",
+            "description": "Requires view_applications OR manage_applications."
+          }
+        },
+        {
+          "name": "Tests report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/tests?period=90d&test_result=passed&group_by=week"
+          }
+        },
+        {
+          "name": "Appointments report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/appointments?period=30d&appointment_status=completed"
+          }
+        },
+        {
+          "name": "Licenses report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/licenses?period=12m&license_type_code=private"
+          }
+        },
+        {
+          "name": "Fines report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/fines?period=30d&fine_status=unpaid",
+            "description": "Separate from application payments. Requires view_fines OR manage_fines."
+          }
+        },
+        {
+          "name": "Employee workload",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/employees?period=30d&per_page=25",
+            "description": "Requires manage_employees OR view_employees. Audit metrics need view_audit_logs."
+          }
+        },
+        {
+          "name": "Forbidden without view_reports (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/summary?period=30d",
+            "description": "Use a token without view_reports to expect HTTP 403."
+          }
+        },
+        {
+          "name": "Invalid custom period (422)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+            ],
+            "url": "{{base_url}}/dashboard/reports/summary?period=custom&date_from=2026-01-01",
+            "description": "Missing date_to — validation error."
+          }
+        }
+      ]
+    },
+    {
       "name": "08 - Dashboard Document Review",
       "description": "Dashboard Document Review APIs (auth:sanctum + dashboard + permission:review_documents).\n\nAuth: Bearer {{dashboard_token}} — keep empty; do not store a real token.\n\nDefault queue scope: review_status=awaiting_review (applications in documents_under_review with at least one pending_review document).\n\nSearch fields: application_number, citizen name only. Phone / email / national_id are NOT searchable and are NOT returned in queue rows.\n\nQueue citizen shape: { id, name } only.\n\nOrdering: FIFO by COALESCE(submitted_at, created_at) ASC, then id ASC.\n\nStats units (all application counts):\n- awaiting_review: applications awaiting document review\n- completed_documents: applications that left document-review stage (post-review statuses) — name is historical; unit is applications\n- late_requests: awaiting-review applications older than 3 days\n- reupload_required: applications in documents_rejected\n\nReject payload (Dashboard):\n{\n  \"rejection_reason_code\": \"unclear_document|wrong_document|expired_document|incomplete_document|other\",\n  \"rejection_details\": \"optional except required when code=other (max 2000)\"\n}\n\nPreview is authenticated inline binary (PDF/JPEG/PNG). No public URL. No storage paths in JSON.\n\nLegacy admin POST /admin/documents/{id}/reject still accepts free-text rejection_reason.",
       "item": [

@@ -10,7 +10,7 @@ class ReportController extends Controller
     public function overview(ReportService $reports)
     {
         return $this->successResponse(
-            $reports->overview(),
+            $reports->overview(request()->user()),
             'messages.reports.overview'
         );
     }
