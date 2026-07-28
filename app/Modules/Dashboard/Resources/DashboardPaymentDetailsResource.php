@@ -5,6 +5,7 @@ namespace App\Modules\Dashboard\Resources;
 use App\Enums\PaymentStatus;
 use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
 use App\Support\EmployeeMessageTranslator;
+use App\Support\Msg;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -63,7 +64,7 @@ class DashboardPaymentDetailsResource extends JsonResource
             ] : null),
             'failure' => $this->failure_code ? [
                 'code' => $this->failure_code,
-                'message' => $this->failure_message ?? __('messages.payments.failure_codes.'.$this->failure_code),
+                'message' => $this->failure_message ?? Msg::get('payments.failure_codes.'.$this->failure_code),
             ] : null,
             'timestamps' => [
                 'created_at' => $this->created_at?->toIso8601String(),

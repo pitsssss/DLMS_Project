@@ -1,0 +1,236 @@
+{
+  "info": {
+    "_postman_id": "dlms-dashboard-issued-licenses",
+    "name": "DLMS Dashboard Issued Licenses Management",
+    "description": "Dashboard issued-license registry: list, stats, options, details, history, audit, block/unblock, print PDF, and public verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "dashboard_token", "value": "" },
+    { "key": "license_id", "value": "1" },
+    { "key": "verification_token", "value": "exampleVerificationTokenReplaceMe0123456789" }
+  ],
+  "item": [
+    {
+      "name": "Dashboard Issued Licenses Management",
+      "item": [
+        {
+          "name": "List licenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses?page=1&per_page=20"
+          }
+        },
+        {
+          "name": "List search by license number",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses?search=LIC-2026-EXAMPLE"
+          }
+        },
+        {
+          "name": "List filter status active",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses?status=active"
+          }
+        },
+        {
+          "name": "List expiring soon",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses?expiry_filter=expiring_soon"
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/stats"
+          }
+        },
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/options"
+          },
+          "response": [
+            {
+              "name": "Example options",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/dashboard/licenses/options"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم جلب خيارات تصفية الرخص بنجاح.\",\n  \"data\": {\n    \"statuses\": [\n      { \"value\": \"active\", \"label\": \"فعالة\" },\n      { \"value\": \"expired\", \"label\": \"منتهية الصلاحية\" }\n    ],\n    \"expiry_filters\": [\n      { \"value\": \"expiring_soon\", \"label\": \"تنتهي قريباً\" }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}"
+          }
+        },
+        {
+          "name": "History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/history?per_page=20"
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/audit-logs?per_page=20"
+          }
+        },
+        {
+          "name": "Block",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"تحقيق إداري نموذجي\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/block"
+          }
+        },
+        {
+          "name": "Unblock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/unblock"
+          }
+        },
+        {
+          "name": "Print PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/pdf" }
+            ],
+            "description": "Returns binary application/pdf. Use Send and Download in Postman.",
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/print"
+          }
+        },
+        {
+          "name": "Public verification",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/licenses/verify/{{verification_token}}"
+          },
+          "response": [
+            {
+              "name": "Valid active example",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم التحقق من الرخصة.\",\n  \"data\": {\n    \"valid\": true,\n    \"status\": \"active\",\n    \"status_label\": \"فعالة\",\n    \"license_number\": \"LIC-2026-EXAMPLE\",\n    \"holder_name\": \"مواطن تجريبي\",\n    \"license_type\": { \"code\": \"private\", \"label\": \"رخصة قيادة خاصة\" },\n    \"issue_date\": \"2026-01-01\",\n    \"expiry_date\": \"2036-01-01\",\n    \"message\": \"الرخصة سارية وصحيحة.\",\n    \"verified_at\": \"2026-07-28T13:00:00+03:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "401 unauthenticated list",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/dashboard/licenses"
+          }
+        },
+        {
+          "name": "403 forbidden print",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "description": "Use a token without view_licenses/manage_licenses.",
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/print"
+          }
+        },
+        {
+          "name": "404 missing license",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/licenses/999999"
+          }
+        },
+        {
+          "name": "422 block without reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/dashboard/licenses/{{license_id}}/block"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
+use App\Modules\Dashboard\Controllers\DashboardIssuedLicenseController;
 use App\Modules\Dashboard\Controllers\DashboardOverviewController;
 use App\Modules\Dashboard\Controllers\DashboardPaymentController;
 use App\Modules\Dashboard\Controllers\DashboardReportController;
@@ -147,6 +148,28 @@ Route::prefix('dashboard')
             // Lookup application details by application number (not internal id). The table shows application_number.
             Route::get('/applications/{application_number}', [DashboardApplicationController::class, 'show'])
                 ->where('application_number', '[A-Za-z0-9_\-]+');
+        });
+
+        // Issued licenses management
+        Route::middleware('permission:view_licenses,manage_licenses')->group(function (): void {
+            Route::get('/licenses', [DashboardIssuedLicenseController::class, 'index']);
+            Route::get('/licenses/stats', [DashboardIssuedLicenseController::class, 'stats']);
+            Route::get('/licenses/options', [DashboardIssuedLicenseController::class, 'options']);
+            Route::get('/licenses/{license}', [DashboardIssuedLicenseController::class, 'show'])->whereNumber('license');
+            Route::get('/licenses/{license}/history', [DashboardIssuedLicenseController::class, 'history'])->whereNumber('license');
+            Route::get('/licenses/{license}/audit-logs', [DashboardIssuedLicenseController::class, 'auditLogs'])->whereNumber('license');
+            Route::post('/licenses/{license}/print', [DashboardIssuedLicenseController::class, 'print'])
+                ->whereNumber('license')
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware('permission:manage_licenses')->group(function (): void {
+            Route::post('/licenses/{license}/block', [DashboardIssuedLicenseController::class, 'block'])
+                ->whereNumber('license')
+                ->middleware('throttle:60,1');
+            Route::post('/licenses/{license}/unblock', [DashboardIssuedLicenseController::class, 'unblock'])
+                ->whereNumber('license')
+                ->middleware('throttle:60,1');
         });
 
         // Yours: license types + service types settings

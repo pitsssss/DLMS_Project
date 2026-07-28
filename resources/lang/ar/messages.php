@@ -194,6 +194,11 @@ return [
             'incomplete_document' => 'الوثيقة ناقصة أو تحتوي معلومات غير مكتملة',
             'other' => 'سبب آخر',
         ],
+        'statuses' => [
+            'pending_review' => 'بانتظار المراجعة',
+            'approved' => 'مقبول',
+            'rejected' => 'مرفوض',
+        ],
     ],
 
     'payments' => [
@@ -293,6 +298,12 @@ return [
         'result_passed' => 'ناجح',
         'result_failed' => 'راسب',
         'result_no_show' => 'غائب',
+        'statuses' => [
+            'passed' => 'ناجح',
+            'failed' => 'راسب',
+            'no_show' => 'غائب',
+            'pending' => 'قيد الانتظار',
+        ],
         'availability' => [
             'next_action_book' => 'حجز موعد',
             'previous_test_fallback' => 'الاختبار السابق',
@@ -341,6 +352,56 @@ return [
         'not_eligible_renewal' => 'الرخصة غير مؤهلة للتجديد حالياً.',
         'unpaid_fines_continue' => 'يجب تسوية الغرامات غير المدفوعة قبل المتابعة.',
         'note_issued' => 'تم إصدار رخصة القيادة.',
+        'unavailable' => 'غير متوفر',
+        'already_has_successor' => 'تم استبدال هذه الرخصة مسبقاً ولا يمكن إنشاء رخصة لاحقة أخرى.',
+        'block_reason_required' => 'يجب إدخال سبب الحظر.',
+        'block_reason_too_long' => 'سبب الحظر طويل جداً.',
+        'print_failed' => 'تعذر إنشاء ملف الرخصة للطباعة. يرجى المحاولة لاحقاً.',
+        'dashboard_list_retrieved' => 'تم جلب الرخص الصادرة بنجاح.',
+        'dashboard_stats_retrieved' => 'تم جلب إحصائيات الرخص الصادرة بنجاح.',
+        'dashboard_options_retrieved' => 'تم جلب خيارات تصفية الرخص بنجاح.',
+        'dashboard_details_retrieved' => 'تم جلب تفاصيل الرخصة بنجاح.',
+        'dashboard_history_retrieved' => 'تم جلب سجل دورة حياة الرخصة بنجاح.',
+        'dashboard_audit_logs_retrieved' => 'تم جلب سجلات تدقيق الرخصة بنجاح.',
+        'verification_retrieved' => 'تم التحقق من الرخصة.',
+        'statuses' => [
+            'active' => 'فعالة',
+            'expired' => 'منتهية الصلاحية',
+            'suspended' => 'موقوفة',
+            'blocked' => 'محظورة',
+            'renewed' => 'مجددة',
+            'inactive' => 'غير فعالة',
+        ],
+        'expiry_filters' => [
+            'all' => 'الكل',
+            'active' => 'فعالة',
+            'expired' => 'منتهية الصلاحية',
+            'expiring_soon' => 'تنتهي قريباً',
+            'expires_within_30_days' => 'تنتهي خلال 30 يوماً',
+            'expires_within_60_days' => 'تنتهي خلال 60 يوماً',
+            'expires_within_90_days' => 'تنتهي خلال 90 يوماً',
+        ],
+        'actions' => [
+            'issued' => 'إصدار',
+            'blocked' => 'حظر',
+            'unblocked' => 'فك حظر',
+            'expired' => 'انتهاء صلاحية',
+            'renewed' => 'تجديد',
+            'replaced' => 'استبدال',
+            'suspended' => 'إيقاف',
+            'printed' => 'طباعة',
+            'verification_token_rotated' => 'تحديث رمز التحقق',
+        ],
+        'digital' => [
+            'authority' => 'منصة سيرتك — إدارة رخص القيادة',
+            'title' => 'رخصة قيادة رقمية',
+            'verification_guidance' => 'امسح رمز الاستجابة السريعة للتحقق من صحة الرخصة.',
+        ],
+        'verification' => [
+            'valid' => 'الرخصة سارية وصحيحة.',
+            'invalid_status' => 'الرخصة غير سارية حالياً.',
+            'not_found' => 'تعذر التحقق من الرخصة.',
+        ],
     ],
 
     'fines' => [
@@ -352,6 +413,11 @@ return [
         'license_not_found' => 'الرخصة غير موجودة لهذا المواطن.',
         'not_found' => 'الغرامة غير موجودة.',
         'paid_cannot_cancel' => 'لا يمكن إلغاء غرامة مدفوعة.',
+        'statuses' => [
+            'unpaid' => 'غير مدفوعة',
+            'paid' => 'مدفوعة',
+            'cancelled' => 'ملغاة',
+        ],
     ],
 
     'notifications' => [

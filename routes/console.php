@@ -12,3 +12,8 @@ Artisan::command('inspire', function () {
 Schedule::command(ReconcilePendingPaymentsCommand::class)
     ->everyThirtyMinutes()
     ->withoutOverlapping();
+
+Schedule::command(\App\Console\Commands\SyncExpiredLicensesCommand::class)
+    ->dailyAt('00:15')
+    ->timezone(config('dlms.business_timezone', 'Asia/Damascus'))
+    ->withoutOverlapping();

@@ -2,6 +2,8 @@
 
 namespace App\Modules\Licenses\Resources;
 
+use App\Modules\Licenses\Support\LicenseEffectiveStatus;
+use App\Support\Msg;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,12 +15,19 @@ class LicenseResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $effective = LicenseEffectiveStatus::resolve($this->resource);
+
         return [
             'id' => $this->id,
             'license_number' => $this->license_number,
-            'status' => $this->status->value,
+            'status' => $effective->value,
+            'status_label' => Msg::get('licenses.statuses.'.$effective->value),
+            'stored_status' => $this->status->value,
+            'effective_status' => $effective->value,
             'issue_date' => $this->issue_date?->format('Y-m-d'),
             'expiry_date' => $this->expiry_date?->format('Y-m-d'),
+            'days_remaining' => LicenseEffectiveStatus::daysRemaining($this->resource),
+            'is_expiring_soon' => LicenseEffectiveStatus::isExpiringSoon($this->resource),
             'license_type' => $this->whenLoaded('licenseType', fn () => [
                 'id' => $this->licenseType->id,
                 'name' => $this->licenseType->name,

@@ -17,6 +17,7 @@ use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
 use App\Modules\Dashboard\Support\Reports\ReportVisibility;
 use App\Modules\Payments\Support\ApplicationFeeCatalog;
 use App\Support\EmployeeMessageTranslator;
+use App\Support\Msg;
 
 class DashboardReportOptionsService
 {
@@ -50,7 +51,7 @@ class DashboardReportOptionsService
         if ($visibility['applications']) {
             $options['application_statuses'] = $this->enumOptions(
                 ApplicationStatus::cases(),
-                'messages.employee.statuses.'
+                'employee.statuses.'
             );
             $options['service_types'] = $this->catalog(ServiceType::query()->orderBy('name')->get(['code', 'name']));
             $options['license_types'] = $this->catalog(LicenseType::query()->orderBy('name')->get(['code', 'name']));
@@ -58,24 +59,24 @@ class DashboardReportOptionsService
         }
 
         if ($visibility['tests'] || $visibility['appointments']) {
-            $options['test_results'] = array_map(
-                fn (TestResultStatus $s) => ['value' => $s->value, 'label' => $s->value],
-                TestResultStatus::cases()
+            $options['test_results'] = $this->enumOptions(
+                TestResultStatus::cases(),
+                'tests.statuses.'
             );
             $options['test_types'] ??= $this->catalog(TestType::query()->orderBy('name')->get(['code', 'name']));
         }
 
         if ($visibility['appointments']) {
-            $options['appointment_statuses'] = array_map(
-                fn (AppointmentStatus $s) => ['value' => $s->value, 'label' => $s->value],
-                AppointmentStatus::cases()
+            $options['appointment_statuses'] = $this->enumOptions(
+                AppointmentStatus::cases(),
+                'appointments.statuses.'
             );
         }
 
         if ($visibility['document_reviews']) {
-            $options['document_statuses'] = array_map(
-                fn (DocumentStatus $s) => ['value' => $s->value, 'label' => $s->value],
-                DocumentStatus::cases()
+            $options['document_statuses'] = $this->enumOptions(
+                DocumentStatus::cases(),
+                'documents.statuses.'
             );
         }
 
@@ -83,7 +84,7 @@ class DashboardReportOptionsService
             $options['payment_statuses'] = array_map(
                 fn (PaymentStatus $s) => [
                     'value' => $s->value,
-                    'label' => __('messages.payments.statuses.'.$s->value),
+                    'label' => Msg::get('payments.statuses.'.$s->value),
                 ],
                 PaymentStatus::cases()
             );
@@ -93,9 +94,9 @@ class DashboardReportOptionsService
         }
 
         if ($visibility['fines']) {
-            $options['fine_statuses'] = array_map(
-                fn (FineStatus $s) => ['value' => $s->value, 'label' => $s->value],
-                FineStatus::cases()
+            $options['fine_statuses'] = $this->enumOptions(
+                FineStatus::cases(),
+                'fines.statuses.'
             );
         }
 
@@ -136,7 +137,9 @@ class DashboardReportOptionsService
         return array_map(
             fn (\BackedEnum $case) => [
                 'value' => $case->value,
-                'label' => EmployeeMessageTranslator::get($labelPrefix.$case->value),
+                'label' => str_contains($labelPrefix, 'employee.')
+                    ? EmployeeMessageTranslator::get($labelPrefix.$case->value)
+                    : Msg::get($labelPrefix.$case->value),
             ],
             $cases
         );

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
+use App\Support\Msg;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +63,7 @@ class DocumentReviewService
                     $application,
                     ApplicationStatus::PaymentPending,
                     $reviewer,
-                    __('messages.documents.note_all_approved')
+                    Msg::get('documents.note_all_approved')
                 );
             }
 
@@ -81,8 +82,8 @@ class DocumentReviewService
                 'document' => $fresh,
                 'notification' => [
                     'user_id' => $application->citizen_id,
-                    'title' => __('messages.notifications.document_approved_title'),
-                    'body' => __('messages.notifications.document_approved_body'),
+                    'title' => Msg::get('notifications.document_approved_title'),
+                    'body' => Msg::get('notifications.document_approved_body'),
                     'type' => 'document.approved',
                     'data' => [
                         'document_id' => $document->id,
@@ -131,7 +132,7 @@ class DocumentReviewService
                 $application,
                 ApplicationStatus::DocumentsRejected,
                 $reviewer,
-                __('messages.documents.note_some_rejected'),
+                Msg::get('documents.note_some_rejected'),
                 $displayReason
             );
 
@@ -149,19 +150,19 @@ class DocumentReviewService
             );
 
             $fresh = $document->fresh(['requiredDocument', 'application']);
-            $documentName = $fresh?->requiredDocument?->name ?? __('messages.documents.generic_document_name');
+            $documentName = $fresh?->requiredDocument?->name ?? Msg::get('documents.generic_document_name');
             $applicationNumber = $application->application_number;
 
             $detailsSuffix = $details !== null
-                ? ' '.__('messages.notifications.document_rejected_details', ['details' => $details])
+                ? ' '.Msg::get('notifications.document_rejected_details', ['details' => $details])
                 : '';
 
             return [
                 'document' => $fresh,
                 'notification' => [
                     'user_id' => $application->citizen_id,
-                    'title' => __('messages.notifications.document_rejected_title'),
-                    'body' => __('messages.notifications.document_rejected_body', [
+                    'title' => Msg::get('notifications.document_rejected_title'),
+                    'body' => Msg::get('notifications.document_rejected_body', [
                         'document_name' => $documentName,
                         'application_number' => $applicationNumber,
                         'reason' => $reason->label(),

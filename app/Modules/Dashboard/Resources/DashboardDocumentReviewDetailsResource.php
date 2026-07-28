@@ -5,6 +5,7 @@ namespace App\Modules\Dashboard\Resources;
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentRejectionReason;
 use App\Enums\DocumentStatus;
+use App\Support\ArabicMessageTranslator;
 use App\Support\EmployeeMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -122,7 +123,7 @@ class DashboardDocumentReviewDetailsResource extends JsonResource
 
         return [
             'code' => $code?->value ?? $document->rejection_reason_code,
-            'label' => $code?->label() ?? ($document->rejection_reason ?: null),
+            'label' => $code?->label() ?? ArabicMessageTranslator::resolveStoredLabel($document->rejection_reason),
             'details' => $document->rejection_details,
         ];
     }

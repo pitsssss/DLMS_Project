@@ -18,6 +18,7 @@ use App\Modules\Payments\Controllers\StripeWebhookController;
 use App\Modules\Tests\Controllers\ApplicationTestResultController;
 use App\Modules\Fines\Controllers\FineController;
 use App\Modules\Licenses\Controllers\LicenseController;
+use App\Modules\Licenses\Controllers\LicenseVerificationController;
 use App\Modules\Notifications\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
 Route::get('/license-types', [LicenseTypeController::class, 'index']);
 Route::get('/service-types', [ServiceTypeController::class, 'index']);
 Route::get('/test-types', [TestTypeController::class, 'index']);
+
+Route::get('/licenses/verify/{verificationToken}', [LicenseVerificationController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->where('verificationToken', '[A-Za-z0-9]+');
 
 
 Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {

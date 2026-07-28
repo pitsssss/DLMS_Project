@@ -16,6 +16,7 @@ use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
 use App\Modules\Payments\Services\PaymentReconciliationService;
 use App\Modules\Payments\Support\ApplicationFeeCatalog;
 use App\Modules\Payments\Support\Money;
+use App\Support\Msg;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -117,14 +118,14 @@ class DashboardPaymentService
         $statuses = array_map(
             fn (PaymentStatus $s) => [
                 'value' => $s->value,
-                'label' => __('messages.payments.statuses.'.$s->value),
+                'label' => Msg::get('payments.statuses.'.$s->value),
             ],
             PaymentStatus::cases()
         );
 
         $providers = [
-            ['value' => 'mock', 'label' => __('messages.payments.providers.mock')],
-            ['value' => 'stripe', 'label' => __('messages.payments.providers.stripe')],
+            ['value' => 'mock', 'label' => Msg::get('payments.providers.mock')],
+            ['value' => 'stripe', 'label' => Msg::get('payments.providers.stripe')],
         ];
 
         $currencies = Payment::query()

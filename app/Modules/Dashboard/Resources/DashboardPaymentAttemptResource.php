@@ -3,6 +3,7 @@
 namespace App\Modules\Dashboard\Resources;
 
 use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
+use App\Support\Msg;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +25,7 @@ class DashboardPaymentAttemptResource extends JsonResource
             'failed_at' => $this->failed_at?->toIso8601String(),
             'failure' => $this->failure_code ? [
                 'code' => $this->failure_code,
-                'message' => $this->failure_message ?? __('messages.payments.failure_codes.'.$this->failure_code),
+                'message' => $this->failure_message ?? Msg::get('payments.failure_codes.'.$this->failure_code),
             ] : null,
         ];
     }

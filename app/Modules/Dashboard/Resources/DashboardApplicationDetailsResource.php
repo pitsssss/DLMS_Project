@@ -2,11 +2,13 @@
 
 namespace App\Modules\Dashboard\Resources;
 
+use App\Enums\DocumentRejectionReason;
 use App\Models\LicenseApplication;
 use App\Models\LicenseType;
 use App\Models\ServiceType;
 use App\Models\TestType;
 use App\Models\User;
+use App\Support\ArabicMessageTranslator;
 use App\Support\EmployeeMessageTranslator;
 use BackedEnum;
 use Carbon\CarbonInterface;
@@ -374,7 +376,12 @@ class DashboardApplicationDetailsResource extends JsonResource
 
             'profile_status' => $this->profileStatusLabel($valueAsString),
 
-            default => $valueAsString,
+            'rejection_reason_label' => ArabicMessageTranslator::resolveStoredLabel($valueAsString),
+
+            'rejection_reason_code' => DocumentRejectionReason::tryFrom($valueAsString)?->label()
+                ?? ArabicMessageTranslator::resolveStoredLabel($valueAsString),
+
+            default => ArabicMessageTranslator::resolveStoredLabel($valueAsString) ?? $valueAsString,
         };
     }
 

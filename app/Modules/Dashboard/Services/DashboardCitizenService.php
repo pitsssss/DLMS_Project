@@ -14,6 +14,7 @@ use App\Modules\Auth\Repositories\AuthRepository;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
 use App\Support\EmployeeMessageTranslator;
+use App\Support\Msg;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -163,8 +164,8 @@ class DashboardCitizenService
         try {
             $this->notifications->sendToUser(
                 $citizen->id,
-                __('messages.notifications.account_activated_title'),
-                __('messages.notifications.account_activated_body'),
+                Msg::get('notifications.account_activated_title'),
+                Msg::get('notifications.account_activated_body'),
                 'account.activated',
             );
         } catch (\Throwable) {
@@ -215,8 +216,8 @@ class DashboardCitizenService
         try {
             $this->notifications->sendToUser(
                 $citizen->id,
-                __('messages.notifications.account_deactivated_title'),
-                __('messages.notifications.account_deactivated_body', ['reason' => $reason]),
+                Msg::get('notifications.account_deactivated_title'),
+                Msg::get('notifications.account_deactivated_body', ['reason' => $reason]),
                 'account.deactivated',
             );
         } catch (\Throwable) {

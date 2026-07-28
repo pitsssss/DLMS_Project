@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Support\Msg;
+
 enum DocumentRejectionReason: string
 {
     case UnclearDocument = 'unclear_document';
@@ -12,7 +14,7 @@ enum DocumentRejectionReason: string
 
     public function label(): string
     {
-        return __('messages.documents.rejection_reasons.'.$this->value);
+        return Msg::get('documents.rejection_reasons.'.$this->value);
     }
 
     public function requiresDetails(): bool

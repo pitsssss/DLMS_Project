@@ -5,6 +5,7 @@ namespace App\Modules\Dashboard\Support;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Support\EmployeeMessageTranslator;
+use App\Support\Msg;
 use App\Modules\Payments\Support\Money;
 
 final class DashboardPaymentPresenter
@@ -23,7 +24,7 @@ final class DashboardPaymentPresenter
 
         return [
             'value' => $value,
-            'label' => __('messages.payments.statuses.'.$value),
+            'label' => Msg::get('payments.statuses.'.$value),
         ];
     }
 
@@ -33,11 +34,11 @@ final class DashboardPaymentPresenter
     public static function provider(string $provider): array
     {
         $key = 'messages.payments.providers.'.$provider;
-        $label = __($key);
+        $label = Msg::get('payments.providers.'.$provider);
 
         return [
             'value' => $provider,
-            'label' => $label === $key ? $provider : $label,
+            'label' => $label,
         ];
     }
 
@@ -63,7 +64,7 @@ final class DashboardPaymentPresenter
         $code = strtoupper(trim($currency));
 
         return match ($code) {
-            'USD' => __('messages.payments.currencies.usd'),
+            'USD' => Msg::get('payments.currencies.usd'),
             default => $code,
         };
     }

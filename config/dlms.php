@@ -14,4 +14,9 @@ return [
 
     'business_timezone' => env('BUSINESS_TIMEZONE', 'Asia/Damascus'),
 
+    'licenses' => [
+        'expiring_soon_days' => (int) env('LICENSE_EXPIRING_SOON_DAYS', 90),
+        'verification_url_path' => '/api/licenses/verify',
+    ],
+
 ];

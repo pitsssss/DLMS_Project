@@ -2,30 +2,19 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Lang;
-
 class EmployeeMessageTranslator
 {
-    private const LOCALE = 'ar';
-
     public static function get(string $key, array $replace = []): string
     {
         $fullKey = str_starts_with($key, 'messages.') ? $key : 'messages.'.$key;
 
-        if (Lang::has($fullKey, self::LOCALE)) {
-            $translated = Lang::get($fullKey, $replace, self::LOCALE);
+        $translated = ArabicMessageTranslator::resolve($fullKey, $replace);
 
-            if (is_string($translated) && ! self::looksLikeUnresolvedKey($translated, $fullKey)) {
-                return $translated;
-            }
+        if ($translated !== null) {
+            return $translated;
         }
 
         return self::fallback($fullKey, $replace);
-    }
-
-    private static function looksLikeUnresolvedKey(string $translated, string $fullKey): bool
-    {
-        return $translated === $fullKey || str_starts_with($translated, 'messages.');
     }
 
     private static function fallback(string $fullKey, array $replace): string

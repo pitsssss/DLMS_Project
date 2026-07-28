@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Support\Msg;
+
 enum PaymentFailureCode: string
 {
     case CheckoutCreationFailed = 'checkout_creation_failed';
@@ -18,6 +20,6 @@ enum PaymentFailureCode: string
 
     public function label(): string
     {
-        return __('messages.payments.failure_codes.'.$this->value);
+        return Msg::get('payments.failure_codes.'.$this->value);
     }
 }

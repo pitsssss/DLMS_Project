@@ -31,8 +31,20 @@ class DashboardReportLicensesService
         $base = $this->filteredQuery($context, $filters);
 
         $issued = (clone $base)->count();
-        $active = (clone $base)->where('status', LicenseStatus::Active)->count();
-        $expired = (clone $base)->where('status', LicenseStatus::Expired)->count();
+        $today = $this->clock->now()->toDateString();
+        $active = (clone $base)
+            ->where('status', LicenseStatus::Active)
+            ->where('expiry_date', '>=', $today)
+            ->count();
+        $expired = (clone $base)
+            ->where(function ($q) use ($today): void {
+                $q->where('status', LicenseStatus::Expired)
+                    ->orWhere(function ($inner) use ($today): void {
+                        $inner->where('status', LicenseStatus::Active)
+                            ->where('expiry_date', '<', $today);
+                    });
+            })
+            ->count();
         $suspended = (clone $base)->whereIn('status', [LicenseStatus::Suspended, LicenseStatus::Blocked])->count();
         $renewed = (clone $base)->where('status', LicenseStatus::Renewed)->count();
 
@@ -107,6 +119,8 @@ class DashboardReportLicensesService
             ->paginate($perPage);
 
         $rows = collect($paginator->items())->map(function (License $license) {
+            $effective = \App\Modules\Licenses\Support\LicenseEffectiveStatus::resolve($license);
+
             return [
                 'license_number' => $license->license_number,
                 'citizen' => $license->citizen
@@ -115,7 +129,8 @@ class DashboardReportLicensesService
                 'license_type' => $license->licenseType
                     ? ['code' => $license->licenseType->code, 'name' => $license->licenseType->name]
                     : null,
-                'status' => $license->status->value,
+                'status' => $effective->value,
+                'status_label' => \App\Support\Msg::get('licenses.statuses.'.$effective->value),
                 'issue_date' => $license->issue_date?->toDateString(),
                 'expiry_date' => $license->expiry_date?->toDateString(),
                 'service_type' => $license->application?->serviceType
