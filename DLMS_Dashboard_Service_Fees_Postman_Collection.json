@@ -1,0 +1,203 @@
+{
+  "info": {
+    "_postman_id": "dlms-dashboard-service-fees",
+    "name": "DLMS Dashboard Service Fees Management",
+    "description": "Dashboard fee catalog management: list, stats, options, CRUD, activate/deactivate, audit logs, and error examples.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "dashboard_token", "value": "" },
+    { "key": "fee_id", "value": "1" },
+    { "key": "fee_version", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Dashboard Service Fees Management",
+      "item": [
+        {
+          "name": "List fees",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees?page=1&per_page=20"
+          }
+        },
+        {
+          "name": "List search and filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees?search=تقديم&code=application_fee&is_active=1&currency=USD&license_type_code=private&service_type_code=new_license"
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees/stats"
+          }
+        },
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees/options"
+          }
+        },
+        {
+          "name": "Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}"
+          }
+        },
+        {
+          "name": "Create application fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"application_fee\",\n  \"name\": \"رسوم تقديم الطلب\",\n  \"amount\": \"50.00\",\n  \"currency\": \"USD\",\n  \"license_type_code\": \"private\",\n  \"reason\": \"تهيئة أولية\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees"
+          }
+        },
+        {
+          "name": "Update fee with version",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": {{fee_version}},\n  \"name\": \"رسوم محدّثة\",\n  \"amount\": \"55.00\",\n  \"reason\": \"تعديل سعر معتمد\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}"
+          }
+        },
+        {
+          "name": "Activate fee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"إعادة تفعيل\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}/activate"
+          }
+        },
+        {
+          "name": "Deactivate fee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"تعطيل مؤقت\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}/deactivate"
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}/audit-logs?per_page=20"
+          }
+        },
+        {
+          "name": "401 Unauthorized (no token)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/dashboard/fees"
+          }
+        },
+        {
+          "name": "403 Forbidden (missing permission)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "description": "Use a dashboard token for a role without manage_settings.",
+            "url": "{{base_url}}/dashboard/fees"
+          }
+        },
+        {
+          "name": "409 Stale version",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 999,\n  \"amount\": \"60.00\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees/{{fee_id}}"
+          }
+        },
+        {
+          "name": "422 Validation error (float amount)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"renewal_fee\",\n  \"name\": \"رسوم\",\n  \"amount\": 40.5,\n  \"currency\": \"USD\",\n  \"service_type_code\": \"renew_license\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/fees"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -148,13 +148,7 @@ class DashboardPaymentService
             ->all();
 
         $feeTypes = Fee::query()
-            ->whereIn('code', [
-                'application_fee',
-                'renewal_fee',
-                'lost_replacement_fee',
-                'damaged_replacement_fee',
-                'unblock_fee',
-            ])
+            ->whereIn('code', ApplicationFeeCatalog::payableCodes())
             ->select('code', 'name')
             ->distinct()
             ->orderBy('code')
@@ -435,13 +429,7 @@ class DashboardPaymentService
     {
         $fees = Fee::query()
             ->where('is_active', true)
-            ->whereIn('code', [
-                'application_fee',
-                'renewal_fee',
-                'lost_replacement_fee',
-                'damaged_replacement_fee',
-                'unblock_fee',
-            ])
+            ->whereIn('code', ApplicationFeeCatalog::payableCodes())
             ->get();
 
         $map = [];

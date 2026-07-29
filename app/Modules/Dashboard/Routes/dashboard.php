@@ -6,6 +6,7 @@ use App\Modules\Dashboard\Controllers\DashboardAuthController;
 use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
+use App\Modules\Dashboard\Controllers\DashboardFeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardIssuedLicenseController;
 use App\Modules\Dashboard\Controllers\DashboardOverviewController;
@@ -187,5 +188,15 @@ Route::prefix('dashboard')
             Route::patch('/service-types/{serviceType}', [DashboardServiceTypeController::class, 'update'])->whereNumber('serviceType');
             Route::patch('/service-types/{serviceType}/activate', [DashboardServiceTypeController::class, 'activate'])->whereNumber('serviceType');
             Route::patch('/service-types/{serviceType}/deactivate', [DashboardServiceTypeController::class, 'deactivate'])->whereNumber('serviceType');
+
+            Route::get('/fees', [DashboardFeeController::class, 'index']);
+            Route::get('/fees/stats', [DashboardFeeController::class, 'stats']);
+            Route::get('/fees/options', [DashboardFeeController::class, 'options']);
+            Route::post('/fees', [DashboardFeeController::class, 'store']);
+            Route::get('/fees/{fee}', [DashboardFeeController::class, 'show'])->whereNumber('fee');
+            Route::patch('/fees/{fee}', [DashboardFeeController::class, 'update'])->whereNumber('fee');
+            Route::patch('/fees/{fee}/activate', [DashboardFeeController::class, 'activate'])->whereNumber('fee');
+            Route::patch('/fees/{fee}/deactivate', [DashboardFeeController::class, 'deactivate'])->whereNumber('fee');
+            Route::get('/fees/{fee}/audit-logs', [DashboardFeeController::class, 'auditLogs'])->whereNumber('fee');
         });
     });

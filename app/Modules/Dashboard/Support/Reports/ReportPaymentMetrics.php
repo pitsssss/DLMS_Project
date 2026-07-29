@@ -9,6 +9,7 @@ use App\Models\LicenseApplication;
 use App\Models\Payment;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Dashboard\Support\DashboardPaymentPresenter;
+use App\Modules\Payments\Support\ApplicationFeeCatalog;
 use App\Modules\Payments\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -130,13 +131,7 @@ final class ReportPaymentMetrics
     {
         $fees = Fee::query()
             ->where('is_active', true)
-            ->whereIn('code', [
-                'application_fee',
-                'renewal_fee',
-                'lost_replacement_fee',
-                'damaged_replacement_fee',
-                'unblock_fee',
-            ])
+            ->whereIn('code', ApplicationFeeCatalog::payableCodes())
             ->get();
 
         $map = [];
