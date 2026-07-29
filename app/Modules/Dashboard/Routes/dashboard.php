@@ -6,6 +6,7 @@ use App\Modules\Dashboard\Controllers\DashboardAuthController;
 use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
+use App\Modules\Dashboard\Controllers\DashboardAppointmentSlotController;
 use App\Modules\Dashboard\Controllers\DashboardFeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardIssuedLicenseController;
@@ -67,6 +68,23 @@ Route::prefix('dashboard')
                     Route::get('/employees', [DashboardReportController::class, 'employees']);
                 });
             });
+
+        // Appointment times management (slot availability)
+        Route::middleware('permission:view_appointments,manage_appointments')->group(function (): void {
+            Route::get('/appointment-slots', [DashboardAppointmentSlotController::class, 'index']);
+            Route::get('/appointment-slots/stats', [DashboardAppointmentSlotController::class, 'stats']);
+            Route::get('/appointment-slots/options', [DashboardAppointmentSlotController::class, 'options']);
+            Route::get('/appointment-slots/{slot}', [DashboardAppointmentSlotController::class, 'show'])->whereNumber('slot');
+            Route::get('/appointment-slots/{slot}/bookings', [DashboardAppointmentSlotController::class, 'bookings'])->whereNumber('slot');
+            Route::get('/appointment-slots/{slot}/audit-logs', [DashboardAppointmentSlotController::class, 'auditLogs'])->whereNumber('slot');
+        });
+
+        Route::middleware('permission:manage_appointments')->group(function (): void {
+            Route::post('/appointment-slots', [DashboardAppointmentSlotController::class, 'store']);
+            Route::patch('/appointment-slots/{slot}', [DashboardAppointmentSlotController::class, 'update'])->whereNumber('slot');
+            Route::patch('/appointment-slots/{slot}/activate', [DashboardAppointmentSlotController::class, 'activate'])->whereNumber('slot');
+            Route::patch('/appointment-slots/{slot}/deactivate', [DashboardAppointmentSlotController::class, 'deactivate'])->whereNumber('slot');
+        });
 
         Route::middleware('permission:view_roles')->group(function (): void {
             Route::get('/roles', [DashboardRoleController::class, 'index']);

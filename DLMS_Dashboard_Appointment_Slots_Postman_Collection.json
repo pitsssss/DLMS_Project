@@ -1,0 +1,231 @@
+{
+  "info": {
+    "_postman_id": "dlms-dashboard-appointment-slots",
+    "name": "DLMS Dashboard Appointment Times Management",
+    "description": "Dashboard appointment slot management: list, stats, options, CRUD, activate/deactivate, bookings, audit logs, and error examples.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "dashboard_token", "value": "" },
+    { "key": "slot_id", "value": "1" },
+    { "key": "slot_version", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Dashboard Appointment Times Management",
+      "item": [
+        {
+          "name": "List appointment slots",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots?page=1&per_page=20"
+          }
+        },
+        {
+          "name": "List with filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots?search=المركز&test_type_code=vision&availability=available&is_active=1&date_from=2026-07-29&date_to=2026-08-29"
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots/stats"
+          }
+        },
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots/options"
+          }
+        },
+        {
+          "name": "Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}"
+          }
+        },
+        {
+          "name": "Create slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"test_type_id\": 1,\n  \"appointment_center_id\": 1,\n  \"date\": \"2026-08-15\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"capacity\": 5,\n  \"location\": \"قاعة 1\",\n  \"reason\": \"إضافة موعد جديد\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots"
+          }
+        },
+        {
+          "name": "Update slot with version",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": {{slot_version}},\n  \"capacity\": 8,\n  \"location\": \"قاعة 2\",\n  \"reason\": \"تعديل السعة\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}"
+          }
+        },
+        {
+          "name": "Activate slot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"إعادة تفعيل\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}/activate"
+          }
+        },
+        {
+          "name": "Deactivate slot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"إغلاق مؤقت للصيانة\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}/deactivate"
+          }
+        },
+        {
+          "name": "Bookings inside slot",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}/bookings?status=booked&per_page=20"
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}/audit-logs?per_page=20"
+          }
+        },
+        {
+          "name": "401 Unauthorized (no token)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots"
+          }
+        },
+        {
+          "name": "403 Forbidden (citizen token)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/dashboard/appointment-slots"
+          }
+        },
+        {
+          "name": "409 Stale version example",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 999,\n  \"location\": \"قاعة قديمة\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}"
+          }
+        },
+        {
+          "name": "422 Deactivate without reason",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots/{{slot_id}}/deactivate"
+          }
+        },
+        {
+          "name": "422 Duplicate slot example",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"test_type_id\": 1,\n  \"appointment_center_id\": 1,\n  \"date\": \"2026-08-15\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"capacity\": 5\n}"
+            },
+            "url": "{{base_url}}/dashboard/appointment-slots"
+          }
+        }
+      ]
+    }
+  ]
+}

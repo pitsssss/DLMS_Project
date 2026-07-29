@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Modules\Appointments\Repositories\AppointmentRepository;
 use App\Modules\Appointments\Repositories\AppointmentSlotRepository;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Services\AuditLogService;
+use App\Support\BusinessClock;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +25,9 @@ class AppointmentService
         private readonly ApplicationRepository $applications,
         private readonly AppointmentRepository $appointments,
         private readonly AppointmentSlotRepository $slots,
-        private readonly TestProgressionService $progression
+        private readonly TestProgressionService $progression,
+        private readonly AuditLogService $auditLogs,
+        private readonly BusinessClock $clock,
     ) {}
 
     /**
@@ -97,9 +101,11 @@ class AppointmentService
                 ->with(['testType', 'appointmentCenter'])
                 ->first();
 
+            $businessToday = $this->clock->now()->toDateString();
+
             if ($slot === null
                 || ! $slot->is_active
-                || $slot->date->format('Y-m-d') < now()->toDateString()
+                || $slot->date->format('Y-m-d') < $businessToday
                 || $slot->booked_count >= $slot->capacity) {
                 throw new ApiException('messages.appointments.slot_unavailable', 422);
             }
@@ -160,16 +166,39 @@ class AppointmentService
                 throw new ApiException('messages.appointments.only_booked_reschedule', 422);
             }
 
-            $newSlot = $this->slots->findAvailableForBooking($newAppointmentSlotId, $appointment->test_type_id);
-            if ($newSlot === null) {
-                throw new ApiException('messages.appointments.slot_not_available', 422);
-            }
-
-            if ($newSlot->id === $appointment->appointment_slot_id) {
+            $oldSlotId = (int) $appointment->appointment_slot_id;
+            if ($newAppointmentSlotId === $oldSlotId) {
                 return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
             }
 
-            $oldSlot = AppointmentSlot::query()->whereKey($appointment->appointment_slot_id)->lockForUpdate()->firstOrFail();
+            $slotIds = [$oldSlotId, $newAppointmentSlotId];
+            sort($slotIds, SORT_NUMERIC);
+
+            $lockedSlots = AppointmentSlot::query()
+                ->whereIn('id', $slotIds)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            $oldSlot = $lockedSlots->get($oldSlotId);
+            $newSlot = $lockedSlots->get($newAppointmentSlotId);
+            $businessToday = $this->clock->now()->toDateString();
+
+            if ($newSlot === null
+                || ! $newSlot->is_active
+                || $newSlot->test_type_id !== $appointment->test_type_id
+                || $newSlot->date->format('Y-m-d') < $businessToday
+                || $newSlot->booked_count >= $newSlot->capacity) {
+                throw new ApiException('messages.appointments.slot_not_available', 422);
+            }
+
+            if ($oldSlot === null) {
+                throw new ApiException('messages.appointments.slot_unavailable', 422);
+            }
+
+            $oldSnapshot = $this->slotAuditSnapshot($oldSlot);
+
             if ($oldSlot->booked_count > 0) {
                 $oldSlot->decrement('booked_count');
             }
@@ -181,6 +210,16 @@ class AppointmentService
             $appointment->appointment_slot_id = $newSlot->id;
             $appointment->scheduled_at = $scheduledAt;
             $appointment->save();
+
+            $this->auditLogs->log(
+                $citizen,
+                'appointment.rescheduled',
+                'appointment',
+                $appointment->id,
+                $oldSnapshot,
+                $this->slotAuditSnapshot($newSlot),
+                request(),
+            );
 
             return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
@@ -213,8 +252,42 @@ class AppointmentService
             $appointment->cancellation_reason = $reason;
             $appointment->save();
 
+            $this->auditLogs->log(
+                $citizen,
+                'appointment.cancelled',
+                'appointment',
+                $appointment->id,
+                [
+                    'status' => AppointmentStatus::Booked->value,
+                    'appointment_slot_id' => $slot->id,
+                ],
+                [
+                    'appointment_id' => $appointment->id,
+                    'appointment_slot_id' => $slot->id,
+                    'reason' => $reason,
+                    'cancelled_at' => $appointment->cancelled_at?->toIso8601String(),
+                    'status' => AppointmentStatus::Cancelled->value,
+                ],
+                request(),
+            );
+
             return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
         });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function slotAuditSnapshot(AppointmentSlot $slot): array
+    {
+        return [
+            'appointment_slot_id' => $slot->id,
+            'date' => $slot->date->format('Y-m-d'),
+            'start_time' => (string) $slot->start_time,
+            'end_time' => (string) $slot->end_time,
+            'test_type_id' => $slot->test_type_id,
+            'appointment_center_id' => $slot->appointment_center_id,
+        ];
     }
 
     private function requireOwnedApplication(User $citizen, int $applicationId): LicenseApplication
