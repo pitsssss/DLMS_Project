@@ -18,3 +18,7 @@ Route::post('/actions/{action}/confirm', [AIAgentController::class, 'confirmActi
 Route::post('/actions/{action}/cancel', [AIAgentController::class, 'cancelAction'])
     ->whereNumber('action')
     ->middleware('throttle:20,1');
+
+Route::post('/sessions/{session}/documents', [AIAgentController::class, 'uploadSessionDocument'])
+    ->whereNumber('session')
+    ->middleware('throttle:20,1');

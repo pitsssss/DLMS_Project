@@ -4,8 +4,10 @@ namespace App\Modules\AIAgent\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\AIAgent\Requests\SendAgentMessageRequest;
+use App\Modules\AIAgent\Requests\UploadAgentDocumentRequest;
 use App\Modules\AIAgent\Resources\AIAgentSessionResource;
 use App\Modules\AIAgent\Services\AIAgentActionService;
+use App\Modules\AIAgent\Services\AgentDocumentUploadService;
 use App\Modules\AIAgent\Services\AIAgentService;
 use Illuminate\Http\Request;
 
@@ -66,5 +68,23 @@ class AIAgentController extends Controller
         $data = $actions->cancel($request->user(), $action);
 
         return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
+    }
+
+    public function uploadSessionDocument(
+        UploadAgentDocumentRequest $request,
+        int $session,
+        AgentDocumentUploadService $uploadService
+    ) {
+        $validated = $request->validated();
+
+        $data = $uploadService->upload(
+            $request->user(),
+            $session,
+            (int) $validated['application_id'],
+            (int) $validated['required_document_id'],
+            $request->file('file')
+        );
+
+        return $this->successResponse($data, 'messages.documents.uploaded');
     }
 }

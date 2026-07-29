@@ -36,6 +36,8 @@ class AgentActionReplyBuilder
             'get_appointment_slots' => $this->appointmentHandler->replyFromSlotsResult($result),
             'get_current_appointments' => $this->appointmentHandler->replyFromCurrentAppointmentsResult($result),
             'book_appointment' => $this->bookAppointmentReply($result),
+            'get_test_results' => $this->testResultsReply($result),
+            'submit_documents_for_review' => $this->submitDocumentsReply($result),
             default => 'تم تنفيذ العملية بنجاح.',
         };
     }
@@ -171,5 +173,49 @@ class AgentActionReplyBuilder
         return $count === 0
             ? 'لا توجد رخص قيادة صادرة على حسابك حالياً.'
             : "لديك {$count} رخصة/رخص مسجلة. يمكنك مراجعة التفاصيل في النتيجة.";
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function testResultsReply(array $result): string
+    {
+        $items = is_array($result['items'] ?? null) ? $result['items'] : [];
+
+        if ($items === []) {
+            return 'لا توجد نتائج اختبار مسجلة لهذا الطلب حالياً.';
+        }
+
+        $lines = collect($items)
+            ->map(function (array $item): string {
+                $testName = trim((string) ($item['test_type']['name'] ?? 'الاختبار'));
+                $status = (string) ($item['result'] ?? '');
+                $translated = $status !== '' ? __('messages.tests.result_'.$status) : '';
+                $attempt = (string) ($item['attempt_number'] ?? '');
+                $date = trim((string) ($item['recorded_at'] ?? ''));
+
+                $datePart = $date !== '' ? substr($date, 0, 10) : '';
+                $suffix = $datePart !== '' ? " بتاريخ {$datePart}" : '';
+
+                $attemptPart = $attempt !== '' ? " (المحاولة {$attempt})" : '';
+
+                return "- {$testName}: {$translated}{$attemptPart}{$suffix}.";
+            })
+            ->implode("\n");
+
+        return "هذه نتائج الاختبارات المسجلة لديك:\n{$lines}";
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function submitDocumentsReply(array $result): string
+    {
+        $number = trim((string) ($result['application_number'] ?? ''));
+        $status = trim((string) ($result['status_label_ar'] ?? 'قيد المراجعة'));
+
+        return $number !== ''
+            ? "تم إرسال وثائق طلب {$number} للمراجعة. حالة الطلب الآن: {$status}."
+            : "تم إرسال وثائق طلبك للمراجعة. حالة الطلب الآن: {$status}.";
     }
 }

@@ -109,6 +109,13 @@ class AgentWorkflowIntentCatalog
                 'action_name' => 'get_test_results',
                 'suggested_followups' => ['get_application_status'],
             ],
+            AgentIntent::SubmitDocumentsForReview->value => [
+                'intent' => AgentIntent::SubmitDocumentsForReview->value,
+                'requires_application' => true,
+                'read_only' => false,
+                'action_name' => 'submit_documents_for_review',
+                'suggested_followups' => ['get_application_next_step', 'get_required_documents'],
+            ],
             AgentIntent::CreateNewLicenseApplication->value => [
                 'intent' => AgentIntent::CreateNewLicenseApplication->value,
                 'requires_application' => false,

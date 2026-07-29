@@ -503,7 +503,7 @@ Phase 9 adds a **controlled AI agent** for citizens — not a generic chatbot. T
 | --------- | ----- |
 | **9A (current)** | Foundation: Gemini integration, intent/slot handling, sessions/messages/actions/evaluations, **proposed actions only** (no execution). |
 | **9B (current — batch 1)** | Confirm/cancel endpoints; safe read/create actions via existing services. |
-| **9B (later)** | Payments, appointments, document submission via AI agent. |
+| **9B (later)** | Payments, appointments, and reschedule/cancel via AI agent. |
 | **9C (future)** | Admin monitoring APIs and analytics reports. |
 
 ## Phase 9A limitations
@@ -549,6 +549,7 @@ Configuration is read from `config/ai.php`. **Never expose `GEMINI_API_KEY` to t
 | POST | `/api/ai-agent/message` | Send a message; creates or continues a session. |
 | GET | `/api/ai-agent/sessions` | List the citizen’s AI sessions. |
 | GET | `/api/ai-agent/sessions/{session}` | Show session messages and proposed actions. |
+| POST | `/api/ai-agent/sessions/{session}/documents` | Upload a required document inside an AI agent session (multipart/form-data). |
 
 Example `POST /api/ai-agent/message` response:
 
@@ -579,11 +580,41 @@ Citizens can confirm or cancel their own pending actions:
 | POST | `/api/ai-agent/actions/{action}/confirm` | Confirm and execute an action in `awaiting_confirmation`. |
 | POST | `/api/ai-agent/actions/{action}/cancel` | Cancel a pending action. |
 
-**Executable in this batch:** `create_application`, `get_application_status`, `get_required_documents`, `get_fines`, `get_licenses`.
+**Executable in this batch:** `create_application`, `get_application_status`, `get_required_documents`, `get_fines`, `get_licenses`, `get_test_results` (read-only), `submit_documents_for_review` (requires confirmation).
 
-**Not yet executable via AI agent:** payments, appointments, document submission, reschedule/cancel appointment.
+**Not yet executable via AI agent:** payments, appointments, reschedule/cancel appointment.
 
 Execution uses existing services only (`ApplicationService`, `ApplicationDocumentService`, `FineService`, `LicenseService`). Admin-only actions are rejected with **403** and marked `failed`.
+
+## AI Agent Phase 2 — Document Upload Workflow
+
+Citizens can upload required documents from inside the chat UI via:
+
+`POST /api/ai-agent/sessions/{session}/documents`
+
+### Request (multipart/form-data)
+- `application_id` (int)
+- `required_document_id` (int)
+- `file` (uploaded file)
+
+### Behavior
+- Upload uses the same `ApplicationDocumentService::upload()` rules as the REST document endpoints.
+- The AI agent does **not** analyze or read the file content (Gemini is not used for the upload endpoint).
+- Upload does **not** transition the application automatically to `documents_under_review`.
+  - `Draft` stays `Draft`
+  - `DocumentsRejected` stays `DocumentsRejected`
+- A later citizen message/confirmation can still propose/execute `submit_documents_for_review` (Phase 9B confirm flow).
+
+### Response (data)
+The endpoint returns a stable checklist payload (completed/missing/rejected/pending_review), plus:
+- `checklist.all_required_uploaded`
+- `checklist.can_submit_for_review`
+- `agent_reply` (instructional text for the next step)
+
+### Errors (typical)
+- `401` if not authenticated as citizen
+- `404` if session/application not found for this citizen
+- `422` if the file is invalid (type/extension/size) or if the application status does not allow edits
 
 ### End-to-end citizen flow
 

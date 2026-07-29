@@ -11,6 +11,7 @@ use App\Models\TestType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Applications\Resources\ApplicationResource;
 use App\Modules\Applications\Services\ApplicationDocumentService;
@@ -23,9 +24,35 @@ use App\Modules\Fines\Resources\FineResource;
 use App\Modules\Fines\Services\FineService;
 use App\Modules\Licenses\Resources\LicenseResource;
 use App\Modules\Licenses\Services\LicenseService;
+use App\Modules\Tests\Resources\TestResultResource;
+use App\Modules\Tests\Services\TestResultService;
 
 class AgentActionExecutor
 {
+    /**
+     * Keep this list in sync with the switch in execute().
+     * Used by Phase 1 tests to ensure every allowed proposed action is actually executable.
+     *
+     * @var list<string>
+     */
+    public const SUPPORTED_ACTION_NAMES = [
+        'create_application',
+        'get_application_status',
+        'get_application_next_step',
+        'get_required_documents',
+        'get_application_fee',
+        'get_profile_status',
+        'get_fines',
+        'get_licenses',
+        'get_available_tests',
+        'get_appointment_slots',
+        'get_current_appointments',
+        'book_appointment',
+        'get_test_results',
+        'start_payment',
+        'submit_documents_for_review',
+    ];
+
     public function __construct(
         private readonly ApplicationService $applications,
         private readonly ApplicationDocumentService $documents,
@@ -35,6 +62,7 @@ class AgentActionExecutor
         private readonly AgentApplicationNextStepService $nextStepService,
         private readonly ApplicationPaymentService $payments,
         private readonly AppointmentService $appointments,
+        private readonly TestResultService $testResults,
         private readonly TestProgressionService $progression,
     ) {}
 
@@ -71,6 +99,8 @@ class AgentActionExecutor
             'get_appointment_slots' => $this->executeGetAppointmentSlots($user, $arguments),
             'get_current_appointments' => $this->executeGetCurrentAppointments($user, $arguments),
             'book_appointment' => $this->executeBookAppointment($user, $arguments),
+            'get_test_results' => $this->executeGetTestResults($user, $arguments),
+            'submit_documents_for_review' => $this->executeSubmitDocumentsForReview($user, $arguments),
             default => throw new ApiException('Unsupported AI agent action.', 422),
         };
     }
@@ -326,6 +356,41 @@ class AgentActionExecutor
     }
 
     /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetTestResults(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+
+        $results = $this->testResults->listForApplication($user, $applicationId);
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'items' => TestResultResource::collection($results)->resolve(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeSubmitDocumentsForReview(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->documents->submitForReview($user, $applicationId);
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'status' => $application->status->value,
+            'status_label_ar' => ApplicationStatusLabelMapper::labelAr($application->status),
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function formatAppointmentForAgent(
@@ -461,6 +526,11 @@ class AgentActionExecutor
 
     private function requiresApprovedProfile(string $actionName): bool
     {
-        return in_array($actionName, ['create_application', 'start_payment', 'book_appointment'], true);
+        return in_array($actionName, [
+            'create_application',
+            'start_payment',
+            'book_appointment',
+            'submit_documents_for_review',
+        ], true);
     }
 }

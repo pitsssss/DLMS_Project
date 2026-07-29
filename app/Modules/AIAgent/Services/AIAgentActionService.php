@@ -4,11 +4,13 @@ namespace App\Modules\AIAgent\Services;
 
 use App\Exceptions\ApiException;
 use App\Models\User;
+use App\Models\LicenseApplication;
 use App\Modules\AIAgent\Enums\AgentActionStatus;
 use App\Modules\AIAgent\Enums\AgentMessageRole;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\Applications\Services\ApplicationDocumentService;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +19,8 @@ class AIAgentActionService
     public function __construct(
         private readonly AgentActionExecutor $executor,
         private readonly AgentActionReplyBuilder $replyBuilder,
+        private readonly AgentApplicationActionPolicy $applicationPolicy,
+        private readonly ApplicationDocumentService $documents,
         private readonly AgentEvaluationService $evaluationService,
     ) {}
 
@@ -39,11 +43,13 @@ class AIAgentActionService
             throw new ApiException('This action cannot be executed yet. Please use the standard API endpoints.', 422);
         }
 
-        $action->status = AgentActionStatus::Confirmed;
-        $action->confirmed_at = now();
-        $action->save();
-
         try {
+            $this->assertMutatingActionStillAllowed($user, $action);
+
+            $action->status = AgentActionStatus::Confirmed;
+            $action->confirmed_at = now();
+            $action->save();
+
             $result = $this->executor->execute($user, $action);
 
             $action->status = AgentActionStatus::Executed;
@@ -186,6 +192,85 @@ class AIAgentActionService
         };
 
         throw new ApiException($message, 422);
+    }
+
+    /**
+     * For confirmed mutating actions, validate against the current DB state.
+     *
+     * @throws ApiException
+     */
+    private function assertMutatingActionStillAllowed(User $user, AIAgentAction $action): void
+    {
+        if (! in_array($action->action_name, [
+            'start_payment',
+            'book_appointment',
+            'submit_documents_for_review',
+        ], true)) {
+            return;
+        }
+
+        $applicationId = $action->arguments['application_id'] ?? null;
+        if (! is_numeric($applicationId) || (int) $applicationId < 1) {
+            throw new ApiException('Application ID is required for this action.', 422);
+        }
+
+        $application = LicenseApplication::query()
+            ->whereKey((int) $applicationId)
+            ->where('citizen_id', $user->id)
+            ->with(['serviceType'])
+            ->first();
+
+        if ($application === null) {
+            throw new ApiException('messages.applications.not_found', 404);
+        }
+
+        $blockReason = $this->applicationPolicy->blockReason($application, $action->action_name);
+        if ($blockReason !== null) {
+            throw new ApiException($blockReason, 422);
+        }
+
+        if ($action->action_name === 'submit_documents_for_review') {
+            $checklist = $this->documents->requiredChecklist($user, (int) $applicationId);
+
+            $required = array_values(array_filter(
+                $checklist,
+                static fn (array $item): bool => ($item['is_required'] ?? false) === true
+            ));
+
+            $missing = [];
+            $rejected = [];
+
+            foreach ($required as $item) {
+                $latest = $item['latest_document'] ?? null;
+                $name = (string) ($item['name'] ?? '');
+
+                if ($latest === null) {
+                    $missing[] = $name;
+                    continue;
+                }
+
+                $status = strtolower((string) ($latest['status'] ?? ''));
+                if ($status === 'rejected') {
+                    $rejected[] = $name;
+                }
+            }
+
+            if ($missing !== []) {
+                $missingList = implode('، ', array_values(array_filter($missing)));
+                throw new ApiException(
+                    "لا يمكن إرسال الوثائق للمراجعة لأن الوثائق المطلوبة غير مكتملة: {$missingList}.",
+                    422
+                );
+            }
+
+            if ($rejected !== []) {
+                $rejectedList = implode('، ', array_values(array_filter($rejected)));
+                throw new ApiException(
+                    "لا يمكن إرسال الوثائق للمراجعة لأن بعض الوثائق مرفوضة. يرجى إعادة رفع: {$rejectedList}.",
+                    422
+                );
+            }
+        }
     }
 
     private function assertCancellable(AIAgentAction $action): void

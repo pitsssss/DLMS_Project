@@ -22,6 +22,7 @@ class AgentSafetyRules
         'get_test_results',
         'start_payment',
         'book_appointment',
+        'submit_documents_for_review',
     ];
 
     /** @var list<string> Read-only actions that may run without explicit confirmation. */
@@ -52,8 +53,6 @@ class AgentSafetyRules
         'get_available_tests',
         'get_appointment_slots',
         'book_appointment',
-        'reschedule_appointment',
-        'cancel_appointment',
         'get_test_results',
         'get_licenses',
         'get_fines',

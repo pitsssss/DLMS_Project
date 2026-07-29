@@ -46,6 +46,11 @@ class NotificationService
                 'body' => __('messages.notifications.documents_rejected_body'),
                 'type' => 'application.documents_rejected',
             ],
+            ApplicationStatus::DocumentsUnderReview->value => [
+                'title' => __('messages.notifications.documents_under_review_title'),
+                'body' => __('messages.notifications.documents_under_review_body'),
+                'type' => 'application.documents_under_review',
+            ],
             ApplicationStatus::AppointmentPending->value => [
                 'title' => __('messages.notifications.appointment_pending_title'),
                 'body' => __('messages.notifications.appointment_pending_body'),

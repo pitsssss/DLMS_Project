@@ -436,6 +436,8 @@ return [
         'payment_completed_body' => 'تم استلام دفعتك رقم :payment_number بمبلغ :amount :currency للطلب :application_number بنجاح.',
         'documents_rejected_title' => 'تم رفض الوثائق',
         'documents_rejected_body' => 'تم رفض واحدة أو أكثر من الوثائق. يرجى المراجعة وإعادة الإرسال.',
+        'documents_under_review_title' => 'مراجعة الوثائق',
+        'documents_under_review_body' => 'وثائق طلبك قيد المراجعة حالياً من قبل الموظف المختص. لا تحتاج لاتخاذ إجراء حالياً، وسيتم إعلامك عند انتهاء المراجعة.',
         'appointment_pending_title' => 'حجز موعد الاختبار',
         'appointment_pending_body' => 'تم استلام الدفع. يمكنك الآن حجز مواعيد الاختبارات.',
         'approved_title' => 'تم اعتماد الطلب',

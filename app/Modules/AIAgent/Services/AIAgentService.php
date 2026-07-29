@@ -279,6 +279,7 @@ class AIAgentService
                 'get_appointment_slots' => AgentIntent::GetAppointmentSlots->value,
                 'get_current_appointments' => AgentIntent::GetCurrentAppointments->value,
                 'book_appointment' => AgentIntent::BookAppointment->value,
+                'get_test_results' => AgentIntent::GetTestResults->value,
                 default => $session->current_intent ?? AgentIntent::GeneralHelp->value,
             };
             $session->current_intent = $response['intent'];

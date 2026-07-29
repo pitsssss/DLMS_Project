@@ -22,6 +22,10 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::OutOfScope;
         }
 
+        if (self::isSubmitDocumentsForReviewQuery($message)) {
+            return AgentIntent::SubmitDocumentsForReview;
+        }
+
         if (self::isRequiredDocumentsQuery($message)) {
             return AgentIntent::GetRequiredDocuments;
         }
@@ -148,6 +152,48 @@ class AgentWorkflowPhraseMatcher
     public static function isRequiredDocumentsQuery(string $message): bool
     {
         return AgentMessageIntentMatcher::isRequiredDocumentsQuery($message);
+    }
+
+    public static function isSubmitDocumentsForReviewQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        if ($normalized === '') {
+            return false;
+        }
+
+        // Intentionally restrictive to avoid colliding with "get required documents" queries.
+        // We trigger when the user indicates they are sending/finished uploading documents for review.
+        $patterns = [
+            // Arabic explicit actions
+            'ارسل الوثائق للمراجعة',
+            'أرسل الوثائق للمراجعة',
+            'قدم الوثائق للمراجعة',
+            'ابعت الوثائق للمراجعة',
+            // English explicit actions
+            'submit documents for review',
+            'send documents for review',
+            // Arabic "I finished uploading" variants (without triggering the generic "required documents" intent)
+            'خلصت رفع',
+            'خلصت رفع الوثائق',
+            'خلصت رفع الاوراق',
+            'خلصت رافع',
+            'خلصت اوراق',
+            'رفعت الوثائق',
+            'رفعت الاوراق',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (str_contains($normalized, self::normalize($pattern))) {
+                return true;
+            }
+        }
+
+        // Additional keyword-based match for shorter variants.
+        return (str_contains($normalized, self::normalize('submit documents'))
+                || str_contains($normalized, self::normalize('send documents')))
+            && (str_contains($normalized, self::normalize('review'))
+                || str_contains($normalized, self::normalize('للمراجعة')));
     }
 
     public static function isExplicitNewLicenseRequest(string $message): bool

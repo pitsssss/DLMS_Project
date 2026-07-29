@@ -2197,6 +2197,132 @@
       ]
     },
     {
+      "name": "11. AI Agent — Document Upload",
+      "item": [
+        {
+          "name": "11.1 Upload Document (inside session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "application_id",
+                  "value": "{{application_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "required_document_id",
+                  "value": "{{required_document_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF or image per document rules."
+                }
+              ]
+            }
+          }
+        }
+        ,
+        {
+          "name": "11.2 Upload Document (invalid file type) → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "application_id",
+                  "value": "{{application_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "required_document_id",
+                  "value": "{{required_document_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Use an invalid extension (e.g. .exe) to validate rejection."
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.3 Upload Document (foreign application) → 404/403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "application_id",
+                  "value": "{{foreign_application_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "required_document_id",
+                  "value": "{{required_document_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Intentionally set foreign_application_id to a citizen other than the current token owner."
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "12. AI Agent — Actions",
       "item": [
         {
