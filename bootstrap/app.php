@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'dashboard' => \App\Http\Middleware\EnsureDashboardUser::class,
             'profile.approved' => \App\Http\Middleware\EnsureProfileApproved::class,
             'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
             'dev.dashboard' => \App\Http\Middleware\EnsureDevDashboardAllowed::class,
         ]);
     })

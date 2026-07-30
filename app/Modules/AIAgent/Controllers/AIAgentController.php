@@ -2,14 +2,19 @@
 
 namespace App\Modules\AIAgent\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
+use App\Modules\AIAgent\Requests\HandleAgentInteractionRequest;
 use App\Modules\AIAgent\Requests\SendAgentMessageRequest;
 use App\Modules\AIAgent\Requests\UploadAgentDocumentRequest;
 use App\Modules\AIAgent\Resources\AIAgentSessionResource;
 use App\Modules\AIAgent\Services\AIAgentActionService;
+use App\Modules\AIAgent\Services\AgentDocumentFlowService;
 use App\Modules\AIAgent\Services\AgentDocumentUploadService;
+use App\Modules\AIAgent\Services\AgentPendingWorkflowService;
 use App\Modules\AIAgent\Services\AIAgentService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 class AIAgentController extends Controller
 {
@@ -70,11 +75,101 @@ class AIAgentController extends Controller
         return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
     }
 
+    public function handleInteraction(
+        HandleAgentInteractionRequest $request,
+        int $session,
+        AIAgentService $agent,
+        AgentDocumentFlowService $documentFlow,
+        AgentPendingWorkflowService $pendingWorkflow,
+    ) {
+        $sessionModel = $agent->getSessionForUser($request->user(), $session);
+        $validated = $request->validated();
+        $action = (string) $validated['action'];
+        $token = isset($validated['selection_token']) ? (string) $validated['selection_token'] : null;
+
+        $documentState = \App\Modules\AIAgent\Enums\DocumentFlowState::tryFrom(
+            (string) (($sessionModel->context['document_flow']['state'] ?? ''))
+        );
+
+        if ($action === 'cancel_pending_workflow') {
+            $data = $pendingWorkflow->cancelPending($request->user(), $sessionModel);
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        if ($action === 'show_application_choices_again') {
+            $data = $pendingWorkflow->showChoicesAgain($request->user(), $sessionModel);
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        if ($action === 'select_application' && $documentState !== \App\Modules\AIAgent\Enums\DocumentFlowState::ApplicationSelection) {
+            $data = $pendingWorkflow->selectApplicationByToken(
+                $request->user(),
+                $sessionModel,
+                (string) $token
+            );
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        $data = $documentFlow->handleInteraction(
+            $request->user(),
+            $sessionModel,
+            $action,
+            $token
+        );
+
+        return $this->successResponse($data, 'messages.ai_agent.response_generated');
+    }
+
     public function uploadSessionDocument(
         UploadAgentDocumentRequest $request,
         int $session,
-        AgentDocumentUploadService $uploadService
+        AgentDocumentUploadService $uploadService,
+        AgentDocumentFlowService $documentFlow,
+        AIAgentService $agent,
     ) {
+        $files = $this->flattenUploadedFiles($request->allFiles());
+
+        if ($request->isTokenMode()) {
+            $sessionModel = $agent->getSessionForUser($request->user(), $session);
+            $data = $documentFlow->uploadWithToken(
+                $request->user(),
+                $sessionModel,
+                (string) $request->input('upload_token'),
+                $files,
+                $request->filled('application_id') ? (int) $request->input('application_id') : null,
+                $request->filled('required_document_id') ? (int) $request->input('required_document_id') : null,
+            );
+
+            return $this->successResponse($data, 'messages.documents.uploaded');
+        }
+
+        if (count($files) === 0) {
+            throw new ApiException(
+                'يرجى إرفاق ملف الوثيقة المطلوبة.',
+                422,
+                [],
+                [],
+                'DOCUMENT_FILE_REQUIRED'
+            );
+        }
+
+        if (count($files) > 1) {
+            throw new ApiException(
+                'تم إرفاق أكثر من ملف. يرجى إرفاق ملف واحد فقط.',
+                422,
+                [],
+                [],
+                'EXACTLY_ONE_DOCUMENT_FILE_REQUIRED',
+                [
+                    'received_files_count' => count($files),
+                    'maximum_files' => 1,
+                ]
+            );
+        }
+
         $validated = $request->validated();
 
         $data = $uploadService->upload(
@@ -82,9 +177,38 @@ class AIAgentController extends Controller
             $session,
             (int) $validated['application_id'],
             (int) $validated['required_document_id'],
-            $request->file('file')
+            $files[0]
         );
 
         return $this->successResponse($data, 'messages.documents.uploaded');
+    }
+
+    /**
+     * Recursively collect every UploadedFile from multipart payload.
+     *
+     * @param  array<string, mixed>  $allFiles
+     * @return list<UploadedFile>
+     */
+    private function flattenUploadedFiles(array $allFiles): array
+    {
+        $files = [];
+
+        $walker = function (mixed $value) use (&$files, &$walker): void {
+            if ($value instanceof UploadedFile) {
+                $files[] = $value;
+
+                return;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $item) {
+                    $walker($item);
+                }
+            }
+        };
+
+        $walker($allFiles);
+
+        return $files;
     }
 }

@@ -18,5 +18,8 @@ return [
     'agent' => [
         'max_history_messages' => (int) env('AI_AGENT_MAX_HISTORY_MESSAGES', 10),
         'low_confidence_threshold' => (float) env('AI_AGENT_LOW_CONFIDENCE_THRESHOLD', 0.55),
+        'document_upload_token_ttl_seconds' => (int) env('AI_AGENT_DOCUMENT_UPLOAD_TOKEN_TTL', 600),
+        'selection_token_ttl_seconds' => (int) env('AI_AGENT_SELECTION_TOKEN_TTL', 1800),
+        'pending_workflow_ttl_seconds' => (int) env('AI_AGENT_PENDING_WORKFLOW_TTL', 900),
     ],
 ];

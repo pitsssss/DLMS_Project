@@ -360,12 +360,30 @@ class AgentSessionContextService
             $collected['license_type_code'] = $payload['proposed_action']['arguments']['license_type_code'];
         }
 
+        $existing = is_array($session->context) ? $session->context : [];
+
         $context = [
             'intent' => $payload['intent'] ?? $session->current_intent,
             'missing_slots' => array_values($payload['missing_slots'] ?? []),
             'collected_slots' => $collected,
             'service_type_code' => $state['service_type_code'] ?? 'new_license',
         ];
+
+        // Preserve conversational document-upload workflow state and document breadcrumbs.
+        foreach ([
+            'document_flow',
+            'pending_workflow',
+            'active_application_id',
+            'last_application_id',
+            'last_uploaded_document_id',
+            'last_required_document_id',
+            'last_appointment_id',
+            'last_test_type_code',
+        ] as $preserveKey) {
+            if (array_key_exists($preserveKey, $existing)) {
+                $context[$preserveKey] = $existing[$preserveKey];
+            }
+        }
 
         if ($pendingAction !== null) {
             $context['last_proposed_action'] = [

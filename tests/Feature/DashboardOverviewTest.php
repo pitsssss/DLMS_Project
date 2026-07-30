@@ -301,13 +301,15 @@ class DashboardOverviewTest extends TestCase
 
         $response = $this->getJson('/api/dashboard/overview')->assertOk();
 
-        // profile_document_reviewer has review_profiles/review_documents/view_applications — not employees/payments/fines/audit
-        $this->assertTrue($response->json('data.visibility.applications'));
+        // profile_document_reviewer has review_profiles/review_documents only — not general applications management
+        $this->assertFalse($response->json('data.visibility.applications'));
         $this->assertNull($response->json('data.kpis.employees'));
         $this->assertNull($response->json('data.kpis.payments'));
         $this->assertNull($response->json('data.kpis.fines'));
         $this->assertNull($response->json('data.recent_activities'));
         $this->assertFalse($response->json('data.visibility.employees'));
+        $this->assertTrue($reviewer->hasPermission('review_documents'));
+        $this->assertFalse($reviewer->hasPermission('view_applications'));
     }
 
     public function test_empty_database_returns_zeros(): void

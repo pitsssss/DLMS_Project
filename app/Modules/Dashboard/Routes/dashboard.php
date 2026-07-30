@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Dashboard\Controllers\DashboardAccessControlController;
 use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardApplicationController;
 use App\Modules\Dashboard\Controllers\DashboardAuthController;
@@ -216,5 +217,31 @@ Route::prefix('dashboard')
             Route::patch('/fees/{fee}/activate', [DashboardFeeController::class, 'activate'])->whereNumber('fee');
             Route::patch('/fees/{fee}/deactivate', [DashboardFeeController::class, 'deactivate'])->whereNumber('fee');
             Route::get('/fees/{fee}/audit-logs', [DashboardFeeController::class, 'auditLogs'])->whereNumber('fee');
+        });
+
+        // Access-control management — genuine Super Admin only (not manage_roles alone).
+        Route::prefix('access-control')
+            ->middleware('super_admin')
+            ->group(function (): void {
+                Route::get('/overview', [DashboardAccessControlController::class, 'overview']);
+                Route::get('/permissions', [DashboardAccessControlController::class, 'permissions']);
+
+                Route::get('/roles', [DashboardAccessControlController::class, 'roles']);
+                Route::get('/roles/options', [DashboardAccessControlController::class, 'roleOptions']);
+                Route::post('/roles', [DashboardAccessControlController::class, 'storeRole']);
+                Route::get('/roles/{role}', [DashboardAccessControlController::class, 'showRole'])->whereNumber('role');
+                Route::patch('/roles/{role}', [DashboardAccessControlController::class, 'updateRole'])->whereNumber('role');
+                Route::patch('/roles/{role}/permissions', [DashboardAccessControlController::class, 'syncRolePermissions'])->whereNumber('role');
+                Route::patch('/roles/{role}/archive', [DashboardAccessControlController::class, 'archiveRole'])->whereNumber('role');
+                Route::patch('/roles/{role}/restore', [DashboardAccessControlController::class, 'restoreRole'])->whereNumber('role');
+                Route::get('/roles/{role}/employees', [DashboardAccessControlController::class, 'roleEmployees'])->whereNumber('role');
+                Route::get('/roles/{role}/audit-logs', [DashboardAccessControlController::class, 'roleAuditLogs'])->whereNumber('role');
+            });
+
+        Route::middleware('super_admin')->group(function (): void {
+            Route::get('/employees/{employee}/access', [DashboardAccessControlController::class, 'employeeAccess'])->whereNumber('employee');
+            Route::patch('/employees/{employee}/roles', [DashboardAccessControlController::class, 'syncEmployeeRole'])->whereNumber('employee');
+            Route::patch('/employees/{employee}/direct-permissions', [DashboardAccessControlController::class, 'syncDirectPermissions'])->whereNumber('employee');
+            Route::get('/employees/{employee}/access/audit-logs', [DashboardAccessControlController::class, 'employeeAccessAuditLogs'])->whereNumber('employee');
         });
     });

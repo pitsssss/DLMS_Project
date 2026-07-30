@@ -31,6 +31,8 @@ class AIAgentService
         private readonly AgentEvaluationService $evaluationService,
         private readonly AgentSessionContextService $sessionContext,
         private readonly AIAgentActionService $actionService,
+        private readonly AgentDocumentFlowService $documentFlow,
+        private readonly AgentPendingWorkflowService $pendingWorkflow,
     ) {}
 
     /**
@@ -84,6 +86,27 @@ class AIAgentService
                 }
             }
 
+            // Conversational document-upload decisions are deterministic and must not go to Gemini.
+            if ($this->documentFlow->shouldHandleTextDecision($session, $userMessage)) {
+                return $this->documentFlow->handleTextDecision($user, $session, $userMessage);
+            }
+
+            // Pending application selection must be resolved before Gemini / general_help.
+            if ($this->pendingWorkflow->isAwaitingApplicationChoice($session)) {
+                $pendingResult = $this->pendingWorkflow->handleAwaitingMessage($user, $session, $userMessage);
+                if ($pendingResult !== null) {
+                    return $pendingResult;
+                }
+                // null => clear topic change; fall through to normal intent detection.
+                $session->refresh();
+            }
+
+            // Submit-for-review phrases also contain "الوثائق" — do not steal them into the upload offer flow.
+            if (AgentWorkflowPhraseMatcher::isRequiredDocumentsQuery($userMessage)
+                && ! AgentWorkflowPhraseMatcher::isSubmitDocumentsForReviewQuery($userMessage)) {
+                return $this->documentFlow->startRequiredDocumentsFlow($user, $session);
+            }
+
             $startedAt = hrtime(true);
             $wasFallback = false;
             $payload = null;
@@ -121,6 +144,12 @@ class AIAgentService
             $payload = $this->postProcessor->enforceDuplicateApplicationRules($user, $payload);
             $payload = $this->postProcessor->applyConfirmationReply($payload);
             $payload = AgentTranslator::localizePayload($payload);
+
+            // Multi-application intents: create pending_workflow and return selection buttons.
+            if (in_array('application_choice', $payload['missing_slots'] ?? [], true)) {
+                return $this->pendingWorkflow->enrichPayloadIfNeeded($user, $session, $payload, $userMessage);
+            }
+
             $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);
 
             $session->current_intent = $payload['intent'];
@@ -387,6 +416,18 @@ class AIAgentService
             'pending_action' => null,
             'suggested_next_actions' => array_values($payload['suggested_next_actions'] ?? []),
         ];
+
+        if (isset($payload['message_type'])) {
+            $response['message_type'] = $payload['message_type'];
+        }
+
+        if (isset($payload['ui_payload']) && is_array($payload['ui_payload'])) {
+            $response['ui_payload'] = $payload['ui_payload'];
+        }
+
+        if (isset($payload['application']) && is_array($payload['application'])) {
+            $response['application'] = $payload['application'];
+        }
 
         if ($pendingAction !== null) {
             $response['pending_action'] = [

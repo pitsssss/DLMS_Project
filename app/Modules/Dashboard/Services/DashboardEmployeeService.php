@@ -259,12 +259,41 @@ class DashboardEmployeeService
         $this->assertManageableDashboardUser($user);
 
         $role = $this->resolveEmployeeRole($roleName);
+
+        if ($role->is_archived || ! $role->canBeAssigned()) {
+            throw new ApiException('messages.access_control.role_not_assignable', 422);
+        }
+
+        $actor = request()->user();
         $oldRole = $user->role?->name;
+
+        if ($oldRole === 'super_admin' && $role->name !== 'super_admin') {
+            $this->assertCanDeactivate($user, $actor instanceof User ? $actor : null);
+            // Reuse last-super-admin invariant when demoting.
+            if ($user->role?->name === 'super_admin' && (bool) $user->is_active) {
+                $otherActiveSuperAdmins = User::query()
+                    ->whereIn('user_type', [UserType::Employee, UserType::Admin])
+                    ->where('is_active', true)
+                    ->where('id', '!=', $user->id)
+                    ->whereHas('role', fn (Builder $q) => $q->where('name', 'super_admin'))
+                    ->exists();
+
+                if (! $otherActiveSuperAdmins) {
+                    throw new ApiException('messages.access_control.cannot_remove_last_super_admin', 422);
+                }
+            }
+        }
+
+        if (($role->is_protected || in_array($role->name, ['super_admin', 'admin'], true))
+            && $actor instanceof User
+            && ! $actor->isSuperAdmin()) {
+            throw new ApiException('messages.access_control.super_admin_required', 403);
+        }
 
         $updated = $this->users->updateUser($user, ['role_id' => $role->id]);
 
         $this->auditLogs->log(
-            request()->user(),
+            $actor instanceof User ? $actor : null,
             'employee.role_assigned',
             'user',
             $updated->id,

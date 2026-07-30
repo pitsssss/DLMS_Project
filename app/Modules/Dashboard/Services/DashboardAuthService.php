@@ -39,7 +39,7 @@ class DashboardAuthService
             throw new ApiException('messages.dashboard.inactive_account', 403);
         }
 
-        $user->load('role.permissions');
+        $user->load(['role.permissions', 'directPermissions']);
 
         return [
             'token' => $user->createToken('dashboard-token')->plainTextToken,
@@ -60,7 +60,7 @@ class DashboardAuthService
      */
     public function me(User $user): array
     {
-        $user->load('role.permissions');
+        $user->load(['role.permissions', 'directPermissions']);
 
         return [
             'user' => [
@@ -69,11 +69,15 @@ class DashboardAuthService
                 'email' => $user->email,
                 'user_type' => $user->user_type?->value,
                 'is_active' => (bool) $user->is_active,
+                'is_super_admin' => $user->isSuperAdmin(),
                 'role' => [
                     'name' => $user->role?->name,
                     'display_name' => $user->role?->display_name,
                 ],
                 'permissions' => $user->permissionNames(),
+                'role_permissions' => $user->isSuperAdmin() ? ['*'] : $user->rolePermissionNames(),
+                'direct_permissions' => $user->isSuperAdmin() ? [] : $user->directPermissionNames(),
+                'effective_permissions' => $user->permissionNames(),
                 'dashboard_modules' => $this->modules->modulesForUser($user),
             ],
         ];

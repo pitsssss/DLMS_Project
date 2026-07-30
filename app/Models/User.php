@@ -7,6 +7,7 @@ use App\Enums\UserType;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -71,6 +72,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function directPermissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'permission_user')->withTimestamps();
+    }
+
     public function deactivatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'deactivated_by');
@@ -132,6 +138,9 @@ class User extends Authenticatable
     }
 
     /**
+     * Effective permission names = role permissions UNION direct grants.
+     * Super Admin bypass returns ['*'] and is not editable via permission rows.
+     *
      * @return list<string>
      */
     public function permissionNames(): array
@@ -140,9 +149,38 @@ class User extends Authenticatable
             return ['*'];
         }
 
+        return $this->effectivePermissionNames();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function rolePermissionNames(): array
+    {
         $this->loadMissing('role.permissions');
 
-        return $this->role?->permissions->pluck('name')->values()->all() ?? [];
+        return $this->role?->permissions->pluck('name')->unique()->sort()->values()->all() ?? [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function directPermissionNames(): array
+    {
+        $this->loadMissing('directPermissions');
+
+        return $this->directPermissions->pluck('name')->unique()->sort()->values()->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function effectivePermissionNames(): array
+    {
+        return array_values(array_unique(array_merge(
+            $this->rolePermissionNames(),
+            $this->directPermissionNames()
+        )));
     }
 
     public function hasPermission(string $permission): bool
@@ -151,9 +189,32 @@ class User extends Authenticatable
             return true;
         }
 
-        $this->loadMissing('role.permissions');
+        return in_array($permission, $this->effectivePermissionNames(), true);
+    }
 
-        return $this->role?->permissions->contains('name', $permission) ?? false;
+    /**
+     * @return list<array{name: string, source: string}>
+     */
+    public function effectivePermissionsWithSource(): array
+    {
+        $role = array_fill_keys($this->rolePermissionNames(), true);
+        $direct = array_fill_keys($this->directPermissionNames(), true);
+        $names = array_values(array_unique(array_merge(array_keys($role), array_keys($direct))));
+        sort($names);
+
+        $items = [];
+        foreach ($names as $name) {
+            $fromRole = isset($role[$name]);
+            $fromDirect = isset($direct[$name]);
+            $source = match (true) {
+                $fromRole && $fromDirect => 'role_and_direct',
+                $fromRole => 'role',
+                default => 'direct',
+            };
+            $items[] = ['name' => $name, 'source' => $source];
+        }
+
+        return $items;
     }
 
     public function hasCompletedProfile(): bool

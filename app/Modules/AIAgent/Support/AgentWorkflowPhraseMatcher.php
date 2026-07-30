@@ -493,7 +493,7 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'اعرضلي مخالفاتي', 'مخalفاتي', 'مخالفاتي', 'عندي مخalفات', 'عندي مخالفات',
+            'اعرضلي مخالفاتي', 'مخالفاتي', 'عندي مخالفات', 'المخالفات', 'مخالفات',
             'الغرامات', 'الغرامه', 'fines', 'my fines',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {

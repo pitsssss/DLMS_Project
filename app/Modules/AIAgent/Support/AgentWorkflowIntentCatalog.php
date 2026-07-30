@@ -154,4 +154,36 @@ class AgentWorkflowIntentCatalog
     {
         return self::definitions()[$intent] ?? null;
     }
+
+    public static function requiresApplication(string $intent): bool
+    {
+        return (bool) (self::get($intent)['requires_application'] ?? false);
+    }
+
+    public static function isReadOnly(string $intent): bool
+    {
+        return (bool) (self::get($intent)['read_only'] ?? true);
+    }
+
+    public static function actionName(string $intent): ?string
+    {
+        $action = self::get($intent)['action_name'] ?? null;
+
+        return is_string($action) && $action !== '' ? $action : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function applicationDependentIntents(): array
+    {
+        $intents = [];
+        foreach (self::definitions() as $intent => $definition) {
+            if (($definition['requires_application'] ?? false) === true) {
+                $intents[] = $intent;
+            }
+        }
+
+        return $intents;
+    }
 }

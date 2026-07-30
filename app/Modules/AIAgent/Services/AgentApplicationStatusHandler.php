@@ -31,23 +31,12 @@ class AgentApplicationStatusHandler
                 'reply' => AgentTranslator::message('ai_agent.no_active_applications'),
                 'proposed_action' => null,
                 'requires_confirmation' => false,
+                'message_type' => 'no_eligible_application',
             ]);
         }
 
         if ($applications->count() === 1) {
-            $application = $applications->first();
-            $statusReply = $this->nextStepService->statusReplyWithNextStep($application, $language);
-
-            return $this->basePayload($language, [
-                'reply' => $statusReply['reply'],
-                'proposed_action' => [
-                    'name' => 'get_application_status',
-                    'arguments' => [
-                        'application_id' => $application->id,
-                    ],
-                ],
-                'requires_confirmation' => false,
-            ]);
+            return $this->buildPayloadForApplication($citizen, $applications->first(), $language);
         }
 
         return $this->basePayload($language, [
@@ -57,6 +46,36 @@ class AgentApplicationStatusHandler
             'proposed_action' => null,
             'missing_slots' => ['application_choice'],
             'requires_confirmation' => false,
+        ]);
+    }
+
+    /**
+     * Continue/status for an already selected application (pending workflow resume).
+     *
+     * @return array<string, mixed>
+     */
+    public function buildPayloadForApplication(User $citizen, LicenseApplication $application, string $language = 'ar'): array
+    {
+        if ((int) $application->citizen_id !== (int) $citizen->id) {
+            return $this->basePayload($language, [
+                'reply' => AgentTranslator::message('ai_agent.no_active_applications'),
+                'proposed_action' => null,
+                'requires_confirmation' => false,
+            ]);
+        }
+
+        $statusReply = $this->nextStepService->statusReplyWithNextStep($application, $language);
+
+        return $this->basePayload($language, [
+            'reply' => $statusReply['reply'],
+            'proposed_action' => [
+                'name' => 'get_application_status',
+                'arguments' => [
+                    'application_id' => $application->id,
+                ],
+            ],
+            'requires_confirmation' => false,
+            'message_type' => 'application_status',
         ]);
     }
 

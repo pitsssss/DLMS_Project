@@ -19,6 +19,10 @@ Route::post('/actions/{action}/cancel', [AIAgentController::class, 'cancelAction
     ->whereNumber('action')
     ->middleware('throttle:20,1');
 
+Route::post('/sessions/{session}/interactions', [AIAgentController::class, 'handleInteraction'])
+    ->whereNumber('session')
+    ->middleware('throttle:30,1');
+
 Route::post('/sessions/{session}/documents', [AIAgentController::class, 'uploadSessionDocument'])
     ->whereNumber('session')
     ->middleware('throttle:20,1');

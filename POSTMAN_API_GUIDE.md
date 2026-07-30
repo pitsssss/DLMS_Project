@@ -7,20 +7,24 @@
   - `api_prefix = /api`
 - Keep all token variables empty initially (`citizen_token`, `employee_token`, `admin_token`, and role-specific dashboard tokens).
 
+## Collection Layout
+Top-level folders:
+1. `00. Public & System` — ping, public content, reference data, license verify
+2. `01. Citizen App` — all citizen modules (Auth → Profile → Applications → … → AI Agent)
+3. `02. Dashboard` — all dashboard/admin modules in one place
+4. `03. Payment Callbacks & Webhooks`
+5. `04. Error & Security Scenarios`
+
+Request names describe **who** + **what** (example: `Citizen - Register New Account`).
+
 ## 2) Authentication and Tokens
-- Citizen authentication:
-  - `01.* /auth/register`
-  - `01.* /auth/verify-otp`
-  - `01.* /auth/login` -> stores token into `citizen_token`.
+- Citizen authentication (order matters):
+  1. `Citizen - Register New Account`
+  2. `Citizen - Verify OTP (Registration)`
+  3. `Citizen - Login` → stores `citizen_token`
 - Dashboard authentication:
-  - `01.* /dashboard/auth/login` -> stores token into `employee_token`.
-  - password recovery endpoints are in the same folder.
-- For permission testing, copy `employee_token` into:
-  - `document_reviewer_token`
-  - `examiner_token`
-  - `license_issuer_token`
-  - `fines_employee_token`
-  depending on seeded role/permissions.
+  - `Dashboard - Employee/Admin Login` → stores `employee_token` / `admin_token`
+- For permission testing, copy `employee_token` into role-specific token variables as needed.
 
 ## 3) Citizen Demo Flow
 1. Login citizen.
