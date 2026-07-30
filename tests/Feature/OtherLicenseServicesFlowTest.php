@@ -22,11 +22,11 @@ use Database\Seeders\RolesSeeder;
 use Database\Seeders\ServiceTypesSeeder;
 use Database\Seeders\TestTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Mockery;
+use Tests\Support\FakeDocumentFile;
 use Tests\TestCase;
 
 class OtherLicenseServicesFlowTest extends TestCase
@@ -144,7 +144,7 @@ class OtherLicenseServicesFlowTest extends TestCase
                 "/api/applications/{$applicationId}/documents",
                 [
                     'required_document_id' => (int) $item['id'],
-                    'file' => UploadedFile::fake()->create('doc-'.$item['code'].'.pdf', 80, 'application/pdf'),
+                    'file' => FakeDocumentFile::pdf('doc-'.$item['code'].'.pdf'),
                 ],
                 ['Accept' => 'application/json']
             )->assertOk();

@@ -102,7 +102,7 @@ class AgentDocumentUploadService
             ? 'تم رفع الوثيقة. أصبحت جميع الوثائق المطلوبة مكتملة، ويمكنك الآن إرسالها للمراجعة عبر رسالة "أرسل الوثائق للمراجعة".'
             : $this->buildUploadAgentReply($requiredItems, $missing, $rejected);
 
-        $this->updateSessionContext($session, $applicationId, $requiredDocumentId);
+        $this->updateSessionContext($session, $applicationId, (int) $uploaded->id, $requiredDocumentId);
 
         return [
             'session_id' => $session->id,
@@ -139,10 +139,15 @@ class AgentDocumentUploadService
         ];
     }
 
-    private function updateSessionContext(AIAgentSession $session, int $applicationId, int $requiredDocumentId): void
-    {
+    private function updateSessionContext(
+        AIAgentSession $session,
+        int $applicationId,
+        int $uploadedDocumentId,
+        int $requiredDocumentId
+    ): void {
         $context = $session->context ?? [];
         $context['last_application_id'] = $applicationId;
+        $context['last_uploaded_document_id'] = $uploadedDocumentId;
         $context['last_required_document_id'] = $requiredDocumentId;
         $session->context = $context;
         $session->last_message_at = now();

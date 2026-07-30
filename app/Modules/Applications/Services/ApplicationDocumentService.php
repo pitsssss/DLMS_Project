@@ -11,6 +11,7 @@ use App\Models\RequiredDocument;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Resources\ApplicationDocumentResource;
+use App\Modules\Applications\Support\AllowedDocumentMime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -90,8 +91,11 @@ class ApplicationDocumentService
 
         $this->assertRequiredDocumentAppliesToApplication($application, $required);
         $this->validateFileAgainstRules($file, $required);
+        $this->assertApprovedDocumentCannotBeReplaced($application->id, $required->id);
 
-        return DB::transaction(function () use ($application, $required, $file) {
+        $detectedMime = $this->detectTrustedMimeType($file);
+
+        return DB::transaction(function () use ($application, $required, $file, $detectedMime) {
             ApplicationDocument::query()
                 ->where('application_id', $application->id)
                 ->where('required_document_id', $required->id)
@@ -112,7 +116,7 @@ class ApplicationDocumentService
                 'required_document_id' => $required->id,
                 'file_path' => $storedPath,
                 'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
+                'mime_type' => $detectedMime,
                 'size' => (int) $file->getSize(),
                 'status' => DocumentStatus::PendingReview,
                 'rejection_reason' => null,
@@ -203,16 +207,23 @@ class ApplicationDocumentService
             ->first();
     }
 
+    private function assertApprovedDocumentCannotBeReplaced(int $applicationId, int $requiredDocumentId): void
+    {
+        $latest = $this->latestDocument($applicationId, $requiredDocumentId);
+
+        if ($latest !== null && $latest->status === DocumentStatus::Approved) {
+            throw new ApiException('messages.documents.cannot_replace_approved', 422);
+        }
+    }
+
     private function validateFileAgainstRules(UploadedFile $file, RequiredDocument $required): void
     {
-        $extension = strtolower((string) ($file->getClientOriginalExtension() ?: ''));
-
-        $allowed = $required->allowed_extensions;
-        if ($allowed === null || $allowed === []) {
-            $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
+        if ((int) $file->getSize() <= 0) {
+            throw new ApiException('messages.documents.empty_file', 422);
         }
 
-        $allowed = array_map('strtolower', $allowed);
+        $extension = strtolower((string) ($file->getClientOriginalExtension() ?: ''));
+        $allowed = AllowedDocumentMime::normalizeExtensions($required->allowed_extensions);
 
         if ($extension === '' || ! in_array($extension, $allowed, true)) {
             throw new ApiException('messages.documents.invalid_file_type', 422);
@@ -224,5 +235,23 @@ class ApplicationDocumentService
         if ($file->getSize() > $maxBytes) {
             throw new ApiException(__('messages.documents.file_too_large', ['max_kb' => $maxKb]), 422);
         }
+
+        $detectedMime = $this->detectTrustedMimeType($file);
+
+        if (! AllowedDocumentMime::isMimeAllowedForExtension($extension, $detectedMime)) {
+            throw new ApiException('messages.documents.invalid_file_type', 422);
+        }
+    }
+
+    private function detectTrustedMimeType(UploadedFile $file): string
+    {
+        // Prefer Fileinfo-backed detection over client-declared MIME.
+        $mime = (string) ($file->getMimeType() ?: '');
+
+        if ($mime === '' || $mime === 'application/octet-stream') {
+            throw new ApiException('messages.documents.invalid_file_type', 422);
+        }
+
+        return strtolower($mime);
     }
 }

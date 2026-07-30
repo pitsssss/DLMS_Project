@@ -15,9 +15,9 @@ use Database\Seeders\RequiredDocumentsSeeder;
 use Database\Seeders\RolesSeeder;
 use Database\Seeders\ServiceTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Laravel\Sanctum\Sanctum;
+use Tests\Support\FakeDocumentFile;
 use Tests\TestCase;
 
 class DocumentFlowTest extends TestCase
@@ -96,7 +96,7 @@ class DocumentFlowTest extends TestCase
             "/api/applications/{$applicationId}/documents",
             [
                 'required_document_id' => $requiredDocumentId,
-                'file' => UploadedFile::fake()->create('doc-'.$code.'.pdf', 80, 'application/pdf'),
+                'file' => FakeDocumentFile::pdf('doc-'.$code.'.pdf'),
             ],
             ['Accept' => 'application/json']
         )->assertOk();
@@ -346,7 +346,7 @@ class DocumentFlowTest extends TestCase
             "/api/applications/{$applicationId}/documents",
             [
                 'required_document_id' => $requiredDocumentId,
-                'file' => UploadedFile::fake()->create('replacement.pdf', 90, 'application/pdf'),
+                'file' => FakeDocumentFile::pdf('replacement.pdf'),
             ],
             ['Accept' => 'application/json']
         )->assertOk();
@@ -371,7 +371,7 @@ class DocumentFlowTest extends TestCase
             "/api/applications/{$applicationId}/documents",
             [
                 'required_document_id' => $requiredId,
-                'file' => UploadedFile::fake()->create('x.pdf', 50, 'application/pdf'),
+                'file' => FakeDocumentFile::pdf('x.pdf'),
             ],
             ['Accept' => 'application/json']
         )->assertStatus(422);

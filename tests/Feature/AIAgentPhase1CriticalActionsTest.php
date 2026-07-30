@@ -30,9 +30,9 @@ use Database\Seeders\ServiceTypesSeeder;
 use Database\Seeders\TestTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
-use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
 use Mockery;
+use Tests\Support\FakeDocumentFile;
 use Tests\TestCase;
 
 class AIAgentPhase1CriticalActionsTest extends TestCase
@@ -111,7 +111,7 @@ class AIAgentPhase1CriticalActionsTest extends TestCase
                 "/api/applications/{$application->id}/documents",
                 [
                     'required_document_id' => $required['id'],
-                    'file' => UploadedFile::fake()->create($fileName, 80, 'application/pdf'),
+                    'file' => FakeDocumentFile::pdf($fileName),
                 ],
                 ['Accept' => 'application/json']
             )->assertOk();
@@ -133,7 +133,7 @@ class AIAgentPhase1CriticalActionsTest extends TestCase
             "/api/applications/{$application->id}/documents",
             [
                 'required_document_id' => $doc['id'],
-                'file' => UploadedFile::fake()->create($fileName, 80, 'application/pdf'),
+                'file' => FakeDocumentFile::pdf($fileName),
             ],
             ['Accept' => 'application/json']
         )->assertOk();

@@ -1349,11 +1349,7 @@ class AIAgentFlowTest extends TestCase
             "/api/applications/{$application->id}/documents",
             [
                 'required_document_id' => $checklist[0]['id'],
-                'file' => \Illuminate\Http\UploadedFile::fake()->create(
-                    'doc-'.$checklist[0]['code'].'.pdf',
-                    80,
-                    'application/pdf'
-                ),
+                'file' => \Tests\Support\FakeDocumentFile::pdf('doc-'.$checklist[0]['code'].'.pdf'),
             ],
             ['Accept' => 'application/json']
         )->assertOk();

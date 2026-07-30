@@ -15,11 +15,11 @@ use Database\Seeders\RequiredDocumentsSeeder;
 use Database\Seeders\RolesSeeder;
 use Database\Seeders\ServiceTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\Support\AssertsArabicLabels;
+use Tests\Support\FakeDocumentFile;
 use Tests\TestCase;
 
 class DashboardTranslationLabelsTest extends TestCase
@@ -170,7 +170,7 @@ class DashboardTranslationLabelsTest extends TestCase
                 "/api/applications/{$applicationId}/documents",
                 [
                     'required_document_id' => $item['id'],
-                    'file' => UploadedFile::fake()->create('doc-'.$item['code'].'.pdf', 80, 'application/pdf'),
+                    'file' => FakeDocumentFile::pdf('doc-'.$item['code'].'.pdf'),
                 ],
                 ['Accept' => 'application/json']
             )->assertOk();

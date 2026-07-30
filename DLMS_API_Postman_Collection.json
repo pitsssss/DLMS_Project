@@ -82,6 +82,26 @@
       "value": ""
     },
     {
+      "key": "required_document_id_2",
+      "value": ""
+    },
+    {
+      "key": "approved_required_document_id",
+      "value": ""
+    },
+    {
+      "key": "rejected_required_document_id",
+      "value": ""
+    },
+    {
+      "key": "foreign_application_id",
+      "value": ""
+    },
+    {
+      "key": "pending_action_id",
+      "value": ""
+    },
+    {
       "key": "document_id",
       "value": ""
     },
@@ -2198,126 +2218,240 @@
     },
     {
       "name": "11. AI Agent — Document Upload",
+      "description": "Phase 2 / 2.1 document upload inside an AI agent session. Uses the same ApplicationDocumentService as REST (real MIME validation, Approved documents cannot be replaced). Choose local files manually for form-data `file` fields — no hardcoded machine paths.",
       "item": [
         {
-          "name": "11.1 Upload Document (inside session)",
+          "name": "11.1 Upload valid document",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{citizen_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "description": "Upload a real PDF/JPEG/PNG. Saves last_uploaded_document_id into session context on success.",
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "application_id",
-                  "value": "{{application_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "required_document_id",
-                  "value": "{{required_document_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "",
-                  "description": "PDF or image per document rules."
-                }
-              ]
-            }
-          }
-        }
-        ,
-        {
-          "name": "11.2 Upload Document (invalid file type) → 422",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{citizen_token}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "application_id",
-                  "value": "{{application_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "required_document_id",
-                  "value": "{{required_document_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "",
-                  "description": "Use an invalid extension (e.g. .exe) to validate rejection."
-                }
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Select a real local PDF/JPEG/PNG that matches the required document rules." }
               ]
             }
           }
         },
         {
-          "name": "11.3 Upload Document (foreign application) → 404/403",
+          "name": "11.2 Upload another required document",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{citizen_token}}",
-                "type": "text"
-              }
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
             ],
             "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "application_id",
-                  "value": "{{foreign_application_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "required_document_id",
-                  "value": "{{required_document_id}}",
-                  "type": "text"
-                },
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "",
-                  "description": "Intentionally set foreign_application_id to a citizen other than the current token owner."
-                }
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id_2}}", "type": "text", "description": "Second required_document_id from the checklist." },
+                { "key": "file", "type": "file", "src": "", "description": "Select another valid local file for the second required document." }
               ]
             }
+          }
+        },
+        {
+          "name": "11.3 Get required documents / checklist after upload",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{application_id}}/required-documents",
+            "description": "Confirm checklist reflects uploaded documents (same source as agent upload response)."
+          }
+        },
+        {
+          "name": "11.4 Upload invalid file type → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Use an invalid extension (e.g. .exe or .txt) to validate rejection." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.5 Upload spoofed MIME → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "description": "Prepare a local text file, rename it to document.pdf (content remains plain text). Real Fileinfo MIME must not be application/pdf — expect 422.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Plain-text file renamed to .pdf (spoofed extension)." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.6 Upload oversized file → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Select a file larger than the required document max_size_kb (typically 4096 KB) or request max 5120 KB." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.7 Upload to foreign application → 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{foreign_application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Use an application_id owned by another citizen." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.8 Re-upload rejected document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "description": "Application must be documents_rejected. Set rejected_required_document_id to the rejected type. Replacement deletes the previous DB row (no version history).",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{rejected_required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Select a corrected local PDF/JPEG/PNG for the rejected document type." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.9 Try replacing approved document → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/sessions/{{ai_agent_session_id}}/documents",
+            "description": "Expect 422 cannot_replace_approved. Approved document must remain unchanged.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "application_id", "value": "{{application_id}}", "type": "text" },
+                { "key": "required_document_id", "value": "{{approved_required_document_id}}", "type": "text" },
+                { "key": "file", "type": "file", "src": "", "description": "Any valid file — replacement of an Approved document must be rejected." }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11.10 Send message: submit documents for review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const actionId = json?.data?.pending_action?.id;",
+                  "if (actionId) { pm.collectionVariables.set('pending_action_id', String(actionId)); pm.collectionVariables.set('ai_agent_action_id', String(actionId)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"أرسل الوثائق للمراجعة\",\n  \"session_id\": {{ai_agent_session_id}}\n}"
+            },
+            "description": "Creates pending submit_documents_for_review action. Saves pending_action_id."
+          }
+        },
+        {
+          "name": "11.11 Confirm submit action",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/ai-agent/actions/{{pending_action_id}}/confirm",
+            "description": "Transitions application to documents_under_review via ApplicationDocumentService."
+          }
+        },
+        {
+          "name": "11.12 Get application status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/applications/{{application_id}}",
+            "description": "Expect status documents_under_review after successful confirm."
+          }
+        },
+        {
+          "name": "11.13 Dashboard review list (authorized employee)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/dashboard/document-reviews",
+            "description": "Use an employee token with review_documents permission (e.g. profile_document_reviewer). Shared queue — not assigned to a single employee. Application should appear after submit+confirm only."
           }
         }
       ]

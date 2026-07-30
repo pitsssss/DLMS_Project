@@ -597,13 +597,25 @@ Citizens can upload required documents from inside the chat UI via:
 - `required_document_id` (int)
 - `file` (uploaded file)
 
-### Behavior
+### Behavior (Phase 2.1)
 - Upload uses the same `ApplicationDocumentService::upload()` rules as the REST document endpoints.
+- **Real MIME validation** uses Fileinfo-backed `$file->getMimeType()` (not client-declared MIME alone), mapped via `AllowedDocumentMime` (`pdf`→`application/pdf`, `jpg/jpeg`→`image/jpeg`, `png`→`image/png`). Spoofed files (e.g. text renamed to `.pdf`) are rejected.
+- **Approved documents cannot be replaced.** Rejected documents can be re-uploaded while the application is still editable (`Draft` / `DocumentsRejected`).
+- Replacement of a non-approved previous upload **deletes the previous DB row** and creates a new one. There is **no document version history / lineage** and no antivirus scanning in this phase.
+- Files are stored on the private `local` disk under `application_documents/{application_id}/` with UUID filenames.
 - The AI agent does **not** analyze or read the file content (Gemini is not used for the upload endpoint).
 - Upload does **not** transition the application automatically to `documents_under_review`.
   - `Draft` stays `Draft`
   - `DocumentsRejected` stays `DocumentsRejected`
-- A later citizen message/confirmation can still propose/execute `submit_documents_for_review` (Phase 9B confirm flow).
+- After all required documents are uploaded, the citizen must send a separate message to propose `submit_documents_for_review`, then confirm. The application then appears in the **shared** dashboard document-review queue for any employee with `review_documents` (not assigned to a single employee).
+
+### Session context after upload
+Safe referential IDs only:
+- `last_application_id`
+- `last_uploaded_document_id` (`application_documents.id`)
+- `last_required_document_id` (`required_documents.id`)
+
+Never stores filename, storage path, MIME, binary, Base64, or URLs.
 
 ### Response (data)
 The endpoint returns a stable checklist payload (completed/missing/rejected/pending_review), plus:
@@ -614,14 +626,22 @@ The endpoint returns a stable checklist payload (completed/missing/rejected/pend
 ### Errors (typical)
 - `401` if not authenticated as citizen
 - `404` if session/application not found for this citizen
-- `422` if the file is invalid (type/extension/size) or if the application status does not allow edits
+- `422` if the file is invalid (type/extension/MIME/size/empty), application status does not allow edits, document type is not applicable, or an Approved document would be replaced
+
+### Remaining known limitations
+- No document version history / soft-delete lineage on replacement.
+- No external antivirus / malware scanning beyond MIME + extension checks.
+- No Flutter `message_type` / `ui_payload` contract yet (later phase).
 
 ### End-to-end citizen flow
 
 1. `POST /api/ai-agent/message` — e.g. `بدي رخصة جديدة`
 2. `POST /api/ai-agent/message` with `session_id` — e.g. `رخصة خاصة` → `pending_action` created
 3. `POST /api/ai-agent/actions/{id}/confirm` → application created (draft)
-4. Or `POST /api/ai-agent/actions/{id}/cancel` to abort
+4. `POST /api/ai-agent/sessions/{session}/documents` — upload each required document
+5. `POST /api/ai-agent/message` — `أرسل الوثائق للمراجعة` → pending submit action
+6. `POST /api/ai-agent/actions/{id}/confirm` → `documents_under_review` + shared review queue
+7. Or `POST /api/ai-agent/actions/{id}/cancel` to abort without status change
 
 ## Postman (Phase 9A + 9B)
 
