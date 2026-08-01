@@ -39,6 +39,14 @@
       "value": ""
     },
     {
+      "key": "employee_session_uuid",
+      "value": ""
+    },
+    {
+      "key": "session_employee_id",
+      "value": ""
+    },
+    {
       "key": "profile_reviewer_email",
       "value": "profile_document_reviewer@syrtak.gov.sy"
     },
@@ -509,8 +517,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?page=1&per_page=20&sort_by=created_at&sort_direction=desc",
             "description": "Default list. per_page defaults to 20. Returns items, pagination, statistics, role_options."
@@ -521,8 +537,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?search={{employee_search}}"
           }
@@ -532,8 +556,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?search=fines.employee"
           }
@@ -543,8 +575,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?search=09"
           }
@@ -554,8 +594,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?role_id={{role_id}}"
           }
@@ -565,8 +613,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?is_active=1"
           }
@@ -576,8 +632,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?is_active=0"
           }
@@ -587,8 +651,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?search=employee&role_id={{role_id}}&is_active=1&page=1&per_page=20&sort_by=created_at&sort_direction=desc"
           }
@@ -598,8 +670,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?page=2&per_page=10"
           }
@@ -609,8 +689,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?per_page=25"
           }
@@ -620,8 +708,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees?sort_by=name&sort_direction=asc&per_page=20"
           }
@@ -631,8 +727,16 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/roles",
             "description": "Existing roles endpoint (permission: view_roles). List employees also embeds data.role_options with id, name, display_name."
@@ -660,9 +764,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees",
             "body": {
@@ -690,9 +806,21 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}",
             "body": {
@@ -706,8 +834,16 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/activate",
             "description": "Sets is_active=true. Idempotent if already active. Audit: employee.activated"
@@ -718,8 +854,16 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/deactivate",
             "description": "Sets is_active=false. Blocks self-deactivation and last active super_admin. Audit: employee.deactivated"
@@ -730,9 +874,21 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/toggle-active",
             "body": {
@@ -747,9 +903,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/reset-password",
             "body": {
@@ -763,9 +931,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}", "type": "text" }
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}",
+                "type": "text"
+              }
             ],
             "url": "{{base_url}}/dashboard/employees/{{employee_id}}/assign-role",
             "body": {
@@ -1454,8 +1634,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?page=1&per_page=20&sort_by=created_at&sort_direction=desc"
           }
@@ -1465,8 +1651,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?search=private"
           }
@@ -1476,8 +1668,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?is_active=1"
           }
@@ -1487,8 +1685,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?is_active=0"
           }
@@ -1498,8 +1702,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?page=1&per_page=10"
           }
@@ -1509,8 +1719,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types?sort_by=name&sort_direction=asc"
           }
@@ -1520,8 +1736,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}"
           }
@@ -1531,9 +1753,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types",
             "body": {
@@ -1558,9 +1789,18 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}",
             "body": {
@@ -1575,8 +1815,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}/activate"
           }
@@ -1586,8 +1832,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types/{{license_type_id}}/deactivate"
           }
@@ -1597,9 +1849,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/license-types",
             "body": {
@@ -1620,8 +1881,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?page=1&per_page=20&sort_by=created_at&sort_direction=desc"
           }
@@ -1631,8 +1898,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?search=renew"
           }
@@ -1642,8 +1915,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?is_active=1"
           }
@@ -1653,8 +1932,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?is_active=0"
           }
@@ -1664,8 +1949,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?page=1&per_page=10"
           }
@@ -1675,8 +1966,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types?sort_by=code&sort_direction=asc"
           }
@@ -1686,8 +1983,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}"
           }
@@ -1697,9 +2000,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types",
             "body": {
@@ -1724,9 +2036,18 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}",
             "body": {
@@ -1741,8 +2062,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}/activate"
           }
@@ -1752,8 +2079,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types/{{service_type_id}}/deactivate"
           }
@@ -1763,9 +2096,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/service-types",
             "body": {
@@ -1786,8 +2128,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/overview",
             "description": "Default period=30d, recent_limit=5, activity_limit=8. Sections included only when the token holder has the corresponding permissions."
@@ -1798,15 +2146,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=7d",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "7d", "description": "Current day + previous 6 calendar days. trend_granularity=day." }
+                {
+                  "key": "period",
+                  "value": "7d",
+                  "description": "Current day + previous 6 calendar days. trend_granularity=day."
+                }
               ]
             }
           }
@@ -1816,15 +2179,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=30d",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "30d", "description": "Current day + previous 29 calendar days. Default." }
+                {
+                  "key": "period",
+                  "value": "30d",
+                  "description": "Current day + previous 29 calendar days. Default."
+                }
               ]
             }
           }
@@ -1834,15 +2212,29 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=90d",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "90d" }
+                {
+                  "key": "period",
+                  "value": "90d"
+                }
               ]
             }
           }
@@ -1852,15 +2244,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=12m",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "12m", "description": "Current month + previous 11 months. trend_granularity=month. Buckets YYYY-MM." }
+                {
+                  "key": "period",
+                  "value": "12m",
+                  "description": "Current month + previous 11 months. trend_granularity=month. Buckets YYYY-MM."
+                }
               ]
             }
           }
@@ -1870,17 +2277,39 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=30d&recent_limit=5&activity_limit=8",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "30d" },
-                { "key": "recent_limit", "value": "5", "description": "1–10" },
-                { "key": "activity_limit", "value": "8", "description": "1–10" }
+                {
+                  "key": "period",
+                  "value": "30d"
+                },
+                {
+                  "key": "recent_limit",
+                  "value": "5",
+                  "description": "1–10"
+                },
+                {
+                  "key": "activity_limit",
+                  "value": "8",
+                  "description": "1–10"
+                }
               ]
             }
           }
@@ -1890,15 +2319,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/overview?period=invalid",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "overview"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
               "query": [
-                { "key": "period", "value": "invalid", "description": "Expect 422 validation error." }
+                {
+                  "key": "period",
+                  "value": "invalid",
+                  "description": "Expect 422 validation error."
+                }
               ]
             },
             "description": "Expect HTTP 422. Allowed: 7d, 30d, 90d, 12m."
@@ -1909,7 +2353,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": "{{base_url}}/dashboard/overview",
             "description": "No Authorization header. Expect HTTP 401. Citizen tokens expect HTTP 403 (dashboard middleware)."
@@ -1926,8 +2373,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/options",
             "description": "Authoritative filter labels. Options are permission-filtered."
@@ -1938,8 +2391,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/summary?period=30d",
             "description": "Permission-aware KPI sections with visibility object."
@@ -1950,8 +2409,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/summary?period=custom&date_from=2026-07-01&date_to=2026-07-25&group_by=day"
           }
@@ -1961,8 +2426,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/applications?period=30d&application_status=approved&page=1&per_page=20",
             "description": "Requires view_applications OR manage_applications."
@@ -1973,8 +2444,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/tests?period=90d&test_result=passed&group_by=week"
           }
@@ -1984,8 +2461,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/appointments?period=30d&appointment_status=completed"
           }
@@ -1995,8 +2478,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/licenses?period=12m&license_type_code=private"
           }
@@ -2006,8 +2495,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/fines?period=30d&fine_status=unpaid",
             "description": "Separate from application payments. Requires view_fines OR manage_fines."
@@ -2018,8 +2513,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/employees?period=30d&per_page=25",
             "description": "Requires manage_employees OR view_employees. Audit metrics need view_audit_logs."
@@ -2030,8 +2531,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/summary?period=30d",
             "description": "Use a token without view_reports to expect HTTP 403."
@@ -2042,8 +2549,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/reports/summary?period=custom&date_from=2026-01-01",
             "description": "Missing date_to — validation error."
@@ -2060,8 +2573,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews",
             "description": "Default review_status=awaiting_review. No phone/email/national_id in items."
@@ -2072,15 +2591,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?search=APP",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "search", "value": "APP", "description": "Matches application_number or citizen name only." }
+                {
+                  "key": "search",
+                  "value": "APP",
+                  "description": "Matches application_number or citizen name only."
+                }
               ]
             }
           }
@@ -2090,15 +2624,29 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?service_type_code=new_license",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "service_type_code", "value": "new_license" }
+                {
+                  "key": "service_type_code",
+                  "value": "new_license"
+                }
               ]
             }
           }
@@ -2108,15 +2656,29 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?license_type_code=private",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "license_type_code", "value": "private" }
+                {
+                  "key": "license_type_code",
+                  "value": "private"
+                }
               ]
             }
           }
@@ -2126,15 +2688,29 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?review_status=awaiting_review",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "review_status", "value": "awaiting_review" }
+                {
+                  "key": "review_status",
+                  "value": "awaiting_review"
+                }
               ]
             }
           }
@@ -2144,15 +2720,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?review_status=completed",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "review_status", "value": "completed", "description": "Applications past document-review stage." }
+                {
+                  "key": "review_status",
+                  "value": "completed",
+                  "description": "Applications past document-review stage."
+                }
               ]
             }
           }
@@ -2162,15 +2753,30 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?review_status=late",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "review_status", "value": "late", "description": "Awaiting review older than 3 days." }
+                {
+                  "key": "review_status",
+                  "value": "late",
+                  "description": "Awaiting review older than 3 days."
+                }
               ]
             }
           }
@@ -2180,15 +2786,29 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?review_status=reupload_required",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "review_status", "value": "reupload_required" }
+                {
+                  "key": "review_status",
+                  "value": "reupload_required"
+                }
               ]
             }
           }
@@ -2198,16 +2818,34 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard/document-reviews?per_page=20&page=1",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "document-reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "document-reviews"
+              ],
               "query": [
-                { "key": "per_page", "value": "20", "description": "1–100" },
-                { "key": "page", "value": "1" }
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "1–100"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
               ]
             }
           }
@@ -2217,8 +2855,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/stats",
             "description": "All keys are application counts (see folder description)."
@@ -2229,8 +2873,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/{{application_id}}",
             "description": "Includes summary, header, documents (latest active versions), actions, rejection_reasons Combobox options, structured rejection on rejected docs."
@@ -2241,7 +2891,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/preview",
             "description": "Authenticated inline binary. Allowed: PDF, JPEG, PNG. Content-Disposition: inline. No public URL."
@@ -2252,8 +2905,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/approve",
             "description": "No body. Stale/already-reviewed → 422. Final required approval → payment_pending."
@@ -2264,9 +2923,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
             "body": {
@@ -2280,9 +2948,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
             "body": {
@@ -2296,9 +2973,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
             "body": {
@@ -2313,9 +2999,18 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/reject",
             "body": {
@@ -2330,8 +3025,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews/documents/{{document_id}}/approve",
             "description": "Call after the document was already approved/rejected. Expect HTTP 422 Arabic business conflict."
@@ -2342,7 +3043,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews",
             "description": "Expect HTTP 401."
@@ -2353,8 +3057,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
             ],
             "url": "{{base_url}}/dashboard/document-reviews",
             "description": "Use a dashboard token without review_documents. Expect HTTP 403. Citizens also get 403."
@@ -2370,8 +3080,26 @@
           "name": "01 List citizens",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ]
+            },
             "description": "Returns paginated list of citizens.\n\nResponse shape per item:\n{\n  id, name, national_id, phone, email,\n  is_active (bool),\n  account_status: { value: 'active'|'inactive', label },\n  profile_status (raw string),\n  profile_status_info: { value, label },\n  created_at\n}\n\nPagination: { current_page, per_page, total, last_page }"
           }
         },
@@ -2379,8 +3107,32 @@
           "name": "02 Search citizens by name",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?search=محمد", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "search", "value": "محمد" }] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?search=محمد",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "محمد"
+                }
+              ]
+            },
             "description": "Searches name, national_id, phone, email — OR grouped, always citizen-scoped."
           }
         },
@@ -2388,24 +3140,96 @@
           "name": "03 Active citizens",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=1", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "1" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?is_active=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "1"
+                }
+              ]
+            }
           }
         },
         {
           "name": "04 Inactive citizens",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=0", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "0" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?is_active=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "0"
+                }
+              ]
+            }
           }
         },
         {
           "name": "05 Filter by profile status",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?profile_status=approved", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "profile_status", "value": "approved" }] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?profile_status=approved",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "profile_status",
+                  "value": "approved"
+                }
+              ]
+            },
             "description": "Valid values: incomplete | pending_review | approved | rejected"
           }
         },
@@ -2413,16 +3237,71 @@
           "name": "06 Combined filters + pagination",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?is_active=1&profile_status=approved&per_page=10&page=1", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "is_active", "value": "1" }, { "key": "profile_status", "value": "approved" }, { "key": "per_page", "value": "10" }, { "key": "page", "value": "1" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?is_active=1&profile_status=approved&per_page=10&page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "profile_status",
+                  "value": "approved"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
           }
         },
         {
           "name": "07 Citizen statistics",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/stats", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "stats"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "stats"
+              ]
+            },
             "description": "Global citizen aggregation. Response:\n{\n  total, active, inactive,\n  profileStatuses: { incomplete, pending_review, approved, rejected }\n}"
           }
         },
@@ -2430,8 +3309,27 @@
           "name": "08 Profile status options",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/profile-statuses", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "profile-statuses"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/profile-statuses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "profile-statuses"
+              ]
+            },
             "description": "Returns [{ value, label }] for all ProfileStatus enum values."
           }
         },
@@ -2439,8 +3337,27 @@
           "name": "09 Citizen details",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}"
+              ]
+            },
             "description": "Returns full citizen profile with counts and actions.\n\ndeactivation: null when active. When inactive:\n{ reason, deactivated_at, deactivated_by: { id, name } }\n\ncounts: { applications, licenses, fines, unpaid_fines }\n\nactions: { can_activate, can_deactivate, can_edit, can_view_applications, can_view_licenses, can_view_fines, can_view_audit_logs }\n\nEmployee/Admin id → 404 (does not disclose account type)."
           }
         },
@@ -2448,9 +3365,35 @@
           "name": "10 Update citizen",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"اسم محدث\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"0912345678\",\n  \"national_id\": \"01234567890\",\n  \"birth_date\": \"1995-05-20\",\n  \"governorate\": \"دمشق\",\n  \"address\": \"عنوان جديد\"\n}" },
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"اسم محدث\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"0912345678\",\n  \"national_id\": \"01234567890\",\n  \"birth_date\": \"1995-05-20\",\n  \"governorate\": \"دمشق\",\n  \"address\": \"عنوان جديد\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}"
+              ]
+            },
             "description": "Allowed fields: name, email, phone, national_id, birth_date, governorate, address.\n\nNOT allowed (silently ignored or rejected):\n- is_active (use /activate or /deactivate)\n- user_type\n- password\n- roles / permissions\n- deactivation metadata\n\nUnique validation ignores the current citizen (but collisions with other users return 422).\n\nReturns the updated citizen details."
           }
         },
@@ -2458,8 +3401,28 @@
           "name": "11 Activate citizen",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/activate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "activate"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "activate"
+              ]
+            },
             "description": "No body required.\n\nTransactional + lockForUpdate.\n\nIdempotent: already-active citizen returns 200 without audit or notification.\n\nDoes NOT issue a new token — citizen must log in again."
           }
         },
@@ -2467,9 +3430,36 @@
           "name": "12 Deactivate citizen",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"سبب إداري واضح لتعطيل الحساب.\"\n}" },
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "deactivate"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"سبب إداري واضح لتعطيل الحساب.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "deactivate"
+              ]
+            },
             "description": "Payload: { reason: required string max 1000 }\n\nTransactional + lockForUpdate.\n\nEffects:\n- is_active → false\n- deactivated_at, deactivated_by, deactivation_reason stored\n- ALL citizen Sanctum tokens deleted\n- citizen.deactivated audit created\n- Activation notification sent after commit\n\nIdempotent: already-inactive citizen returns 200, remaining tokens revoked, no new audit/notification, original reason preserved."
           }
         },
@@ -2477,32 +3467,136 @@
           "name": "13 Citizen applications",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/applications?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "applications"], "query": [{ "key": "per_page", "value": "20" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/applications?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
           }
         },
         {
           "name": "14 Citizen licenses",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/licenses?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "licenses"], "query": [{ "key": "per_page", "value": "20" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/licenses?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "licenses"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
           }
         },
         {
           "name": "15 Citizen fines",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/fines?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "fines"], "query": [{ "key": "per_page", "value": "20" }] }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/fines?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "fines"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
           }
         },
         {
           "name": "16 Citizen audit logs",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/audit-logs?per_page=20", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "audit-logs"], "query": [{ "key": "per_page", "value": "20" }] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/audit-logs?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
             "description": "Requires manage_users AND view_audit_logs permissions.\n\nReturns citizen-management actions only:\n- citizen.updated\n- citizen.activated\n- citizen.deactivated\n\nPaginated (default 20, max 100)."
           }
         },
@@ -2510,8 +3604,32 @@
           "name": "17 Invalid profile status (422)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens?profile_status=invalid", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"], "query": [{ "key": "profile_status", "value": "invalid" }] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens?profile_status=invalid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ],
+              "query": [
+                {
+                  "key": "profile_status",
+                  "value": "invalid"
+                }
+              ]
+            },
             "description": "Expect HTTP 422 with validation error on profile_status."
           }
         },
@@ -2519,9 +3637,36 @@
           "name": "18 Invalid deactivation reason (422)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{}" },
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{citizen_id}}", "deactivate"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{citizen_id}}/deactivate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{citizen_id}}",
+                "deactivate"
+              ]
+            },
             "description": "Missing reason → 422. Blank reason → 422."
           }
         },
@@ -2529,8 +3674,22 @@
           "name": "19 Unauthenticated (401)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ]
+            },
             "description": "No Authorization header. Expect HTTP 401."
           }
         },
@@ -2538,8 +3697,26 @@
           "name": "20 Forbidden — employee without manage_users (403)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens", "host": ["{{base_url}}"], "path": ["dashboard", "citizens"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens"
+              ]
+            },
             "description": "Use a dashboard token with no manage_users permission. Expect HTTP 403."
           }
         },
@@ -2547,8 +3724,27 @@
           "name": "21 Employee target rejected (404)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/{{employee_id}}", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "{{employee_id}}"] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/{{employee_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "{{employee_id}}"
+              ]
+            },
             "description": "Accessing an employee or admin ID through the citizen endpoint returns 404. Avoids disclosing account type."
           }
         },
@@ -2556,8 +3752,33 @@
           "name": "22 Deprecated — search (backward compat)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
-            "url": { "raw": "{{base_url}}/dashboard/citizens/search?search_term=محمد", "host": ["{{base_url}}"], "path": ["dashboard", "citizens", "search"], "query": [{ "key": "search_term", "value": "محمد" }] },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/citizens/search?search_term=محمد",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "citizens",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "search_term",
+                  "value": "محمد"
+                }
+              ]
+            },
             "description": "DEPRECATED. Kept for backward compatibility only. Use GET /dashboard/citizens?search= instead. Returns up to 50 results, not paginated."
           }
         }
@@ -2571,7 +3792,16 @@
           "name": "01 Payment operations list",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments",
             "description": "Paginated application-payment attempts. Excludes fines."
           }
@@ -2580,7 +3810,16 @@
           "name": "02 Search by payment number",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?search=PAY-2026"
           }
         },
@@ -2588,7 +3827,16 @@
           "name": "03 Search by application number",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?search=APP-"
           }
         },
@@ -2596,7 +3844,16 @@
           "name": "04 Filter pending",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?status=pending"
           }
         },
@@ -2604,7 +3861,16 @@
           "name": "05 Filter completed",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?status=completed"
           }
         },
@@ -2612,7 +3878,16 @@
           "name": "06 Filter failed",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?status=failed"
           }
         },
@@ -2620,7 +3895,16 @@
           "name": "07 Filter under verification",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?status=under_verification"
           }
         },
@@ -2628,7 +3912,16 @@
           "name": "08 Filter provider + fee + dates",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?provider=stripe&fee_code=application_fee&date_from=2026-01-01&date_to=2026-12-31&per_page=20"
           }
         },
@@ -2636,7 +3929,16 @@
           "name": "09 Payment statistics",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/stats",
             "description": "completed_amount is collected revenue only. pending/failed/under_verification are not revenue. Fines excluded."
           }
@@ -2645,7 +3947,16 @@
           "name": "10 Payment options",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/options"
           }
         },
@@ -2653,7 +3964,16 @@
           "name": "11 Due fees list",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/due-fees",
             "description": "Applications in payment_pending with unresolved fee obligation (no completed payment for that application+fee)."
           }
@@ -2662,7 +3982,16 @@
           "name": "12 Payment details",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}",
             "description": "Privacy-safe details. No metadata/checkout URL/secrets. Fine-linked IDs → 404."
           }
@@ -2671,7 +4000,16 @@
           "name": "13 Payment attempts",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}/attempts?per_page=20"
           }
         },
@@ -2679,7 +4017,16 @@
           "name": "14 Payment audit logs",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}/audit-logs",
             "description": "Requires view_audit_logs in addition to payment read permission."
           }
@@ -2688,7 +4035,16 @@
           "name": "15 Verify payment (provider reconcile)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}/verify",
             "description": "Requires manage_payments. No body. Asks Stripe for authoritative status. Mock returns 422 unsupported."
           }
@@ -2697,7 +4053,12 @@
           "name": "16 Unauthenticated (401)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments"
           }
         },
@@ -2705,7 +4066,16 @@
           "name": "17 Forbidden verify without manage_payments (403)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}/verify",
             "description": "Use a token with view_payments only."
           }
@@ -2714,7 +4084,16 @@
           "name": "18 Invalid status (422)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments?status=invalid"
           }
         },
@@ -2722,7 +4101,16 @@
           "name": "19 No delete route (405)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}"
           }
         },
@@ -2730,8 +4118,409 @@
           "name": "20 No mark-paid route (404)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{dashboard_token}}" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dashboard_token}}"
+              }
+            ],
             "url": "{{base_url}}/dashboard/payments/{{payment_id}}/mark-paid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Employee Sessions Management",
+      "item": [
+        {
+          "name": "01 Login creating tracked session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data || {};",
+                  "  if (data.token) { pm.collectionVariables.set('super_admin_token', data.token); pm.collectionVariables.set('dashboard_token', data.token); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{super_admin_email}}\",\n  \"password\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/auth/login",
+            "description": "Successful Dashboard login creates a linked employee session."
+          }
+        },
+        {
+          "name": "02 List sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const items = (pm.response.json().data || {}).items || [];",
+                  "  if (items.length && items[0].id) { pm.collectionVariables.set('employee_session_uuid', items[0].id); }",
+                  "  if (items.length && items[0].employee && items[0].employee.id) { pm.collectionVariables.set('session_employee_id', String(items[0].employee.id)); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions"
+          }
+        },
+        {
+          "name": "03 List filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions?search=&status=active&device_type=desktop&page=1&per_page=20&sort=last_seen_desc"
+          }
+        },
+        {
+          "name": "04 Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions/stats"
+          }
+        },
+        {
+          "name": "05 Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions/options"
+          }
+        },
+        {
+          "name": "06 Session details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}"
+          }
+        },
+        {
+          "name": "07 Employee session history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employees/{{session_employee_id}}/sessions"
+          }
+        },
+        {
+          "name": "08 Heartbeat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/session/heartbeat",
+            "description": "Any authenticated Dashboard employee. No client-controlled lifecycle fields."
+          }
+        },
+        {
+          "name": "09 Revoke one session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"سبب إنهاء الجلسة\",\n  \"password_confirmation\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/revoke"
+          }
+        },
+        {
+          "name": "10 Revoke current session confirmation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"إنهاء الجلسة الحالية عمداً\",\n  \"password_confirmation\": \"{{super_admin_password}}\",\n  \"confirm_current_session\": true\n}"
+            },
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/revoke"
+          }
+        },
+        {
+          "name": "11 Revoke all employee sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"إنهاء جميع الجلسات\",\n  \"include_current_actor_session\": false,\n  \"password_confirmation\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/employees/{{session_employee_id}}/sessions/revoke-all"
+          }
+        },
+        {
+          "name": "12 Session audit logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/audit-logs?page=1&per_page=20"
+          }
+        },
+        {
+          "name": "13 Guest 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions"
+          }
+        },
+        {
+          "name": "14 Non-root forbidden 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employee_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions",
+            "description": "Normal Admin / employee tokens must receive 403."
+          }
+        },
+        {
+          "name": "15 Unknown session 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/dashboard/employee-sessions/00000000-0000-4000-8000-000000000099"
+          }
+        },
+        {
+          "name": "16 Revoke validation 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password_confirmation\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/revoke"
+          }
+        },
+        {
+          "name": "17 Password confirmation failure 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"سبب\",\n  \"password_confirmation\": \"wrong-password\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/revoke"
+          }
+        },
+        {
+          "name": "18 Already-ended session 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"محاولة إنهاء مكررة\",\n  \"password_confirmation\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": "{{base_url}}/dashboard/employee-sessions/{{employee_session_uuid}}/revoke",
+            "description": "Expect 409 when already revoked/logged out/expired."
           }
         }
       ]

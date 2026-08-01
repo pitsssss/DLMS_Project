@@ -19,6 +19,8 @@ trait InteractsWithDashboard
 
     protected function dashboardLoginAs(User $user, string $password = 'password'): string
     {
+        $this->flushDashboardAuthGuards();
+
         $response = $this->postJson('/api/dashboard/auth/login', [
             'email' => $user->email,
             'password' => $password,
@@ -26,6 +28,13 @@ trait InteractsWithDashboard
             ->assertJsonPath('success', true);
 
         return (string) $response->json('data.token');
+    }
+
+    protected function flushDashboardAuthGuards(): void
+    {
+        if (isset($this->app['auth'])) {
+            $this->app['auth']->forgetGuards();
+        }
     }
 
     protected function withDashboardToken(User $user, string $password = 'password'): string
@@ -40,5 +49,17 @@ trait InteractsWithDashboard
         $token = $this->dashboardLoginAs($user, $password);
         Sanctum::actingAs($user, ['*'], 'web');
         $this->withHeader('Authorization', 'Bearer '.$token);
+    }
+
+    /**
+     * Assert a previously issued bearer token is rejected after revocation/logout.
+     */
+    protected function assertDashboardTokenUnauthorized(string $token, string $uri = '/api/dashboard/auth/me'): void
+    {
+        $this->flushDashboardAuthGuards();
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson($uri)
+            ->assertUnauthorized();
     }
 }

@@ -16,7 +16,8 @@ class DashboardAuthController extends Controller
     {
         $result = $auth->login(
             $request->validated('email'),
-            $request->validated('password')
+            $request->validated('password'),
+            $request
         );
 
         return $this->successResponse([
@@ -27,7 +28,7 @@ class DashboardAuthController extends Controller
 
     public function logout(DashboardAuthService $auth)
     {
-        $auth->logout(request()->user());
+        $auth->logout(request()->user(), request());
 
         return $this->successResponse(null, 'messages.dashboard.logout_success');
     }

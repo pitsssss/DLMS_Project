@@ -17,3 +17,12 @@ Schedule::command(\App\Console\Commands\SyncExpiredLicensesCommand::class)
     ->dailyAt('00:15')
     ->timezone(config('dlms.business_timezone', 'Asia/Damascus'))
     ->withoutOverlapping();
+
+Schedule::command(\App\Console\Commands\ReconcileEmployeeSessionsCommand::class)
+    ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command(\App\Console\Commands\PruneEmployeeSessionsCommand::class, ['--dry-run' => true])
+    ->weeklyOn(0, '03:30')
+    ->timezone(config('dlms.business_timezone', 'Asia/Damascus'))
+    ->withoutOverlapping();

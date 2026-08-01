@@ -122,9 +122,28 @@ class User extends Authenticatable
         return $this->hasRole('super_admin') || $this->hasRole('admin');
     }
 
+    /**
+     * True protected root Super Admin only (role name super_admin).
+     * Distinct from isSuperAdmin(), which also treats the protected admin role as a bypass.
+     */
+    public function isRootSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function canManageEmployeeSessions(): bool
+    {
+        return $this->isRootSuperAdmin();
+    }
+
     public function isEmployee(): bool
     {
         return $this->user_type === UserType::Employee;
+    }
+
+    public function employeeSessions(): HasMany
+    {
+        return $this->hasMany(EmployeeSession::class);
     }
 
     public function isCitizen(): bool

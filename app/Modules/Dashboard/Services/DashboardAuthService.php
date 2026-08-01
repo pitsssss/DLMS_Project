@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Modules\Auth\Repositories\AuthRepository;
 use App\Modules\Auth\Repositories\PasswordResetTokenRepository;
 use App\Modules\Auth\Services\OtpService;
+use App\Modules\Dashboard\Services\EmployeeSessions\EmployeeSessionService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,12 +20,13 @@ class DashboardAuthService
         private readonly OtpService $otps,
         private readonly PasswordResetTokenRepository $passwordResetTokens,
         private readonly DashboardModuleService $modules,
+        private readonly EmployeeSessionService $employeeSessions,
     ) {}
 
     /**
      * @return array{token: string, user: User}
      */
-    public function login(string $email, string $password): array
+    public function login(string $email, string $password, ?Request $request = null): array
     {
         $user = $this->users->findByEmail($email);
 
@@ -41,18 +44,18 @@ class DashboardAuthService
 
         $user->load(['role.permissions', 'directPermissions']);
 
+        $request ??= request();
+        $started = $this->employeeSessions->startDashboardSession($user, $request);
+
         return [
-            'token' => $user->createToken('dashboard-token')->plainTextToken,
-            'user' => $user,
+            'token' => $started['token'],
+            'user' => $started['user'],
         ];
     }
 
-    public function logout(User $user): void
+    public function logout(User $user, ?Request $request = null): void
     {
-        $token = $user->currentAccessToken();
-        if ($token) {
-            $token->delete();
-        }
+        $this->employeeSessions->markExplicitLogout($user, $request ?? request());
     }
 
     /**
@@ -70,6 +73,8 @@ class DashboardAuthService
                 'user_type' => $user->user_type?->value,
                 'is_active' => (bool) $user->is_active,
                 'is_super_admin' => $user->isSuperAdmin(),
+                'is_root_super_admin' => $user->isRootSuperAdmin(),
+                'can_manage_employee_sessions' => $user->canManageEmployeeSessions(),
                 'role' => [
                     'name' => $user->role?->name,
                     'display_name' => $user->role?->display_name,

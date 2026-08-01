@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Dashboard\Controllers\DashboardEmployeeSessionController;
 use App\Modules\Dashboard\Controllers\DashboardAccessControlController;
 use App\Modules\Content\Controllers\DashboardContactMessageController;
 use App\Modules\Dashboard\Controllers\DashboardApplicationController;
@@ -27,7 +28,7 @@ Route::prefix('dashboard/auth')->group(function (): void {
         Route::post('/reset-password', [DashboardAuthController::class, 'resetPassword']);
     });
 
-    Route::middleware(['auth:sanctum', 'dashboard'])->group(function (): void {
+    Route::middleware(['auth:sanctum', 'dashboard', 'employee.session.track'])->group(function (): void {
         Route::post('/logout', [DashboardAuthController::class, 'logout']);
         Route::get('/me', [DashboardAuthController::class, 'me']);
         Route::put('/change-password', [DashboardAuthController::class, 'changePassword']);
@@ -35,8 +36,31 @@ Route::prefix('dashboard/auth')->group(function (): void {
 });
 
 Route::prefix('dashboard')
-    ->middleware(['auth:sanctum', 'dashboard'])
+    ->middleware(['auth:sanctum', 'dashboard', 'employee.session.track'])
     ->group(function (): void {
+        Route::post('/session/heartbeat', [DashboardEmployeeSessionController::class, 'heartbeat'])
+            ->middleware('throttle:30,1');
+
+        // Employee session management — true root Super Admin (super_admin) only.
+        Route::middleware('root_super_admin')->group(function (): void {
+            Route::get('/employee-sessions', [DashboardEmployeeSessionController::class, 'index']);
+            Route::get('/employee-sessions/stats', [DashboardEmployeeSessionController::class, 'stats']);
+            Route::get('/employee-sessions/options', [DashboardEmployeeSessionController::class, 'options']);
+            Route::get('/employee-sessions/{session}', [DashboardEmployeeSessionController::class, 'show'])
+                ->whereUuid('session');
+            Route::post('/employee-sessions/{session}/revoke', [DashboardEmployeeSessionController::class, 'revoke'])
+                ->whereUuid('session')
+                ->middleware('throttle:30,1');
+            Route::get('/employee-sessions/{session}/audit-logs', [DashboardEmployeeSessionController::class, 'auditLogs'])
+                ->whereUuid('session');
+
+            Route::get('/employees/{employee}/sessions', [DashboardEmployeeSessionController::class, 'employeeSessions'])
+                ->whereNumber('employee');
+            Route::post('/employees/{employee}/sessions/revoke-all', [DashboardEmployeeSessionController::class, 'revokeAll'])
+                ->whereNumber('employee')
+                ->middleware('throttle:20,1');
+        });
+
         Route::get('/overview', DashboardOverviewController::class);
 
         Route::prefix('reports')
