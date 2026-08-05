@@ -30,5 +30,9 @@ class DatabaseSeeder extends Seeder
             DashboardCitizenLicensesFinesDemoSeeder::class,
 
         ]);
+
+        if (app()->environment(['local', 'testing'])) {
+            $this->call([LostReplacementTestCitizenSeeder::class]);
+        }
     }
 }
