@@ -49,7 +49,7 @@ class CitizenUserSeeder extends Seeder
             [
                 'email' => 'petertoss2004@gmail.com',
                 'phone' => '0930673130',
-                'name' => 'محمد نبيل الشامي',
+                'name' => 'بيتر عبدو طوس',
                 'national_id' => '01010023456',
                 'password' => 'password123',
                 'birth_date' => '2004-07-18',
