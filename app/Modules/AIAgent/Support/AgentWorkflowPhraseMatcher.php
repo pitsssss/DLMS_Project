@@ -170,9 +170,16 @@ class AgentWorkflowPhraseMatcher
             'أرسل الوثائق للمراجعة',
             'قدم الوثائق للمراجعة',
             'ابعت الوثائق للمراجعة',
+            'ابعت الأوراق للمراجعة',
+            'قدم الأوراق للمراجعة',
             // English explicit actions
             'submit documents for review',
             'send documents for review',
+            'submit documents',
+            'send documents',
+            'submit for review',
+            'i submitted documents',
+            'i sent documents',
             // Arabic "I finished uploading" variants (without triggering the generic "required documents" intent)
             'خلصت رفع',
             'خلصت رفع الوثائق',
@@ -181,6 +188,14 @@ class AgentWorkflowPhraseMatcher
             'خلصت اوراق',
             'رفعت الوثائق',
             'رفعت الاوراق',
+            'خلصت الوثائق',
+            // English "I finished uploading" variants
+            'finished uploading',
+            'done uploading',
+            'uploaded documents',
+            'uploaded all documents',
+            'i uploaded',
+            'completed upload',
         ];
 
         foreach ($patterns as $pattern) {
@@ -206,7 +221,29 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'بدي جدد رخصتي', 'تجديد رخصة', 'رخصتي قربت تنتهي', 'جددلي الرخصة', 'renew my license',
+            // Arabic
+            'بدي جدد رخصتي',
+            'تجديد رخصة',
+            'رخصتي قربت تنتهي',
+            'جددلي الرخصة',
+            'بدي جدد',
+            'تجديد',
+            'جدد رخصة',
+            'أجدد رخصتي',
+            'اجدد رخصتي',
+            // English
+            'renew my license',
+            'renew license',
+            'renewal',
+            'license renewal',
+            'i want to renew',
+            'i want renew',
+            'i need to renew',
+            'i need renew',
+            'renew my driving license',
+            'license is expiring',
+            'my license expires',
+            'extend my license',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -221,7 +258,31 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'ضاعت رخصتي', 'فقدت رخصتي', 'بدي بدل فاقد', 'رخصتي مفقودة', 'lost license replacement',
+            // Arabic
+            'ضاعت رخصتي',
+            'فقدت رخصتي',
+            'بدي بدل فاقد',
+            'رخصتي مفقودة',
+            'رخصتي ضايعة',
+            'بدل ضايع',
+            'بدل مفقود',
+            'الرخصة ضاعت',
+            'فقدان رخصة',
+            // English
+            'lost license replacement',
+            'lost license',
+            'my license is lost',
+            'i lost my license',
+            'i lost my driving license',
+            'lost my license',
+            'license lost',
+            'replacement for lost',
+            'replacement lost',
+            'i want replacement lost',
+            'i need replacement lost',
+            'missing license',
+            'cant find my license',
+            "can't find my license",
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -236,7 +297,32 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'رخصتي تالفة', 'الرخصة خربانة', 'بدي بدل تالف', 'الرخصة مكسورة', 'damaged license replacement',
+            // Arabic
+            'رخصتي تالفة',
+            'الرخصة خربانة',
+            'بدي بدل تالف',
+            'الرخصة مكسورة',
+            'رخصتي خربانة',
+            'رخصتي مكسورة',
+            'بدل خربان',
+            'بدل مكسور',
+            'الرخصة تالفة',
+            'تلف الرخصة',
+            // English
+            'damaged license replacement',
+            'damaged license',
+            'my license is damaged',
+            'i damaged my license',
+            'license damaged',
+            'broken license',
+            'my license is broken',
+            'license broken',
+            'replacement for damaged',
+            'replacement damaged',
+            'i want replacement damaged',
+            'i need replacement damaged',
+            'torn license',
+            'license torn',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -251,8 +337,34 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'بدي ادفع', 'بدي أدفع', 'ادفع الرسوم', 'أدفع الرسوم', 'الدفع', 'payment',
-            'شو الرسوم', 'كم الرسوم', 'رسوم الطلب', 'application fee', 'pay fee',
+            // Arabic
+            'بدي ادفع',
+            'بدي أدفع',
+            'ادفع الرسوم',
+            'أدفع الرسوم',
+            'الدفع',
+            'شو الرسوم',
+            'كم الرسوم',
+            'رسوم الطلب',
+            'كم الرسم',
+            'شو الرسم',
+            // English
+            'payment',
+            'i want to pay',
+            'i want pay',
+            'i need to pay',
+            'i need pay',
+            'pay now',
+            'application fee',
+            'pay fee',
+            'what is the fee',
+            'how much is the fee',
+            'how much fee',
+            'what fee',
+            'fees',
+            'cost',
+            'how much',
+            'price',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -266,7 +378,26 @@ class AgentWorkflowPhraseMatcher
     {
         $normalized = self::normalize($message);
 
-        foreach (['بدي ادفع', 'بدي أدفع', 'ادفع', 'أدفع', 'pay now', 'start payment'] as $phrase) {
+        foreach ([
+            // Arabic
+            'بدي ادفع',
+            'بدي أدفع',
+            'ادفع',
+            'أدفع',
+            'خليني ادفع',
+            'خليني أدفع',
+            // English
+            'pay now',
+            'start payment',
+            'i want to pay',
+            'i want pay',
+            'i need to pay',
+            'i need pay',
+            'let me pay',
+            'make payment',
+            'proceed to payment',
+            'proceed payment',
+        ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
             }
@@ -280,6 +411,7 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'شو الفحوص المتاحة',
             'شو الفحوصات المتاحة',
             'شو الاختبارات المتاحة',
@@ -299,10 +431,21 @@ class AgentWorkflowPhraseMatcher
             'أي فحص علي هلق',
             'شو الاختبار الحالي',
             'شو الفحص الحالي',
+            // English
             'available tests',
             'what tests are available',
+            'what tests',
+            'show available tests',
+            'show tests',
             'current test',
             'which test should i book',
+            'which test to book',
+            'what test should i take',
+            'what test do i need',
+            'next test',
+            'my test',
+            'upcoming test',
+            'tests i need',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -321,14 +464,27 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'المواعيد المتاحة',
             'شو المواعيد',
             'اعرض المواعيد',
             'مواعيد اختبار',
             'مواعيد فحص',
+            'شو في مواعيد',
+            'مواعيد متاحة',
+            // English
             'available slots',
             'show appointment slots',
             'show available slots',
+            'appointment slots',
+            'available appointments',
+            'show appointments',
+            'what slots',
+            'what appointments',
+            'free slots',
+            'free appointments',
+            'available times',
+            'appointment times',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -336,7 +492,9 @@ class AgentWorkflowPhraseMatcher
         }
 
         if (AgentTestTypeExtractor::extractFromMessage($message) !== null
-            && str_contains($normalized, self::normalize('مواعيد'))) {
+            && (str_contains($normalized, self::normalize('مواعيد')) 
+                || str_contains($normalized, 'slot') 
+                || str_contains($normalized, 'appointment'))) {
             return true;
         }
 
@@ -356,11 +514,22 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'احجزلي موعد',
             'احجز موعد',
             'بدي احجز موعد',
             'بدي أحجز موعد',
+            'حجز موعد',
+            // English
             'book appointment',
+            'book an appointment',
+            'i want to book appointment',
+            'i want book appointment',
+            'i need to book appointment',
+            'i need book appointment',
+            'make appointment',
+            'schedule appointment',
+            'reserve appointment',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -375,14 +544,24 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'احجز أول موعد',
             'احجزلي الموعد الأول',
             'احجز اول موعد',
             'احجزلي اول موعد',
             'أول موعد متاح',
             'اول موعد متاح',
+            'الموعد الاول',
+            // English
             'book first appointment',
             'book first slot',
+            'first available slot',
+            'first available appointment',
+            'book earliest',
+            'earliest appointment',
+            'earliest slot',
+            'soonest appointment',
+            'next available',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -397,6 +576,7 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'حجزتلي موعد',
             'تم حجز الموعد',
             'انحجز الموعد',
@@ -412,12 +592,24 @@ class AgentWorkflowPhraseMatcher
             'شو الموعد اللي حجزته',
             'تأكدلي إذا انحجز الموعد',
             'صار عندي موعد',
+            'مواعيدي المحجوزة',
+            // English
             'did you book an appointment',
+            'did you book appointment',
             'is my appointment booked',
             'show my appointment',
+            'show my appointments',
             'when is my appointment',
             'my booked appointment',
+            'my appointment',
+            'my appointments',
             'appointment status',
+            'do i have appointment',
+            'do i have an appointment',
+            'my current appointment',
+            'booked appointments',
+            'check my appointment',
+            'view my appointment',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -454,11 +646,22 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
+            // Arabic
             'احجزلي',
             'احجز موعد',
             'بدي احجز',
             'بدي أحجز',
+            'حجز',
+            // English
             'book appointment',
+            'book an appointment',
+            'i want to book',
+            'i want book',
+            'i need to book',
+            'i need book',
+            'reserve',
+            'schedule',
+            'make appointment',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -466,7 +669,10 @@ class AgentWorkflowPhraseMatcher
         }
 
         if (AgentTestTypeExtractor::extractFromMessage($message) !== null
-            && (str_contains($normalized, 'احجز') || str_contains($normalized, 'book'))) {
+            && (str_contains($normalized, 'احجز') 
+                || str_contains($normalized, 'book') 
+                || str_contains($normalized, 'schedule')
+                || str_contains($normalized, 'reserve'))) {
             return true;
         }
 
@@ -478,7 +684,27 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'نتيجة الفحص', 'نتيجة الاختبار', 'شو نتيجة', 'نجحت', 'رسبت', 'test result',
+            // Arabic
+            'نتيجة الفحص',
+            'نتيجة الاختبار',
+            'شو نتيجة',
+            'نجحت',
+            'رسبت',
+            'شو نتيجتي',
+            'نتائج الفحص',
+            'نتائج الاختبار',
+            // English
+            'test result',
+            'test results',
+            'my test result',
+            'my result',
+            'exam result',
+            'did i pass',
+            'did i fail',
+            'passed or failed',
+            'pass or fail',
+            'check result',
+            'check my result',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -493,8 +719,29 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'اعرضلي مخالفاتي', 'مخالفاتي', 'عندي مخالفات', 'المخالفات', 'مخالفات',
-            'الغرامات', 'الغرامه', 'fines', 'my fines',
+            // Arabic
+            'اعرضلي مخالفاتي',
+            'مخالفاتي',
+            'عندي مخالفات',
+            'المخالفات',
+            'مخالفات',
+            'الغرامات',
+            'الغرامه',
+            'شو مخالفاتي',
+            'غرامة',
+            // English
+            'fines',
+            'my fines',
+            'show my fines',
+            'show fines',
+            'violations',
+            'my violations',
+            'penalties',
+            'my penalties',
+            'do i have fines',
+            'do i have any fines',
+            'traffic fines',
+            'traffic violations',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -509,7 +756,25 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'اعرضلي رخصي', 'رخصتي', 'رخصي', 'تفاصيل الرخصة', 'my license', 'my licenses',
+            // Arabic
+            'اعرضلي رخصي',
+            'رخصتي',
+            'رخصي',
+            'تفاصيل الرخصة',
+            'شو رخصي',
+            'عندي رخصة',
+            'رخصي الحالية',
+            // English
+            'my license',
+            'my licenses',
+            'show my license',
+            'show my licenses',
+            'view my license',
+            'license details',
+            'my driving license',
+            'current license',
+            'do i have license',
+            'do i have a license',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -524,8 +789,26 @@ class AgentWorkflowPhraseMatcher
         $normalized = self::normalize($message);
 
         foreach ([
-            'حالة البروفايل', 'حالة الملف', 'تمت الموافقة على بروفايلي', 'profile status',
-            'ليش ما فيني أقدم', 'ليش ما فيني اقدم', 'why cant i apply',
+            // Arabic
+            'حالة البروفايل',
+            'حالة الملف',
+            'تمت الموافقة على بروفايلي',
+            'ليش ما فيني أقدم',
+            'ليش ما فيني اقدم',
+            'البروفايل تبعي',
+            'ملفي الشخصي',
+            'حسابي',
+            // English
+            'profile status',
+            'why cant i apply',
+            "why can't i apply",
+            'my profile',
+            'profile approved',
+            'is my profile approved',
+            'account status',
+            'my account',
+            'profile details',
+            'check profile',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;
@@ -539,7 +822,23 @@ class AgentWorkflowPhraseMatcher
     {
         $normalized = self::normalize($message);
 
-        foreach (['weather', 'football', 'bitcoin', 'recipe', 'الطقس', 'كرة القدم', 'طبخ', 'crypto'] as $phrase) {
+        foreach ([
+            // Arabic
+            'الطقس',
+            'كرة القدم',
+            'طبخ',
+            // English
+            'weather',
+            'football',
+            'bitcoin',
+            'recipe',
+            'crypto',
+            'cooking',
+            'sports',
+            'news',
+            'movie',
+            'music',
+        ] as $phrase) {
             if (str_contains($normalized, $phrase)) {
                 return true;
             }

@@ -2,12 +2,17 @@
 
 namespace App\Modules\AIAgent\Support;
 
+use App\Modules\AIAgent\Services\AgentLocaleContext;
 use Illuminate\Support\Facades\Lang;
 
+/**
+ * AI Agent message translator.
+ * 
+ * IMPORTANT: This class no longer uses static mutable state for locale.
+ * Locale is now managed by AgentLocaleContext (request-scoped service).
+ */
 class AgentTranslator
 {
-    private const AGENT_LOCALE = 'ar';
-
     /**
      * Resolve assistant reply text; never return raw translation keys to the client.
      */
@@ -29,9 +34,10 @@ class AgentTranslator
     public static function message(string $key, array $replace = []): string
     {
         $fullKey = str_starts_with($key, 'messages.') ? $key : 'messages.'.$key;
+        $locale = self::getLocale();
 
-        if (Lang::has($fullKey, self::AGENT_LOCALE)) {
-            $translated = Lang::get($fullKey, $replace, self::AGENT_LOCALE);
+        if (Lang::has($fullKey, $locale)) {
+            $translated = Lang::get($fullKey, $replace, $locale);
 
             if (is_string($translated) && $translated !== $fullKey) {
                 return $translated;
@@ -39,6 +45,27 @@ class AgentTranslator
         }
 
         return self::fallbackForKey($fullKey, $replace);
+    }
+
+    /**
+     * Get the current locale from the request-scoped context.
+     * 
+     * Safe fallback for tests and edge cases where context is not available.
+     */
+    public static function getLocale(): string
+    {
+        if (!app()->bound(AgentLocaleContext::class)) {
+            return AgentLocaleContext::getDefaultLocale();
+        }
+
+        try {
+            /** @var AgentLocaleContext $context */
+            $context = app(AgentLocaleContext::class);
+            return $context->getLocale();
+        } catch (\Throwable) {
+            // Fallback to Arabic if context is not available (e.g., in tests without proper setup)
+            return AgentLocaleContext::getDefaultLocale();
+        }
     }
 
     /**
@@ -84,6 +111,7 @@ class AgentTranslator
     private static function fallbackForKey(string $fullKey, array $replace): string
     {
         $suffix = str_replace('messages.', '', $fullKey);
+        $locale = self::getLocale();
 
         if (str_starts_with($suffix, 'ai_agent.application_next_step.')) {
             $status = substr($suffix, strlen('ai_agent.application_next_step.'));
@@ -94,28 +122,81 @@ class AgentTranslator
         if (str_starts_with($suffix, 'ai_agent.workflow.no_application.')) {
             $key = substr($suffix, strlen('ai_agent.workflow.no_application.'));
 
-            return match ($key) {
-                'payment' => 'لا يوجد لديك طلب حالي متعلق بالدفع. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
-                'appointment' => 'لا يوجد لديك طلب حالي متعلق بالمواعيد. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
-                'test_results' => 'لا يوجد لديك طلب حالي لعرض نتائج الاختبارات.',
-                default => 'لا يوجد لديك طلب حالي لهذه العملية.',
-            };
+            return $locale === 'en' 
+                ? self::noApplicationFallbackEn($key)
+                : self::noApplicationFallbackAr($key);
         }
 
         if (str_starts_with($suffix, 'ai_agent.workflow.multiple_applications.')) {
             $key = substr($suffix, strlen('ai_agent.workflow.multiple_applications.'));
 
-            return match ($key) {
-                'payment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة رسومه أو دفعه.'
-                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
-                'appointment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد حجز موعد له.'
-                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
-                'test_results' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة نتائج اختباراته.'
-                    .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
-                default => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد الطلب المطلوب.',
-            };
+            return $locale === 'en'
+                ? self::multipleApplicationsFallbackEn($key, $replace)
+                : self::multipleApplicationsFallbackAr($key, $replace);
         }
 
+        return $locale === 'en' 
+            ? self::generalFallbackEn($suffix, $replace)
+            : self::generalFallbackAr($suffix, $replace);
+    }
+
+    private static function noApplicationFallbackAr(string $key): string
+    {
+        return match ($key) {
+            'payment' => 'لا يوجد لديك طلب حالي متعلق بالدفع. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
+            'appointment' => 'لا يوجد لديك طلب حالي متعلق بالمواعيد. يمكنني مساعدتك في متابعة طلب موجود أو إنشاء طلب جديد.',
+            'test_results' => 'لا يوجد لديك طلب حالي لعرض نتائج الاختبارات.',
+            default => 'لا يوجد لديك طلب حالي لهذه العملية.',
+        };
+    }
+
+    private static function noApplicationFallbackEn(string $key): string
+    {
+        return match ($key) {
+            'payment' => 'You have no current application related to payment. I can help you track an existing application or create a new one.',
+            'appointment' => 'You have no current application related to appointments. I can help you track an existing application or create a new one.',
+            'test_results' => 'You have no current application to view test results.',
+            default => 'You have no current application for this operation.',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function multipleApplicationsFallbackAr(string $key, array $replace): string
+    {
+        return match ($key) {
+            'payment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة رسومه أو دفعه.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'appointment' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد حجز موعد له.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'test_results' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد معرفة نتائج اختباراته.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            default => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد الطلب المطلوب.',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function multipleApplicationsFallbackEn(string $key, array $replace): string
+    {
+        return match ($key) {
+            'payment' => 'You have more than one application in progress. Please specify the application number for which you want to know the fees or make a payment.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'appointment' => 'You have more than one application in progress. Please specify the application number for which you want to book an appointment.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'test_results' => 'You have more than one application in progress. Please specify the application number for which you want to see test results.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            default => 'You have more than one application in progress. Please specify the required application.',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function generalFallbackAr(string $suffix, array $replace): string
+    {
         return match ($suffix) {
             'ai_agent.existing_active_application' => 'لديك طلب رخصة قيادة '
                 .($replace['label'] ?? 'قيد المتابعة')
@@ -157,7 +238,62 @@ class AgentTranslator
     /**
      * @param  array<string, mixed>  $replace
      */
+    private static function generalFallbackEn(string $suffix, array $replace): string
+    {
+        return match ($suffix) {
+            'ai_agent.existing_active_application' => 'You already have an active '
+                .($replace['label'] ?? 'in-progress')
+                .' driving license application. You can track your current application instead of creating a new one.',
+            'ai_agent.no_active_applications' => 'You have no current applications to view their status.',
+            'ai_agent.multiple_active_applications' => 'You have more than one application in progress. Which application do you want to check?'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'ai_agent.status_prompt_confirm' => 'I found an application in progress. Would you like to view its status?',
+            'ai_agent.application_status.with_next_step' => 'Application '
+                .($replace['number'] ?? '')
+                .' status is: '
+                .($replace['status'] ?? '')
+                .'. '
+                .($replace['next_step'] ?? ''),
+            'ai_agent.required_documents.no_applications' => 'You have no current application to view required documents. I can help you create a new application if you want.',
+            'ai_agent.required_documents.multiple_applications' => 'You have more than one application in progress. Please specify the application number for which you want to see required documents.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'ai_agent.required_documents.list' => 'The required documents for your application are: '
+                .($replace['documents'] ?? '').'.',
+            'ai_agent.required_documents.already_uploaded_hint' => 'Some documents are already uploaded, and you can track the status of each document from the application documents page.',
+            'ai_agent.required_documents.stage_completed_hint' => 'The documents for this application have been reviewed or the documents stage has been completed. You can track the current step from the application status.',
+            'ai_agent.required_documents.unavailable' => 'I could not fetch the required documents for this application at the moment.',
+            'ai_agent.appointments.current.single' => 'Yes, an appointment has been booked for '
+                .($replace['test'] ?? 'the test')
+                .' on '
+                .($replace['date'] ?? '')
+                .' at '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.current.multiple' => 'You have more than one appointment related to this application.',
+            'ai_agent.appointments.current.none' => 'You have no current appointment booked for this application. You can view available slots and book a suitable appointment.',
+            'ai_agent.appointments.current.no_application' => 'You have no current application to view its appointment.',
+            'ai_agent.appointments.current.choose_application' => 'You have more than one application in progress. Please specify the application number for which you want to view the appointment.'
+                .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
+            default => 'Sorry, unable to display the message at the moment. Please try again later or contact support.',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
     private static function applicationNextStepFallback(string $status, array $replace = []): string
+    {
+        $locale = self::getLocale();
+        
+        return $locale === 'en'
+            ? self::applicationNextStepFallbackEn($status, $replace)
+            : self::applicationNextStepFallbackAr($status, $replace);
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function applicationNextStepFallbackAr(string $status, array $replace = []): string
     {
         $message = match ($status) {
             'no_applications' => 'لا يوجد لديك طلبات حالية لتحديد الخطوة التالية. يمكنني مساعدتك في إنشاء طلب رخصة جديد إذا أردت.',
@@ -178,6 +314,35 @@ class AgentTranslator
             'cancelled' => 'تم إلغاء هذا الطلب. يمكنك إنشاء طلب جديد إذا كنت ترغب بمتابعة الخدمة من البداية.',
             'unknown' => 'لم أتمكن من تحديد الخطوة التالية لهذا الطلب. يمكنك فتح تفاصيل الطلب أو التواصل مع الدعم.',
             default => 'لم أتمكن من تحديد الخطوة التالية لهذا الطلب. يمكنك فتح تفاصيل الطلب أو التواصل مع الدعم.',
+        };
+
+        return $message;
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function applicationNextStepFallbackEn(string $status, array $replace = []): string
+    {
+        $message = match ($status) {
+            'no_applications' => 'You have no current applications to determine the next step. I can help you create a new driving license application if you want.',
+            'multiple_applications' => 'You have more than one application in progress. Please specify the application number for which you want to know the next step.'
+                .(isset($replace['summary']) ? "\n".$replace['summary'] : ''),
+            'draft' => 'Your application is currently in draft status. The next step is to upload the required documents and submit them for review.',
+            'documents_rejected' => 'Some documents in your application have been rejected. The next step is to review the reason for rejection and re-upload the required documents correctly.',
+            'documents_under_review' => 'Your application documents are currently under review by the relevant employee. You do not need to take any action now, and you will be notified when the review is complete.',
+            'payment_pending' => 'Your documents have been approved. The next step is to pay the required fees to complete the application.',
+            'payment_completed' => 'Payment completed successfully. The next step is to book an appointment for the first available test.',
+            'appointment_pending' => 'Your application is ready to book a test appointment. The next step is to choose a suitable appointment for the currently available test.',
+            'in_testing' => 'Your application is currently in the testing phase. The next step is to track the current test or wait for the result to be recorded by the relevant employee.',
+            'waiting_retest' => 'Your application is waiting for a retest. The next step is to book a new appointment for the same test that was not passed.',
+            'approved' => 'All requirements have been met and your application is now eligible for license issuance. The next step is to wait for the license to be issued by the relevant employee.',
+            'administrative_review' => 'Your application is currently under administrative review. You do not need to take any action now until the review is complete.',
+            'license_issued' => 'The license for your application has been issued successfully. You can now view the license details from the licenses section.',
+            'rejected' => 'The application has been rejected. You can review the reason for rejection from the application details.',
+            'cancelled' => 'This application has been cancelled. You can create a new application if you want to continue the service from the beginning.',
+            'unknown' => 'I could not determine the next step for this application. You can open the application details or contact support.',
+            default => 'I could not determine the next step for this application. You can open the application details or contact support.',
         };
 
         return $message;

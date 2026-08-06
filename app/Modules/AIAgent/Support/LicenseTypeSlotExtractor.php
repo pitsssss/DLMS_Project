@@ -107,4 +107,15 @@ class LicenseTypeSlotExtractor
             default => $code,
         };
     }
+
+    public static function labelEn(string $code): string
+    {
+        return match ($code) {
+            'private' => 'Private',
+            'public' => 'Public',
+            'truck' => 'Truck',
+            'bus' => 'Bus',
+            default => $code,
+        };
+    }
 }

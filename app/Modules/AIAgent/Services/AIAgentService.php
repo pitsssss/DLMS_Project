@@ -33,6 +33,8 @@ class AIAgentService
         private readonly AIAgentActionService $actionService,
         private readonly AgentDocumentFlowService $documentFlow,
         private readonly AgentPendingWorkflowService $pendingWorkflow,
+        private readonly AgentLocaleContext $localeContext,
+        private readonly AgentSessionLocaleManager $sessionLocaleManager,
     ) {}
 
     /**
@@ -44,13 +46,34 @@ class AIAgentService
             throw new ApiException('AI agent is currently disabled.', 503);
         }
 
-        $prepared = $this->preProcessor->process($message);
+        // Load or create session first to get session locale
+        $session = $this->resolveSession($user, $sessionId);
+        $sessionLocale = $this->sessionLocaleManager->getSessionLocale($session);
+
+        // Preprocess with session locale context
+        $prepared = $this->preProcessor->process($message, $sessionLocale);
+        
         if ($prepared['flags']['empty']) {
             throw new ApiException('Message cannot be empty.', 422, ['message' => ['Message is required.']]);
         }
 
-        return DB::transaction(function () use ($user, $prepared, $sessionId) {
-            $session = $this->resolveSession($user, $sessionId);
+        $detection = $prepared['language_detection'];
+
+        // Determine final locale for this request
+        $requestLocale = $this->sessionLocaleManager->resolveLocaleForRequest($session, $detection);
+
+        // Set locale in request-scoped context
+        $this->localeContext->setLocale($requestLocale);
+        $this->localeContext->setDetectionMetadata(
+            $detection['locale'],
+            $detection['confidence'],
+            $detection['source']
+        );
+
+        // Update session locale if confident or explicit
+        $this->sessionLocaleManager->updateIfConfident($session, $detection);
+
+        return DB::transaction(function () use ($user, $prepared, $session, $requestLocale) {
             $userMessage = $prepared['message'];
 
             $state = $this->sessionContext->mergeUserMessage($session, $userMessage);
@@ -120,7 +143,7 @@ class AIAgentService
                 $payload = $this->postProcessor->normalize(
                     $raw,
                     $userMessage,
-                    $prepared['language_hint']
+                    $requestLocale
                 );
             } catch (\Throwable) {
                 $payload = null;
@@ -132,7 +155,7 @@ class AIAgentService
                     $user,
                     $userMessage,
                     $session,
-                    $prepared['language_hint']
+                    $requestLocale
                 );
             }
 
@@ -279,6 +302,8 @@ class AIAgentService
 
         $response = [
             'session_id' => $session->id,
+            'locale' => $this->localeContext->getLocale(),
+            'text_direction' => $this->localeContext->getTextDirection(),
             'reply' => (string) ($actionResult['reply'] ?? ''),
             'intent' => $session->current_intent ?? AgentIntent::GeneralHelp->value,
             'confidence' => 1.0,
@@ -408,6 +433,8 @@ class AIAgentService
     ): array {
         $response = [
             'session_id' => $session->id,
+            'locale' => $this->localeContext->getLocale(),
+            'text_direction' => $this->localeContext->getTextDirection(),
             'reply' => $payload['reply'],
             'intent' => $payload['intent'],
             'confidence' => $payload['confidence'],

@@ -17,6 +17,12 @@ class AgentActionReplyBuilder
         private readonly AgentAppointmentHandler $appointmentHandler,
     ) {}
 
+    private function isEnglish(): bool
+    {
+        return method_exists(AgentTranslator::class, 'getLocale') 
+            && AgentTranslator::getLocale() === 'en';
+    }
+
     /**
      * @param  array<string, mixed>  $result
      */
@@ -38,18 +44,26 @@ class AgentActionReplyBuilder
             'book_appointment' => $this->bookAppointmentReply($result),
             'get_test_results' => $this->testResultsReply($result),
             'submit_documents_for_review' => $this->submitDocumentsReply($result),
-            default => 'تم تنفيذ العملية بنجاح.',
+            default => AgentTranslator::getLocale() === 'en' 
+                ? 'Operation completed successfully.'
+                : 'تم تنفيذ العملية بنجاح.',
         };
     }
 
     public function cancel(): string
     {
-        return 'تم إلغاء العملية. يمكنك طلب المساعدة من جديد في أي وقت.';
+        return AgentTranslator::getLocale() === 'en'
+            ? 'The operation has been cancelled. You can request help again at any time.'
+            : 'تم إلغاء العملية. يمكنك طلب المساعدة من جديد في أي وقت.';
     }
 
     public function failure(string $message): string
     {
-        return 'تعذر تنفيذ العملية: '.$message;
+        $prefix = AgentTranslator::getLocale() === 'en'
+            ? 'Failed to execute operation: '
+            : 'تعذر تنفيذ العملية: ';
+        
+        return $prefix.$message;
     }
 
     /**
@@ -60,8 +74,13 @@ class AgentActionReplyBuilder
         $number = (string) ($result['application_number'] ?? '');
         $arguments = is_array($action->arguments) ? $action->arguments : [];
         $licenseCode = (string) ($arguments['license_type_code'] ?? 'private');
+        
+        if (AgentTranslator::getLocale() === 'en') {
+            $label = LicenseTypeSlotExtractor::labelEn($licenseCode);
+            return "{$label} driving license application created successfully. Application number is {$number}. The next step is to upload the required documents.";
+        }
+        
         $label = LicenseTypeSlotExtractor::labelAr($licenseCode);
-
         return "تم إنشاء طلب رخصة القيادة {$label} بنجاح. رقم الطلب هو {$number}. الخطوة التالية هي رفع الوثائق المطلوبة.";
     }
 
@@ -99,7 +118,9 @@ class AgentActionReplyBuilder
         $amount = (string) ($result['fee']['amount'] ?? '');
         $currency = (string) ($result['fee']['currency'] ?? ApplicationFeeCatalog::CURRENCY);
 
-        return "رسوم طلب {$number} هي {$amount} {$currency}.";
+        return AgentTranslator::getLocale() === 'en'
+            ? "The fee for application {$number} is {$amount} {$currency}."
+            : "رسوم طلب {$number} هي {$amount} {$currency}.";
     }
 
     /**
@@ -108,12 +129,21 @@ class AgentActionReplyBuilder
     private function profileStatusReply(array $result): string
     {
         $status = (string) ($result['profile_status'] ?? '');
+        $isEn = AgentTranslator::getLocale() === 'en';
 
         return match ($status) {
-            'approved' => 'تمت الموافقة على ملفك الشخصي. يمكنك استخدام خدمات الطلبات والرخص.',
-            'pending_review' => 'ملفك الشخصي قيد المراجعة حالياً.',
-            'rejected' => 'تم رفض بيانات ملفك الشخصي. يرجى تعديل البيانات وإعادة إرسالها للمراجعة.',
-            default => 'حالة ملفك الشخصي: '.$status,
+            'approved' => $isEn 
+                ? 'Your profile has been approved. You can use application and license services.'
+                : 'تمت الموافقة على ملفك الشخصي. يمكنك استخدام خدمات الطلبات والرخص.',
+            'pending_review' => $isEn
+                ? 'Your profile is currently under review.'
+                : 'ملفك الشخصي قيد المراجعة حالياً.',
+            'rejected' => $isEn
+                ? 'Your profile data has been rejected. Please update the information and resubmit for review.'
+                : 'تم رفض بيانات ملفك الشخصي. يرجى تعديل البيانات وإعادة إرسالها للمراجعة.',
+            default => $isEn
+                ? 'Your profile status: '.$status
+                : 'حالة ملفك الشخصي: '.$status,
         };
     }
 
@@ -123,12 +153,17 @@ class AgentActionReplyBuilder
     private function startPaymentReply(array $result): string
     {
         $number = (string) ($result['application_number'] ?? '');
+        $isEn = AgentTranslator::getLocale() === 'en';
 
         if (! empty($result['checkout_url'])) {
-            return "تم تجهيز دفع رسوم الطلب {$number}. يمكنك إكمال الدفع من رابط الدفع المعروض في التطبيق.";
+            return $isEn
+                ? "Payment for application {$number} is ready. You can complete the payment from the payment link displayed in the app."
+                : "تم تجهيز دفع رسوم الطلب {$number}. يمكنك إكمال الدفع من رابط الدفع المعروض في التطبيق.";
         }
 
-        return "تم تجهيز دفع رسوم الطلب {$number} بنجاح.";
+        return $isEn
+            ? "Payment for application {$number} has been prepared successfully."
+            : "تم تجهيز دفع رسوم الطلب {$number} بنجاح.";
     }
 
     /**
@@ -137,10 +172,15 @@ class AgentActionReplyBuilder
     private function finesReply(array $result): string
     {
         $count = is_array($result['items'] ?? null) ? count($result['items']) : 0;
+        $isEn = AgentTranslator::getLocale() === 'en';
 
         return $count === 0
-            ? 'لا توجد مخالفات مسجلة على حسابك حالياً.'
-            : "لديك {$count} مخalفة مسجلة. يمكنك مراجعة التفاصيل في النتيجة.";
+            ? ($isEn 
+                ? 'You currently have no fines registered on your account.'
+                : 'لا توجد مخالفات مسجلة على حسابك حالياً.')
+            : ($isEn
+                ? "You have {$count} fine(s) registered. You can review the details in the result."
+                : "لديك {$count} مخالفة مسجلة. يمكنك مراجعة التفاصيل في النتيجة.");
     }
 
     /**
@@ -169,10 +209,15 @@ class AgentActionReplyBuilder
     private function licensesReply(array $result): string
     {
         $count = is_array($result['items'] ?? null) ? count($result['items']) : 0;
+        $isEn = AgentTranslator::getLocale() === 'en';
 
         return $count === 0
-            ? 'لا توجد رخص قيادة صادرة على حسابك حالياً.'
-            : "لديك {$count} رخصة/رخص مسجلة. يمكنك مراجعة التفاصيل في النتيجة.";
+            ? ($isEn
+                ? 'You currently have no driving licenses issued on your account.'
+                : 'لا توجد رخص قيادة صادرة على حسابك حالياً.')
+            : ($isEn
+                ? "You have {$count} license(s) registered. You can review the details in the result."
+                : "لديك {$count} رخصة/رخص مسجلة. يمكنك مراجعة التفاصيل في النتيجة.");
     }
 
     /**
@@ -212,10 +257,20 @@ class AgentActionReplyBuilder
     private function submitDocumentsReply(array $result): string
     {
         $number = trim((string) ($result['application_number'] ?? ''));
-        $status = trim((string) ($result['status_label_ar'] ?? 'قيد المراجعة'));
+        $isEn = AgentTranslator::getLocale() === 'en';
+        
+        $status = $isEn 
+            ? trim((string) ($result['status_label_en'] ?? 'under review'))
+            : trim((string) ($result['status_label_ar'] ?? 'قيد المراجعة'));
 
-        return $number !== ''
-            ? "تم إرسال وثائق طلب {$number} للمراجعة. حالة الطلب الآن: {$status}."
+        if ($number !== '') {
+            return $isEn
+                ? "Documents for application {$number} have been submitted for review. Application status is now: {$status}."
+                : "تم إرسال وثائق طلب {$number} للمراجعة. حالة الطلب الآن: {$status}.";
+        }
+
+        return $isEn
+            ? "Your application documents have been submitted for review. Application status is now: {$status}."
             : "تم إرسال وثائق طلبك للمراجعة. حالة الطلب الآن: {$status}.";
     }
 }

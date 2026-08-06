@@ -4,32 +4,34 @@ namespace App\Modules\AIAgent\Services;
 
 class AgentPreProcessor
 {
+    public function __construct(
+        private readonly AgentLanguageDetector $languageDetector,
+    ) {}
+
     /**
-     * @return array{message: string, language_hint: string|null, flags: array<string, bool>}
+     * @return array{
+     *   message: string,
+     *   language_detection: array{
+     *     locale: string,
+     *     confidence: float,
+     *     source: string,
+     *     is_explicit: bool
+     *   },
+     *   flags: array<string, bool>
+     * }
      */
-    public function process(string $message): array
+    public function process(string $message, ?string $sessionLocale = null): array
     {
         $trimmed = trim(preg_replace('/\s+/u', ' ', $message) ?? $message);
 
+        $detection = $this->languageDetector->detect($trimmed, $sessionLocale);
+
         return [
             'message' => $trimmed,
-            'language_hint' => $this->detectLanguageHint($trimmed),
+            'language_detection' => $detection,
             'flags' => [
                 'empty' => $trimmed === '',
             ],
         ];
-    }
-
-    private function detectLanguageHint(string $message): ?string
-    {
-        if (preg_match('/[\x{0600}-\x{06FF}]/u', $message)) {
-            return 'ar';
-        }
-
-        if (preg_match('/[a-zA-Z]/', $message)) {
-            return 'en';
-        }
-
-        return null;
     }
 }

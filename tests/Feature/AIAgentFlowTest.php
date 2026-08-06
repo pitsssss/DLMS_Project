@@ -71,6 +71,67 @@ class AIAgentFlowTest extends TestCase
         $this->instance(GeminiAgentClient::class, $mock);
     }
 
+    public function test_arabic_request_does_not_return_500_and_uses_arabic_locale(): void
+    {
+        $citizen = $this->citizen();
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini([
+            'intent' => 'general_help',
+            'confidence' => 0.8,
+            'language' => 'ar',
+            'reply' => 'ماذا تحتاج؟',
+            'missing_slots' => [],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $this->postJson('/api/ai-agent/message', [
+            'message' => 'بدي مساعدة',
+        ])->assertOk()
+            ->assertJsonPath('data.locale', 'ar');
+    }
+
+    public function test_english_request_preserves_english_locale_when_supported(): void
+    {
+        $citizen = $this->citizen();
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini([
+            'intent' => 'general_help',
+            'confidence' => 0.8,
+            'language' => 'en',
+            'reply' => 'How can I help you?',
+            'missing_slots' => [],
+            'proposed_action' => null,
+            'requires_confirmation' => false,
+            'safety_status' => 'safe',
+            'requires_human_support' => false,
+        ]);
+
+        $this->postJson('/api/ai-agent/message', [
+            'message' => 'I need help',
+        ])->assertOk()
+            ->assertJsonPath('data.locale', 'en');
+    }
+
+    public function test_gemini_failure_reaches_deterministic_fallback_with_resolved_locale(): void
+    {
+        $citizen = $this->citizen();
+        Sanctum::actingAs($citizen);
+
+        $this->mockGemini(null, true);
+
+        $this->postJson('/api/ai-agent/message', [
+            'message' => 'I need help',
+        ])->assertOk()
+            ->assertJsonPath('data.locale', 'en')
+            ->assertJsonPath('data.intent', 'general_help')
+            ->assertJsonPath('data.reply', 'I assist with driving license services only. I can help with new applications, status, documents, payments, appointments, results, licenses, and fines. How can I help?');
+    }
+
     public function test_citizen_can_send_message_and_create_session(): void
     {
         $citizen = $this->citizen();

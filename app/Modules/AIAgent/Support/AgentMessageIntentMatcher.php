@@ -6,6 +6,7 @@ class AgentMessageIntentMatcher
 {
     /** @var list<string> */
     private const STATUS_PHRASES = [
+        // Arabic
         'حالة الطلب',
         'حالة طلبي',
         'حالة الطلب الخاص بي',
@@ -24,13 +25,26 @@ class AgentMessageIntentMatcher
         'طلبي',
         'حالة طلب',
         'وين الطلب',
+        'شو صار بالطلب',
+        'صار في تحديث',
+        // English
         'application status',
         'track my application',
         'where is my application',
+        'my application',
+        'my applications',
+        'status of my application',
+        'check application',
+        'check my application',
+        'view application',
+        'view my application',
+        'application progress',
+        'track application',
     ];
 
     /** @var list<string> */
     private const REQUIRED_DOCUMENTS_PHRASES = [
+        // Arabic
         'شو الوثائق المطلوبة',
         'ما هي الوثائق المطلوبة',
         'ما الوثائق المطلوبة',
@@ -51,15 +65,25 @@ class AgentMessageIntentMatcher
         'الوثائق',
         'المستندات',
         'الأوراق',
+        // English
         'required documents',
         'what documents are required',
+        'what documents do i need',
+        'what documents',
         'documents needed',
         'what should i upload',
+        'what do i upload',
         'required files',
+        'needed documents',
+        'documents i need',
+        'files needed',
+        'upload documents',
+        'which documents',
     ];
 
     /** @var list<string> */
     private const NEW_LICENSE_PHRASES = [
+        // Arabic
         'رخصة جديدة',
         'رخصه جديده',
         'بدي رخصة',
@@ -70,10 +94,30 @@ class AgentMessageIntentMatcher
         'أنشئ طلب',
         'انشئ طلب',
         'عمل طلب جديد',
+        'بدي اعمل طلب',
+        'بدي أعمل طلب',
+        'بدي سوي طلب',
+        'بدي أسوي طلب',
+        // English
         'new license',
         'new driving license',
         'apply for license',
+        'apply for driving license',
         'create application',
+        'new application',
+        'i want new license',
+        'i want a new license',
+        'i want driving license',
+        'i want a driving license',
+        'i need new license',
+        'i need a new license',
+        'i need driving license',
+        'i need a driving license',
+        'get new license',
+        'get driving license',
+        'apply for new license',
+        'make application',
+        'start application',
     ];
 
     /** @var list<string> */
@@ -176,6 +220,7 @@ class AgentMessageIntentMatcher
 
     /** @var list<string> */
     private const NEXT_STEP_PHRASES = [
+        // Arabic
         'الخطوة القادمة',
         'الخطوة التالية',
         'شو الخطوة',
@@ -195,16 +240,28 @@ class AgentMessageIntentMatcher
         'ما الخطوة التالية',
         'الخطوة اللي بعدها',
         'الخطوة اللي بعد',
+        'شو الخطوة الجاية',
+        // English
         'next step',
         'what next',
+        'what is next',
         'what should i do now',
+        'what do i do now',
+        'what should i do next',
+        'what do i do next',
         'continue application',
         'continue',
+        'then what',
+        'after that',
+        'what comes next',
+        'whats next',
+        'following step',
     ];
 
     private static function hasExplicitStatusQuestion(string $normalized): bool
     {
         $signals = [
+            // Arabic
             'حالة الطلب',
             'حالة طلبي',
             'شو حالة',
@@ -214,7 +271,12 @@ class AgentMessageIntentMatcher
             'تابعلي طلبي',
             'متابعة الطلب',
             'متابعة طلبي',
+            // English
             'application status',
+            'status of application',
+            'check status',
+            'track application',
+            'track my application',
         ];
 
         foreach ($signals as $signal) {
@@ -287,11 +349,16 @@ class AgentMessageIntentMatcher
         }
 
         $signals = [
+            // Arabic
             'وين صار',
             'وين وصل',
             'شو صار',
             'وصل الطلب',
+            // English
             'status',
+            'track',
+            'progress',
+            'where is',
         ];
 
         foreach ($signals as $signal) {
