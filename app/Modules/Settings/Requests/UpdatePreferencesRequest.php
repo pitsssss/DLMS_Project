@@ -3,6 +3,7 @@
 namespace App\Modules\Settings\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePreferencesRequest extends FormRequest
 {
@@ -17,7 +18,11 @@ class UpdatePreferencesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'language' => ['nullable', 'string', 'in:ar,en'],
+            'language' => [
+                'nullable',
+                'string',
+                Rule::in(config('localization.supported', ['ar', 'en'])),
+            ],
             'theme' => ['nullable', 'string', 'in:light,dark,system'],
         ];
     }

@@ -22,27 +22,47 @@ use App\Modules\Licenses\Controllers\LicenseVerificationController;
 use App\Modules\Notifications\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/ping', function () {
-    return response()->json([
-        'success' => true,
-        'message' => __('messages.ping.running'),
-        'data' => [
-            'phase' => 9,
-        ],
-    ]);
+/*
+|--------------------------------------------------------------------------
+| Public citizen-facing routes (locale after Accept-Language only)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('locale')->group(function (): void {
+    Route::get('/ping', function () {
+        return response()->json([
+            'success' => true,
+            'message' => __('messages.ping.running'),
+            'data' => [
+                'phase' => 9,
+            ],
+        ]);
+    });
+
+    Route::post('/auth/register', [RegisterController::class, 'register']);
+    Route::post('/auth/verify-otp', [RegisterController::class, 'verifyOtp']);
+    Route::post('/auth/login', [LoginController::class, 'login']);
+
+    Route::middleware('throttle:5,1')->group(function (): void {
+        Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot']);
+        Route::post('/auth/verify-forgot-password-otp', [ForgotPasswordController::class, 'verifyForgotPasswordOtp']);
+        Route::post('/auth/reset-password', [ForgotPasswordController::class, 'resetPassword']);
+    });
+
+    Route::get('/license-types', [LicenseTypeController::class, 'index']);
+    Route::get('/service-types', [ServiceTypeController::class, 'index']);
+    Route::get('/test-types', [TestTypeController::class, 'index']);
+
+    Route::get('/licenses/verify/{verificationToken}', [LicenseVerificationController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->where('verificationToken', '[A-Za-z0-9]+');
 });
 
-Route::post('/auth/register', [RegisterController::class, 'register']);
-Route::post('/auth/verify-otp', [RegisterController::class, 'verifyOtp']);
-Route::post('/auth/login', [LoginController::class, 'login']);
-
-Route::middleware('throttle:5,1')->group(function (): void {
-    Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot']);
-    Route::post('/auth/verify-forgot-password-otp', [ForgotPasswordController::class, 'verifyForgotPasswordOtp']);
-    Route::post('/auth/reset-password', [ForgotPasswordController::class, 'resetPassword']);
-});
-
-Route::middleware('auth:sanctum')->group(function (): void {
+/*
+|--------------------------------------------------------------------------
+| Authenticated citizen routes (auth → locale so users.language is available)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'locale'])->group(function (): void {
     Route::post('/auth/logout', [LogoutController::class, 'logout']);
     Route::get('/auth/me', [ProfileController::class, 'me']);
 
@@ -51,20 +71,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/profile/change-password', [ProfileController::class, 'changePassword']);
 });
 
-Route::get('/license-types', [LicenseTypeController::class, 'index']);
-Route::get('/service-types', [ServiceTypeController::class, 'index']);
-Route::get('/test-types', [TestTypeController::class, 'index']);
-
-Route::get('/licenses/verify/{verificationToken}', [LicenseVerificationController::class, 'show'])
-    ->middleware('throttle:30,1')
-    ->where('verificationToken', '[A-Za-z0-9]+');
-
-
-Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'citizen', 'locale'])->group(function (): void {
     Route::get('/profile/status', [ProfileController::class, 'status']);
 });
 
-Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(function (): void {
+Route::middleware(['auth:sanctum', 'citizen', 'locale'])->prefix('applications')->group(function (): void {
     Route::get('/', [ApplicationController::class, 'index']);
     Route::get('/{application}/required-documents', [ApplicationDocumentController::class, 'requiredDocuments'])
         ->whereNumber('application');
@@ -106,7 +117,7 @@ Route::middleware(['auth:sanctum', 'citizen'])->prefix('applications')->group(fu
     });
 });
 
-Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'citizen', 'locale'])->group(function (): void {
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index']);
 
     Route::middleware('profile.approved')->group(function (): void {
@@ -129,10 +140,6 @@ Route::middleware(['auth:sanctum', 'citizen'])->group(function (): void {
     });
 
     Route::get('/licenses', [LicenseController::class, 'index']);
-
-
-
-
 
     Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
 

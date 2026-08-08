@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'root_super_admin' => \App\Http\Middleware\EnsureRootSuperAdmin::class,
             'employee.session.track' => \App\Http\Middleware\TrackEmployeeSessionActivity::class,
             'dev.dashboard' => \App\Http\Middleware\EnsureDevDashboardAllowed::class,
+            'locale' => \App\Http\Middleware\ResolveRequestLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

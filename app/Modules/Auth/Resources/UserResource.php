@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'governorate' => $this->governorate,
             'address' => $this->address,
+            'language' => $this->language ?? config('localization.default', 'ar'),
             'profile_completed' => (bool) $this->profile_completed,
             'profile_status' => $this->profile_status instanceof \App\Enums\ProfileStatus
                 ? $this->profile_status->value

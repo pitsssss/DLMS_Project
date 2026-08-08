@@ -32,7 +32,7 @@ class SettingsService
         }
 
         return [
-            'language' => $user->language ?? config('content.defaults.language', 'ar'),
+            'language' => $user->language ?? config('localization.default', config('content.defaults.language', 'ar')),
             'theme' => $user->theme ?? config('content.defaults.theme', 'system'),
         ];
     }

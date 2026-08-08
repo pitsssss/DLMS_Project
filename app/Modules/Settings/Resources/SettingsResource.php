@@ -27,7 +27,7 @@ class SettingsResource extends JsonResource
                 'profile_completed' => (bool) $this->profile_completed,
             ],
             'preferences' => [
-                'language' => $this->language ?? config('content.defaults.language', 'ar'),
+                'language' => $this->language ?? config('localization.default', config('content.defaults.language', 'ar')),
                 'theme' => $this->theme ?? config('content.defaults.theme', 'system'),
             ],
             'available_languages' => config('content.languages', []),
