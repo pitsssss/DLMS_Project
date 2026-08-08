@@ -42,6 +42,7 @@ class LostReplacementTestCitizenSeeder extends Seeder
                 'national_id' => 'LRTEST0000001',
                 'password' => Hash::make($password),
                 'user_type' => 'citizen',
+                'role_id' => null,
                 'birth_date' => now()->subYears(30)->toDateString(),
                 'governorate' => 'دمشق',
                 'address' => 'عنوان تجريبي',
