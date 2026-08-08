@@ -2,11 +2,9 @@
 
 namespace App\Modules\AIAgent\Services;
 
-use App\Enums\ApplicationStatus;
-use App\Models\LicenseApplication;
 use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
-use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Payments\Support\ApplicationFeeCatalog;
 
@@ -46,6 +44,18 @@ class AgentFeeAndPaymentHandler
             ]);
         }
 
+        if ($intent === AgentIntent::GetPaymentStatus) {
+            return $this->responseBuilder->basePayload($intent, $context->language, [
+                'reply' => AgentTranslator::message('ai_agent.payment.status.loading'),
+                'proposed_action' => [
+                    'name' => 'get_payment_status',
+                    'arguments' => ['application_id' => $application->id],
+                ],
+                'requires_confirmation' => false,
+                'execute_immediately' => true,
+            ]);
+        }
+
         $actionName = $intent === AgentIntent::StartPayment ? 'start_payment' : 'get_application_fee';
         $blockReason = $this->policy->blockReason($application, $actionName);
 
@@ -55,7 +65,7 @@ class AgentFeeAndPaymentHandler
 
         if ($intent === AgentIntent::StartPayment) {
             return $this->responseBuilder->basePayload($intent, $context->language, [
-                'reply' => 'يمكنني تجهيز دفع رسوم الطلب. هل تؤكد المتابعة؟',
+                'reply' => AgentTranslator::message('ai_agent.payment.start.confirm'),
                 'proposed_action' => [
                     'name' => 'start_payment',
                     'arguments' => ['application_id' => $application->id],
@@ -71,17 +81,22 @@ class AgentFeeAndPaymentHandler
             $currency = (string) ($feeData['fee']->currency ?? ApplicationFeeCatalog::CURRENCY);
 
             return $this->responseBuilder->basePayload(AgentIntent::GetApplicationFee, $context->language, [
-                'reply' => "رسوم طلبك {$application->application_number} هي {$amount} {$currency}. يمكنك المتابعة للدفع عندما تكون جاهزاً.",
+                'reply' => AgentTranslator::message('ai_agent.payment.fee.reply', [
+                    'number' => $application->application_number,
+                    'amount' => $amount,
+                    'currency' => $currency,
+                ]),
                 'proposed_action' => [
                     'name' => 'get_application_fee',
                     'arguments' => ['application_id' => $application->id],
                 ],
+                'execute_immediately' => true,
             ]);
         } catch (\Throwable) {
             return $this->responseBuilder->blockedPayload(
                 AgentIntent::GetApplicationFee,
                 $context->language,
-                'لم أتمكن من جلب رسوم هذا الطلب حالياً.'
+                AgentTranslator::message('ai_agent.payment.fee.unavailable')
             );
         }
     }

@@ -28,10 +28,13 @@ class HandleAgentInteractionRequest extends FormRequest
                     'select_required_document',
                     'select_appointment_slot',
                     'select_appointment',
+                    'select_license',
                     'cancel_document_upload',
                     'show_required_documents',
                     'cancel_pending_workflow',
                     'show_application_choices_again',
+                    'confirm_pending_action',
+                    'cancel_pending_action',
                 ]),
             ],
             'selection_token' => [
@@ -45,7 +48,18 @@ class HandleAgentInteractionRequest extends FormRequest
                         'select_required_document',
                         'select_appointment_slot',
                         'select_appointment',
+                        'select_license',
                     ],
+                    true
+                )),
+            ],
+            'action_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+                Rule::requiredIf(fn (): bool => in_array(
+                    $this->input('action'),
+                    ['confirm_pending_action', 'cancel_pending_action'],
                     true
                 )),
             ],

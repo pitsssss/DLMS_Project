@@ -12,6 +12,7 @@ enum AgentIntent: string
     case GetApplicationNextStep = 'get_application_next_step';
     case GetRequiredDocuments = 'get_required_documents';
     case GetApplicationFee = 'get_application_fee';
+    case GetPaymentStatus = 'get_payment_status';
     case SubmitDocumentsForReview = 'submit_documents_for_review';
     case StartPayment = 'start_payment';
     case GetAvailableTests = 'get_available_tests';

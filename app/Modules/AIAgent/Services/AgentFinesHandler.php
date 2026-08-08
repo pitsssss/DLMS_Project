@@ -4,6 +4,7 @@ namespace App\Modules\AIAgent\Services;
 
 use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentTranslator;
 
 class AgentFinesHandler
 {
@@ -17,11 +18,12 @@ class AgentFinesHandler
     public function buildPayload(AgentWorkflowContext $context): array
     {
         return $this->responseBuilder->basePayload(AgentIntent::GetFines, $context->language, [
-            'reply' => 'سأعرض لك مخالفاتك الحالية.',
+            'reply' => AgentTranslator::message('ai_agent.fines.loading'),
             'proposed_action' => [
                 'name' => 'get_fines',
                 'arguments' => [],
             ],
+            'execute_immediately' => true,
         ]);
     }
 }

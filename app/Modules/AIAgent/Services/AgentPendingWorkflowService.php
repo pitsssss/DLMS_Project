@@ -7,6 +7,7 @@ use App\Exceptions\ApiException;
 use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentActionStatus;
+use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Enums\AgentMessageRole;
 use App\Modules\AIAgent\Enums\DocumentFlowState;
 use App\Modules\AIAgent\Enums\PendingWorkflowInspectionStatus;
@@ -36,6 +37,8 @@ class AgentPendingWorkflowService
         private readonly AgentWorkflowOrchestrator $orchestrator,
         private readonly AIAgentActionService $actionService,
         private readonly AgentAppointmentOptionService $appointmentOptions,
+        private readonly AgentLicenseOptionService $licenseOptions,
+        private readonly AgentOtherLicenseServicesHandler $otherLicenseServices,
     ) {}
 
     public function getWorkflow(AIAgentSession $session): ?array
@@ -64,6 +67,7 @@ class AgentPendingWorkflowService
         $state = (string) ($workflow['state'] ?? '');
         if (in_array($state, [
             PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::AwaitingLicenseChoice->value,
             PendingWorkflowState::AwaitingAppointmentChoice->value,
             PendingWorkflowState::AwaitingAppointmentSlotChoice->value,
             PendingWorkflowState::Failed->value,
@@ -318,6 +322,72 @@ class AgentPendingWorkflowService
     }
 
     /**
+     * Multi-license selection for renew / lost / damaged.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function enrichLicenseSelectionIfNeeded(
+        User $citizen,
+        AIAgentSession $session,
+        array $payload,
+        string $originalMessage = '',
+    ): array {
+        $missing = $payload['missing_slots'] ?? [];
+        if (! is_array($missing) || ! in_array('related_license_id', $missing, true)) {
+            return $payload;
+        }
+
+        $intent = (string) ($payload['intent'] ?? '');
+        $service = match ($intent) {
+            AgentIntent::CreateRenewLicenseApplication->value => \App\Enums\ServiceCode::RenewLicense,
+            AgentIntent::CreateLostReplacementApplication->value => \App\Enums\ServiceCode::LostReplacement,
+            AgentIntent::CreateDamagedReplacementApplication->value => \App\Enums\ServiceCode::DamagedReplacement,
+            default => null,
+        };
+        if ($service === null) {
+            return $payload;
+        }
+
+        $licenses = $this->licenseOptions->eligibleLicenses($citizen, $service);
+        if ($licenses->isEmpty()) {
+            return $payload;
+        }
+        if ($licenses->count() === 1) {
+            return $this->otherLicenseServices->confirmationPayload(
+                $citizen,
+                $service,
+                AgentIntent::from($intent),
+                AgentTranslator::getLocale(),
+                $licenses->first()
+            );
+        }
+
+        $ttl = (int) config('ai.agent.pending_workflow_ttl_seconds', 900);
+        $workflow = [
+            'workflow_id' => (string) Str::uuid(),
+            'state' => PendingWorkflowState::AwaitingLicenseChoice->value,
+            'intent' => $intent,
+            'original_message' => mb_substr($originalMessage, 0, 500),
+            'required_slots' => ['related_license_id'],
+            'current_required_slot' => 'related_license_id',
+            'required_slot' => 'related_license_id',
+            'candidate_license_ids' => $licenses->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            'collected_slots' => [
+                'service_type_code' => $service->value,
+            ],
+            'metadata' => ['action_name' => 'create_application'],
+            'created_at' => now()->toIso8601String(),
+            'expires_at' => now()->addSeconds($ttl)->toIso8601String(),
+        ];
+        $this->writeWorkflow($session, $workflow);
+        $session->current_intent = $intent;
+        $session->save();
+
+        return $this->licenseSelectionRequiredResponse($citizen, $session, $workflow, $licenses);
+    }
+
+    /**
      * Handle chat while a pending workflow is active or expired.
      * Returns null only for clear topic-change (caller continues with new intent).
      *
@@ -354,13 +424,17 @@ class AgentPendingWorkflowService
             return $this->cancel($session, $workflow);
         }
 
-        // Slot-choice / appointment-choice stages: resolve deterministically.
+        // Slot-choice / appointment-choice / license-choice stages: resolve deterministically.
         if ($state === PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
             return $this->handleAwaitingSlotChoice($citizen, $session, $workflow, $message);
         }
 
         if ($state === PendingWorkflowState::AwaitingAppointmentChoice->value) {
             return $this->handleAwaitingAppointmentChoice($citizen, $session, $workflow, $message);
+        }
+
+        if ($state === PendingWorkflowState::AwaitingLicenseChoice->value) {
+            return $this->handleAwaitingLicenseChoice($citizen, $session, $workflow, $message);
         }
 
         if (! in_array($state, [
@@ -514,6 +588,20 @@ class AgentPendingWorkflowService
             unset($result['keep_pending_workflow']);
 
             return $result;
+        }
+
+        if ($state === PendingWorkflowState::AwaitingLicenseChoice->value) {
+            $serviceCode = (string) ($workflow['collected_slots']['service_type_code'] ?? '');
+            $service = \App\Enums\ServiceCode::tryFrom($serviceCode);
+            $licenses = $service
+                ? $this->licenseOptions->eligibleLicenses($citizen, $service)
+                : collect();
+            $candidateIds = array_map('intval', $workflow['candidate_license_ids'] ?? []);
+            if ($candidateIds !== []) {
+                $licenses = $licenses->whereIn('id', $candidateIds)->values();
+            }
+
+            return $this->licenseSelectionRequiredResponse($citizen, $session, $workflow, $licenses);
         }
 
         $candidates = $this->loadCandidatesByIds($citizen, $workflow['candidate_application_ids'] ?? []);
@@ -1598,6 +1686,243 @@ class AgentPendingWorkflowService
             (int) $appointment->application_id,
             $appointmentId
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @param  Collection<int, \App\Models\License>  $licenses
+     * @return array<string, mixed>
+     */
+    private function licenseSelectionRequiredResponse(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        $licenses,
+    ): array {
+        $intent = (string) ($workflow['intent'] ?? '');
+        $workflow['state'] = PendingWorkflowState::AwaitingLicenseChoice->value;
+        $workflow['candidate_license_ids'] = $licenses->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+        $this->writeWorkflow($session, $workflow);
+
+        $buttons = $this->licenseOptions->buildLicenseButtons(
+            $citizen,
+            $session,
+            $licenses,
+            (string) ($workflow['workflow_id'] ?? ''),
+            $intent
+        );
+
+        $reply = AgentTranslator::message('ai_agent.other_license.choose');
+        $this->storeAssistantMessage($session, $reply, [
+            'message_type' => 'license_selection_required',
+            'intent' => $intent,
+        ]);
+
+        return [
+            'session_id' => $session->id,
+            'message_type' => 'license_selection_required',
+            'reply' => $reply,
+            'intent' => $intent,
+            'confidence' => 1.0,
+            'missing_slots' => ['related_license_id'],
+            'requires_confirmation' => false,
+            'pending_action' => null,
+            'ui_payload' => [
+                'selection_type' => 'license',
+                'licenses' => $buttons,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    private function handleAwaitingLicenseChoice(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        string $message,
+    ): array {
+        $serviceCode = (string) ($workflow['collected_slots']['service_type_code'] ?? '');
+        $service = \App\Enums\ServiceCode::tryFrom($serviceCode);
+        $licenses = $service
+            ? $this->licenseOptions->eligibleLicenses($citizen, $service)
+            : collect();
+        $candidateIds = array_map('intval', $workflow['candidate_license_ids'] ?? []);
+        if ($candidateIds !== []) {
+            $licenses = $licenses->whereIn('id', $candidateIds)->values();
+        }
+
+        $resolution = $this->licenseOptions->resolveFromText($message, $licenses);
+        if (($resolution['status'] ?? '') === 'matched' && isset($resolution['license_id'])) {
+            return $this->resumeWithLicense($citizen, $session, (int) $resolution['license_id']);
+        }
+
+        return $this->licenseSelectionRequiredResponse($citizen, $session, $workflow, $licenses);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function selectLicenseByToken(User $citizen, AIAgentSession $session, string $selectionToken): array
+    {
+        $workflow = $this->assertActiveForInteraction($session);
+        if (($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingLicenseChoice->value) {
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.other_license.choose'),
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_STATE_INVALID'
+            );
+        }
+
+        $verified = $this->selectionTokens->verify(
+            $selectionToken,
+            $citizen,
+            $session,
+            AgentSelectionTokenService::PURPOSE_LICENSE,
+            (string) ($workflow['workflow_id'] ?? ''),
+            (string) ($workflow['intent'] ?? '')
+        );
+
+        $licenseId = (int) ($verified['license_id'] ?? 0);
+        if ($licenseId < 1) {
+            throw new ApiException(
+                'رمز اختيار الرخصة غير صالح.',
+                422,
+                [],
+                [],
+                'APPLICATION_SELECTION_TOKEN_INVALID'
+            );
+        }
+
+        return $this->resumeWithLicense($citizen, $session, $licenseId);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function resumeWithLicense(User $citizen, AIAgentSession $session, int $licenseId): array
+    {
+        $workflow = $this->getWorkflow($session);
+        if ($workflow === null) {
+            throw new ApiException(
+                'لا توجد عملية اختيار رخصة قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_NOT_FOUND'
+            );
+        }
+
+        $candidateIds = array_map('intval', $workflow['candidate_license_ids'] ?? []);
+        if ($candidateIds !== [] && ! in_array($licenseId, $candidateIds, true)) {
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.other_license.invalid_choice'),
+                422,
+                [],
+                [],
+                'LICENSE_SELECTION_INVALID'
+            );
+        }
+
+        $intent = (string) ($workflow['intent'] ?? '');
+        $service = match ($intent) {
+            AgentIntent::CreateRenewLicenseApplication->value => \App\Enums\ServiceCode::RenewLicense,
+            AgentIntent::CreateLostReplacementApplication->value => \App\Enums\ServiceCode::LostReplacement,
+            AgentIntent::CreateDamagedReplacementApplication->value => \App\Enums\ServiceCode::DamagedReplacement,
+            default => \App\Enums\ServiceCode::tryFrom((string) ($workflow['collected_slots']['service_type_code'] ?? '')),
+        };
+
+        if ($service === null) {
+            $this->clear($session);
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.other_license.none_eligible'),
+                422,
+                [],
+                [],
+                'LICENSE_NO_LONGER_ELIGIBLE'
+            );
+        }
+
+        $license = \App\Models\License::query()
+            ->where('citizen_id', $citizen->id)
+            ->whereKey($licenseId)
+            ->with('licenseType')
+            ->first();
+
+        if ($license === null || ! $this->licenseOptions->eligibleLicenses($citizen, $service)->contains(
+            fn ($item): bool => (int) $item->id === $licenseId
+        )) {
+            $this->clear($session);
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.other_license.none_eligible'),
+                422,
+                [],
+                [],
+                'LICENSE_NO_LONGER_ELIGIBLE'
+            );
+        }
+
+        $payload = $this->otherLicenseServices->confirmationPayload(
+            $citizen,
+            $service,
+            AgentIntent::from($intent),
+            AgentTranslator::getLocale(),
+            $license
+        );
+
+        if (! empty($payload['proposed_action']['name']) && ($payload['requires_confirmation'] ?? false)) {
+            $proposed = $payload['proposed_action'];
+            AgentActionArgumentValidator::assertComplete(
+                (string) $proposed['name'],
+                is_array($proposed['arguments'] ?? null) ? $proposed['arguments'] : []
+            );
+
+            $action = AIAgentAction::query()->create([
+                'session_id' => $session->id,
+                'user_id' => $citizen->id,
+                'action_name' => (string) $proposed['name'],
+                'arguments' => $proposed['arguments'],
+                'status' => AgentActionStatus::AwaitingConfirmation,
+                'requires_confirmation' => true,
+                'confirmation_message' => (string) ($payload['reply'] ?? ''),
+            ]);
+
+            $this->clear($session);
+            $reply = (string) ($payload['reply'] ?? '');
+            $this->storeAssistantMessage($session, $reply, [
+                'message_type' => 'license_service_confirmation_required',
+                'action_id' => $action->id,
+            ]);
+
+            return [
+                'session_id' => $session->id,
+                'message_type' => 'license_service_confirmation_required',
+                'reply' => $reply,
+                'intent' => $intent,
+                'confidence' => 1.0,
+                'missing_slots' => [],
+                'requires_confirmation' => true,
+                'pending_action' => [
+                    'id' => $action->id,
+                    'name' => $action->action_name,
+                    'arguments' => $action->arguments,
+                    'requires_confirmation' => true,
+                    'status' => $action->status->value,
+                ],
+                'ui_payload' => $payload['ui_payload'] ?? [
+                    'requires_confirmation' => true,
+                    'action_name' => $action->action_name,
+                ],
+            ];
+        }
+
+        $this->clear($session);
+
+        return array_merge($payload, ['session_id' => $session->id]);
     }
 
     /**

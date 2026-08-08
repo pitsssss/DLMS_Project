@@ -18,6 +18,8 @@ class AgentSelectionTokenService
 
     public const PURPOSE_APPOINTMENT = 'select_appointment';
 
+    public const PURPOSE_LICENSE = 'select_license';
+
     public function issue(
         User $user,
         AIAgentSession $session,
@@ -29,6 +31,7 @@ class AgentSelectionTokenService
         ?string $intent = null,
         ?int $slotId = null,
         ?int $appointmentId = null,
+        ?int $licenseId = null,
     ): string {
         $payload = [
             'uid' => $user->id,
@@ -42,6 +45,7 @@ class AgentSelectionTokenService
             'intent' => $intent,
             'slot_id' => $slotId,
             'apid' => $appointmentId,
+            'lid' => $licenseId,
         ];
 
         $encoded = $this->base64UrlEncode(json_encode($payload, JSON_THROW_ON_ERROR));
@@ -75,6 +79,7 @@ class AgentSelectionTokenService
             self::PURPOSE_PENDING_APPLICATION,
             self::PURPOSE_APPOINTMENT_SLOT,
             self::PURPOSE_APPOINTMENT,
+            self::PURPOSE_LICENSE,
         ], true) || $expectedWorkflowId !== null;
 
         $invalidCode = $structuredCodes ? 'APPLICATION_SELECTION_TOKEN_INVALID' : 'INVALID_SELECTION_TOKEN';
@@ -148,6 +153,7 @@ class AgentSelectionTokenService
         if ($applicationId <= 0 && ! in_array($expectedPurpose, [
             self::PURPOSE_APPOINTMENT,
             self::PURPOSE_APPOINTMENT_SLOT,
+            self::PURPOSE_LICENSE,
         ], true)) {
             throw new ApiException('رمز الاختيار غير صالح.', 422, [], [], $invalidCode);
         }
@@ -163,6 +169,7 @@ class AgentSelectionTokenService
             'intent' => isset($payload['intent']) && is_string($payload['intent']) ? $payload['intent'] : null,
             'slot_id' => isset($payload['slot_id']) && $payload['slot_id'] !== null ? (int) $payload['slot_id'] : null,
             'appointment_id' => isset($payload['apid']) && $payload['apid'] !== null ? (int) $payload['apid'] : null,
+            'license_id' => isset($payload['lid']) && $payload['lid'] !== null ? (int) $payload['lid'] : null,
         ];
     }
 

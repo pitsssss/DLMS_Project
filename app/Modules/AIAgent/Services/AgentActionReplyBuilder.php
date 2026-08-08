@@ -34,6 +34,7 @@ class AgentActionReplyBuilder
             'get_application_next_step' => (string) ($result['next_step_message'] ?? $this->applicationStatusReply($result)),
             'get_required_documents' => $this->requiredDocumentsHandler->replyFromActionResult($result),
             'get_application_fee' => $this->applicationFeeReply($result),
+            'get_payment_status' => $this->paymentStatusReply($result),
             'get_profile_status' => $this->profileStatusReply($result),
             'start_payment' => $this->startPaymentReply($result),
             'get_fines' => $this->finesReply($result),
@@ -120,9 +121,27 @@ class AgentActionReplyBuilder
         $amount = (string) ($result['fee']['amount'] ?? '');
         $currency = (string) ($result['fee']['currency'] ?? ApplicationFeeCatalog::CURRENCY);
 
-        return AgentTranslator::getLocale() === 'en'
-            ? "The fee for application {$number} is {$amount} {$currency}."
-            : "رسوم طلب {$number} هي {$amount} {$currency}.";
+        return AgentTranslator::message('ai_agent.payment.fee.reply', [
+            'number' => $number,
+            'amount' => $amount,
+            'currency' => $currency,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function paymentStatusReply(array $result): string
+    {
+        $number = (string) ($result['application_number'] ?? '');
+        if (! empty($result['is_paid'])) {
+            return AgentTranslator::message('ai_agent.payment.status.paid', ['number' => $number]);
+        }
+        if (! empty($result['is_awaiting_payment'])) {
+            return AgentTranslator::message('ai_agent.payment.status.pending', ['number' => $number]);
+        }
+
+        return AgentTranslator::message('ai_agent.payment.status.unknown');
     }
 
     /**

@@ -21,6 +21,7 @@ class AgentActionArgumentValidator
             'get_application_next_step' => ['application_id'],
             'get_required_documents' => ['application_id'],
             'get_application_fee' => ['application_id'],
+            'get_payment_status' => ['application_id'],
             'get_test_results' => ['application_id'],
             'get_appointment_slots' => ['application_id'],
             'get_current_appointments' => ['application_id'],

@@ -46,12 +46,19 @@ class AgentWorkflowIntentCatalog
                 'action_name' => 'get_application_fee',
                 'suggested_followups' => ['start_payment'],
             ],
+            AgentIntent::GetPaymentStatus->value => [
+                'intent' => AgentIntent::GetPaymentStatus->value,
+                'requires_application' => true,
+                'read_only' => true,
+                'action_name' => 'get_payment_status',
+                'suggested_followups' => ['start_payment', 'get_application_fee'],
+            ],
             AgentIntent::StartPayment->value => [
                 'intent' => AgentIntent::StartPayment->value,
                 'requires_application' => true,
                 'read_only' => false,
                 'action_name' => 'start_payment',
-                'suggested_followups' => ['get_application_fee'],
+                'suggested_followups' => ['get_payment_status', 'get_application_fee'],
             ],
             AgentIntent::GetFines->value => [
                 'intent' => AgentIntent::GetFines->value,
@@ -132,6 +139,27 @@ class AgentWorkflowIntentCatalog
             ],
             AgentIntent::CreateNewLicenseApplication->value => [
                 'intent' => AgentIntent::CreateNewLicenseApplication->value,
+                'requires_application' => false,
+                'read_only' => false,
+                'action_name' => 'create_application',
+                'suggested_followups' => ['get_required_documents'],
+            ],
+            AgentIntent::CreateRenewLicenseApplication->value => [
+                'intent' => AgentIntent::CreateRenewLicenseApplication->value,
+                'requires_application' => false,
+                'read_only' => false,
+                'action_name' => 'create_application',
+                'suggested_followups' => ['get_required_documents'],
+            ],
+            AgentIntent::CreateLostReplacementApplication->value => [
+                'intent' => AgentIntent::CreateLostReplacementApplication->value,
+                'requires_application' => false,
+                'read_only' => false,
+                'action_name' => 'create_application',
+                'suggested_followups' => ['get_required_documents'],
+            ],
+            AgentIntent::CreateDamagedReplacementApplication->value => [
+                'intent' => AgentIntent::CreateDamagedReplacementApplication->value,
                 'requires_application' => false,
                 'read_only' => false,
                 'action_name' => 'create_application',

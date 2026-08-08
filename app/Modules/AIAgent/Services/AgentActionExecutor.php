@@ -41,6 +41,7 @@ class AgentActionExecutor
         'get_application_next_step',
         'get_required_documents',
         'get_application_fee',
+        'get_payment_status',
         'get_profile_status',
         'get_fines',
         'get_licenses',
@@ -93,6 +94,7 @@ class AgentActionExecutor
             'get_application_next_step' => $this->executeGetApplicationNextStep($user, $arguments),
             'get_required_documents' => $this->executeGetRequiredDocuments($user, $arguments),
             'get_application_fee' => $this->executeGetApplicationFee($user, $arguments),
+            'get_payment_status' => $this->executeGetPaymentStatus($user, $arguments),
             'get_profile_status' => $this->executeGetProfileStatus($user),
             'start_payment' => $this->executeStartPayment($user, $arguments),
             'get_fines' => $this->executeGetFines($user),
@@ -215,6 +217,41 @@ class AgentActionExecutor
     }
 
     /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeGetPaymentStatus(User $user, array $arguments): array
+    {
+        $applicationId = $this->requireApplicationId($arguments);
+        $application = $this->applications->getForCitizen($user, $applicationId);
+        $payments = $this->payments->listForApplication($user, $applicationId);
+        $latest = $payments->first();
+
+        return [
+            'application_id' => $applicationId,
+            'application_number' => $application->application_number,
+            'application_status' => $application->status->value,
+            'is_awaiting_payment' => $application->status === \App\Enums\ApplicationStatus::PaymentPending,
+            'is_paid' => $application->status === \App\Enums\ApplicationStatus::PaymentCompleted
+                || ($latest !== null && $latest->status === \App\Enums\PaymentStatus::Completed),
+            'latest_payment' => $latest === null ? null : [
+                'payment_id' => $latest->id,
+                'status' => $latest->status->value,
+                'amount' => $latest->amount,
+                'currency' => $latest->currency,
+                'paid_at' => $latest->paid_at?->toIso8601String(),
+            ],
+            'payments' => $payments->map(static fn ($payment): array => [
+                'payment_id' => $payment->id,
+                'status' => $payment->status->value,
+                'amount' => $payment->amount,
+                'currency' => $payment->currency,
+                'paid_at' => $payment->paid_at?->toIso8601String(),
+            ])->values()->all(),
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function executeGetProfileStatus(User $user): array
@@ -237,6 +274,7 @@ class AgentActionExecutor
             'application_number' => $application->application_number,
             'payment_id' => $payment['payment']->id,
             'checkout_url' => $payment['checkout_url'] ?? null,
+            'publishable_key' => $payment['publishable_key'] ?? null,
             'status' => $payment['payment']->status->value,
         ];
     }

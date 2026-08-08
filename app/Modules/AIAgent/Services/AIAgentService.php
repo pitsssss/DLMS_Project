@@ -173,6 +173,16 @@ class AIAgentService
                 return $this->pendingWorkflow->enrichPayloadIfNeeded($user, $session, $payload, $userMessage);
             }
 
+            // Renew / lost / damaged: multi-license selection.
+            if (in_array('related_license_id', $payload['missing_slots'] ?? [], true)) {
+                return $this->pendingWorkflow->enrichLicenseSelectionIfNeeded(
+                    $user,
+                    $session,
+                    $payload,
+                    $userMessage
+                );
+            }
+
             // Appointment / slot selection continuation (single-app book/reschedule/cancel).
             if (in_array('appointment_slot_choice', $payload['missing_slots'] ?? [], true)
                 || in_array('appointment_choice', $payload['missing_slots'] ?? [], true)) {
@@ -337,6 +347,7 @@ class AIAgentService
                 'get_application_next_step' => AgentIntent::GetApplicationNextStep->value,
                 'get_required_documents' => AgentIntent::GetRequiredDocuments->value,
                 'get_application_fee' => AgentIntent::GetApplicationFee->value,
+                'get_payment_status' => AgentIntent::GetPaymentStatus->value,
                 'get_fines' => AgentIntent::GetFines->value,
                 'get_licenses' => AgentIntent::GetLicenses->value,
                 'get_profile_status' => AgentIntent::GetProfileStatus->value,

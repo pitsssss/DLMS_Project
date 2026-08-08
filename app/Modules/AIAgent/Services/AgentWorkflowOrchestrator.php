@@ -65,7 +65,7 @@ class AgentWorkflowOrchestrator
             AgentIntent::GetApplicationNextStep => $this->applicationNextStepService->buildPayload($citizen, $session, $language),
             AgentIntent::GetRequiredDocuments => $this->requiredDocumentsHandler->buildPayload($citizen, $session, $language),
             AgentIntent::SubmitDocumentsForReview => $this->submitDocumentsForReviewPayload($context, $language),
-            AgentIntent::GetApplicationFee, AgentIntent::StartPayment => $this->feeAndPaymentHandler->buildPayload($context, $intent),
+            AgentIntent::GetApplicationFee, AgentIntent::StartPayment, AgentIntent::GetPaymentStatus => $this->feeAndPaymentHandler->buildPayload($context, $intent),
             AgentIntent::GetAvailableTests => $this->availableTestsHandler->buildPayload($context),
             AgentIntent::GetCurrentAppointments => $this->appointmentHandler->buildCurrentAppointmentsPayload($context),
             AgentIntent::GetAppointmentSlots, AgentIntent::BookAppointment => $this->appointmentHandler->buildPayload($context, $intent),

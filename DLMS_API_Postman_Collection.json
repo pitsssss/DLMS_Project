@@ -4771,6 +4771,177 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "14e. AI Agent — Citizen Services (Phase 2.5)",
+                    "description": "New/renew/lost/damaged, payment, licenses/fines. Prefer selection_token and interactions confirm.",
+                    "item": [
+                        {
+                            "name": "01. New License",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"بدي رخصة جديدة\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "02. Renew License",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "if(d.session_id) pm.collectionVariables.set('ai_agent_session_id', d.session_id);",
+                                            "if(d.pending_action?.id) pm.collectionVariables.set('ai_agent_action_id', d.pending_action.id);",
+                                            "const licenses=d.ui_payload?.licenses||[];",
+                                            "if(licenses[0]?.selection_token) pm.collectionVariables.set('license_selection_token', licenses[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"بدي جدد رخصتي\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "03. Select License",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_license\",\n  \"selection_token\": \"{{license_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions"
+                            }
+                        },
+                        {
+                            "name": "04. Confirm via Interactions",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"confirm_pending_action\",\n  \"action_id\": {{ai_agent_action_id}}\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions"
+                            }
+                        },
+                        {
+                            "name": "05. Payment Status (EN)",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"payment status\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "06. Licenses / Fines",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"show my licenses\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        }
+                    ]
                 }
             ],
             "description": ""

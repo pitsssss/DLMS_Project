@@ -81,6 +81,7 @@ class AIAgentController extends Controller
         AIAgentService $agent,
         AgentDocumentFlowService $documentFlow,
         AgentPendingWorkflowService $pendingWorkflow,
+        AIAgentActionService $actions,
     ) {
         $sessionModel = $agent->getSessionForUser($request->user(), $session);
         $validated = $request->validated();
@@ -131,6 +132,30 @@ class AIAgentController extends Controller
             );
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        if ($action === 'select_license') {
+            $data = $pendingWorkflow->selectLicenseByToken(
+                $request->user(),
+                $sessionModel,
+                (string) $token
+            );
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        if ($action === 'confirm_pending_action') {
+            $actionId = (int) ($validated['action_id'] ?? 0);
+            $data = $actions->confirm($request->user(), $actionId);
+
+            return $this->successResponse($data, 'messages.ai_agent.action_executed');
+        }
+
+        if ($action === 'cancel_pending_action') {
+            $actionId = (int) ($validated['action_id'] ?? 0);
+            $data = $actions->cancel($request->user(), $actionId);
+
+            return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
         }
 
         $data = $documentFlow->handleInteraction(

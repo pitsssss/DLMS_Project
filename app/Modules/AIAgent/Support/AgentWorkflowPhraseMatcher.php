@@ -38,6 +38,10 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::GetApplicationNextStep;
         }
 
+        if (self::isPaymentStatusQuery($message)) {
+            return AgentIntent::GetPaymentStatus;
+        }
+
         if (self::isPaymentFeeQuery($message)) {
             return self::isPayNowQuery($message)
                 ? AgentIntent::StartPayment
@@ -54,6 +58,10 @@ class AgentWorkflowPhraseMatcher
 
         if (self::isRescheduleAppointmentQuery($message)) {
             return AgentIntent::RescheduleAppointment;
+        }
+
+        if (self::isRetestQuery($message)) {
+            return AgentIntent::GetAvailableTests;
         }
 
         if (self::isAvailableTestsQuery($message)) {
@@ -340,8 +348,29 @@ class AgentWorkflowPhraseMatcher
         return false;
     }
 
+    public static function isPaymentStatusQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'حالة الدفع', 'شو حالة الدفع', 'هل دفعت', 'دفعت الرسوم',
+            'payment status', 'did i pay', 'have i paid', 'is payment done',
+            'payment completed', 'check payment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function isPaymentFeeQuery(string $message): bool
     {
+        if (self::isPaymentStatusQuery($message)) {
+            return false;
+        }
+
         $normalized = self::normalize($message);
 
         foreach ([
@@ -405,6 +434,22 @@ class AgentWorkflowPhraseMatcher
             'make payment',
             'proceed to payment',
             'proceed payment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isRetestQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'اعادة اختبار', 'إعادة اختبار', 'إعادة الفحص', 'اعادة الفحص',
+            'بدي اعيد الاختبار', 'بدي أعيد الاختبار', 'retest', 'retake test', 'retake the test',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;

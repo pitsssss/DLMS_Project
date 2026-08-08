@@ -264,6 +264,48 @@ class AgentTranslator
                 .($replace['test'] ?? 'الاختبار')
                 .' بنجاح.',
             'ai_agent.appointments.test_fallback' => 'الاختبار',
+            'ai_agent.other_license.none_eligible' => 'لا يوجد لديك رخصة يمكن تنفيذ هذه الخدمة عليها حالياً.',
+            'ai_agent.other_license.choose' => 'لديك أكثر من رخصة. يرجى اختيار الرخصة المطلوبة.',
+            'ai_agent.other_license.invalid_choice' => 'الخيار المحدد غير ضمن الرخص المعروضة.',
+            'ai_agent.other_license.confirm' => 'وجدت لديك رخصة قيادة '
+                .($replace['label'] ?? '')
+                .' رقم '
+                .($replace['number'] ?? '')
+                .'. هل تريد إنشاء طلب '
+                .($replace['service'] ?? 'الخدمة')
+                .' لها؟',
+            'ai_agent.other_license.service.renew_license' => 'تجديد',
+            'ai_agent.other_license.service.lost_replacement' => 'بدل فاقد',
+            'ai_agent.other_license.service.damaged_replacement' => 'بدل تالف',
+            'ai_agent.payment.start.confirm' => 'يمكنني تجهيز دفع رسوم الطلب. هل تؤكد المتابعة؟',
+            'ai_agent.payment.fee.reply' => 'رسوم طلبك '
+                .($replace['number'] ?? '')
+                .' هي '
+                .($replace['amount'] ?? '')
+                .' '
+                .($replace['currency'] ?? '')
+                .'. يمكنك المتابعة للدفع عندما تكون جاهزاً.',
+            'ai_agent.payment.fee.unavailable' => 'لم أتمكن من جلب رسوم هذا الطلب حالياً.',
+            'ai_agent.payment.status.loading' => 'سأعرض لك حالة الدفع لهذا الطلب.',
+            'ai_agent.payment.status.paid' => 'تم دفع رسوم الطلب '
+                .($replace['number'] ?? '')
+                .' بنجاح.',
+            'ai_agent.payment.status.pending' => 'الطلب '
+                .($replace['number'] ?? '')
+                .' ما زال بانتظار الدفع.',
+            'ai_agent.payment.status.unknown' => 'هذه هي حالة الدفع الحالية لطلبك.',
+            'ai_agent.licenses.loading' => 'سأعرض لك رخص القيادة الخاصة بك.',
+            'ai_agent.fines.loading' => 'سأعرض لك مخالفاتك الحالية.',
+            'ai_agent.fines.pay_unsupported' => 'دفع المخالفات عبر المساعد غير متاح حالياً. يمكنك مراجعة المخالفات من التطبيق.',
+            'ai_agent.tests.loading' => 'سأعرض لك الاختبارات المتاحة لطلبك مع حالة كل اختبار.',
+            'ai_agent.tests.none' => 'لا يوجد اختبار متاح للحجز حالياً. يرجى متابعة الخطوة الحالية لطلبك.',
+            'ai_agent.tests.unavailable' => 'لم أتمكن من جلب الاختبارات المتاحة لهذا الطلب حالياً.',
+            'ai_agent.tests.single_available' => 'الفحص المتاح حالياً هو '
+                .($replace['name'] ?? '')
+                .'.',
+            'ai_agent.tests.multiple_available' => 'الاختبارات المتاحة حالياً هي: '
+                .($replace['names'] ?? '')
+                .'.',
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.',
         };
     }
@@ -340,6 +382,48 @@ class AgentTranslator
                 .($replace['test'] ?? 'the test')
                 .' was cancelled successfully.',
             'ai_agent.appointments.test_fallback' => 'the test',
+            'ai_agent.other_license.none_eligible' => 'You have no license eligible for this service right now.',
+            'ai_agent.other_license.choose' => 'You have more than one license. Please choose the license for this service.',
+            'ai_agent.other_license.invalid_choice' => 'The selected option is not among the offered licenses.',
+            'ai_agent.other_license.confirm' => 'I found your '
+                .($replace['label'] ?? '')
+                .' driving license number '
+                .($replace['number'] ?? '')
+                .'. Do you want to create a '
+                .($replace['service'] ?? 'service')
+                .' application for it?',
+            'ai_agent.other_license.service.renew_license' => 'renewal',
+            'ai_agent.other_license.service.lost_replacement' => 'lost replacement',
+            'ai_agent.other_license.service.damaged_replacement' => 'damaged replacement',
+            'ai_agent.payment.start.confirm' => 'I can prepare the application fee payment. Do you confirm?',
+            'ai_agent.payment.fee.reply' => 'The fee for application '
+                .($replace['number'] ?? '')
+                .' is '
+                .($replace['amount'] ?? '')
+                .' '
+                .($replace['currency'] ?? '')
+                .'. You can proceed to payment when ready.',
+            'ai_agent.payment.fee.unavailable' => 'I could not fetch the fee for this application right now.',
+            'ai_agent.payment.status.loading' => 'I will show the payment status for this application.',
+            'ai_agent.payment.status.paid' => 'The fee for application '
+                .($replace['number'] ?? '')
+                .' has been paid successfully.',
+            'ai_agent.payment.status.pending' => 'Application '
+                .($replace['number'] ?? '')
+                .' is still awaiting payment.',
+            'ai_agent.payment.status.unknown' => 'Here is the current payment status for your application.',
+            'ai_agent.licenses.loading' => 'I will show your driving licenses.',
+            'ai_agent.fines.loading' => 'I will show your current fines.',
+            'ai_agent.fines.pay_unsupported' => 'Paying fines through the assistant is not available yet. You can review fines in the app.',
+            'ai_agent.tests.loading' => 'I will show the available tests for your application and the status of each test.',
+            'ai_agent.tests.none' => 'There is no test available to book right now. Please follow the current step for your application.',
+            'ai_agent.tests.unavailable' => 'I could not fetch the available tests for this application right now.',
+            'ai_agent.tests.single_available' => 'The currently available exam is '
+                .($replace['name'] ?? '')
+                .'.',
+            'ai_agent.tests.multiple_available' => 'The currently available tests are: '
+                .($replace['names'] ?? '')
+                .'.',
             default => 'Sorry, unable to display the message at the moment. Please try again later or contact support.',
         };
     }

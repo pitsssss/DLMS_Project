@@ -5,6 +5,7 @@ namespace App\Modules\AIAgent\Services;
 use App\Models\LicenseApplication;
 use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentTranslator;
 
 class AgentAvailableTestsHandler
 {
@@ -50,7 +51,7 @@ class AgentAvailableTestsHandler
         }
 
         return $this->responseBuilder->basePayload(AgentIntent::GetAvailableTests, $context->language, [
-            'reply' => 'سأعرض لك الاختبارات المتاحة لطلبك مع حالة كل اختبار.',
+            'reply' => AgentTranslator::message('ai_agent.tests.loading'),
             'proposed_action' => [
                 'name' => 'get_available_tests',
                 'arguments' => [
@@ -69,7 +70,7 @@ class AgentAvailableTestsHandler
     {
         $tests = $result['tests'] ?? [];
         if (! is_array($tests) || $tests === []) {
-            return 'لم أتمكن من جلب الاختبارات المتاحة لهذا الطلب حالياً.';
+            return AgentTranslator::message('ai_agent.tests.unavailable');
         }
 
         $available = [];
@@ -90,10 +91,10 @@ class AgentAvailableTestsHandler
         if ($available === []) {
             $firstReason = trim((string) ($unavailable[0]['reason'] ?? ''));
             if ($firstReason !== '') {
-                return 'لا يوجد اختبار متاح للحجز حالياً. '.$firstReason;
+                return AgentTranslator::message('ai_agent.tests.none').' '.$firstReason;
             }
 
-            return 'لا يوجد اختبار متاح للحجز حالياً. يرجى متابعة الخطوة الحالية لطلبك.';
+            return AgentTranslator::message('ai_agent.tests.none');
         }
 
         $availableNames = collect($available)
@@ -103,20 +104,24 @@ class AgentAvailableTestsHandler
             ->all();
 
         if (count($availableNames) === 1) {
-            $reply = 'الفحص المتاح حالياً هو '.$availableNames[0].'.';
+            $reply = AgentTranslator::message('ai_agent.tests.single_available', [
+                'name' => $availableNames[0],
+            ]);
         } else {
-            $reply = 'الاختبارات المتاحة حالياً هي: '.implode('، ', $availableNames).'.';
+            $reply = AgentTranslator::message('ai_agent.tests.multiple_available', [
+                'names' => implode(AgentTranslator::getLocale() === 'en' ? ', ' : '، ', $availableNames),
+            ]);
         }
 
         if ($unavailable !== []) {
             $unavailableSummary = collect($unavailable)
                 ->map(function (array $test): string {
-                    $name = trim((string) ($test['name'] ?? 'اختبار'));
+                    $name = trim((string) ($test['name'] ?? (AgentTranslator::getLocale() === 'en' ? 'test' : 'اختبار')));
                     $reason = trim((string) ($test['reason'] ?? ''));
 
                     return $reason !== ''
-                        ? "{$name} غير متاح حالياً. {$reason}"
-                        : "{$name} غير متاح حالياً";
+                        ? "{$name}: {$reason}"
+                        : $name;
                 })
                 ->implode(' ');
 
