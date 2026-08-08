@@ -371,6 +371,7 @@ class AgentSessionContextService
 
         // Preserve conversational document-upload workflow state and document breadcrumbs.
         foreach ([
+            'locale',
             'document_flow',
             'pending_workflow',
             'active_application_id',

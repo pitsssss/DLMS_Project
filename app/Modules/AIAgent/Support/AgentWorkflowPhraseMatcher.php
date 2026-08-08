@@ -30,6 +30,10 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::GetRequiredDocuments;
         }
 
+        if (self::isPaymentStatusQuery($message)) {
+            return AgentIntent::GetPaymentStatus;
+        }
+
         if (self::isApplicationStatusQuery($message)) {
             return AgentIntent::GetApplicationStatus;
         }
@@ -38,18 +42,10 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::GetApplicationNextStep;
         }
 
-        if (self::isPaymentStatusQuery($message)) {
-            return AgentIntent::GetPaymentStatus;
-        }
-
         if (self::isPaymentFeeQuery($message)) {
             return self::isPayNowQuery($message)
                 ? AgentIntent::StartPayment
                 : AgentIntent::GetApplicationFee;
-        }
-
-        if (self::isCurrentAppointmentsQuery($message)) {
-            return AgentIntent::GetCurrentAppointments;
         }
 
         if (self::isCancelAppointmentQuery($message)) {
@@ -58,6 +54,10 @@ class AgentWorkflowPhraseMatcher
 
         if (self::isRescheduleAppointmentQuery($message)) {
             return AgentIntent::RescheduleAppointment;
+        }
+
+        if (self::isCurrentAppointmentsQuery($message)) {
+            return AgentIntent::GetCurrentAppointments;
         }
 
         if (self::isRetestQuery($message)) {
@@ -626,6 +626,10 @@ class AgentWorkflowPhraseMatcher
 
     public static function isCurrentAppointmentsQuery(string $message): bool
     {
+        if (self::isCancelAppointmentQuery($message) || self::isRescheduleAppointmentQuery($message)) {
+            return false;
+        }
+
         $normalized = self::normalize($message);
 
         foreach ([

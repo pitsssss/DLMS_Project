@@ -54,7 +54,13 @@ class AgentIntentDetector
     ): array {
         $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
             ? $payload['language']
-            : 'ar';
+            : AgentTranslator::getLocale();
+
+        // Prefer the request-resolved session locale over Gemini's language guess.
+        $resolved = AgentTranslator::getLocale();
+        if (in_array($resolved, ['ar', 'en'], true)) {
+            $language = $resolved;
+        }
 
         $override = $this->workflowOrchestrator->overridePayload(
             $citizen,

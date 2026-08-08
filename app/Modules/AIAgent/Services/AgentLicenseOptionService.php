@@ -109,6 +109,22 @@ class AgentLicenseOptionService
             }
         }
 
+        $contained = [
+            0 => ['the first', 'first one', 'first license'],
+            1 => ['the second', 'second one', 'second license'],
+            2 => ['the third', 'third one', 'third license'],
+        ];
+        foreach ($contained as $index => $phrases) {
+            if ($index >= $ordered->count()) {
+                continue;
+            }
+            foreach ($phrases as $phrase) {
+                if (str_contains($normalized, mb_strtolower($phrase))) {
+                    return ['status' => 'matched', 'license_id' => (int) $ordered->get($index)->id];
+                }
+            }
+        }
+
         if (preg_match('/(?:رقم|license|#)\s*([a-z0-9\-]+)/ui', $normalized, $m)
             || preg_match('/^([a-z0-9\-]{4,})$/ui', $normalized, $m)) {
             $needle = mb_strtolower($m[1]);

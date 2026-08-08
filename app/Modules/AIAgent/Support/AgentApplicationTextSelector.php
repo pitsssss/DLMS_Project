@@ -125,6 +125,23 @@ class AgentApplicationTextSelector
             }
         }
 
+        // Longer English phrases: "show me the first one", "the second application", etc.
+        $contained = [
+            0 => ['the first', 'first one', 'first application', 'first option', 'option one'],
+            1 => ['the second', 'second one', 'second application', 'second option', 'option two'],
+            2 => ['the third', 'third one', 'third application', 'third option', 'option three'],
+        ];
+        foreach ($contained as $index => $phrases) {
+            if ($index >= $count) {
+                continue;
+            }
+            foreach ($phrases as $phrase) {
+                if (str_contains($normalized, self::normalize($phrase))) {
+                    return $index;
+                }
+            }
+        }
+
         if (preg_match('/^(?:ال)?(?:طلب|خيار|رقم)?\s*([1-9]|[١٢۳۱۲۳])$/u', $normalized, $m)) {
             $digit = self::normalizeDigits($m[1]);
             $index = ((int) $digit) - 1;

@@ -289,6 +289,22 @@ class AgentAppointmentOptionService
             }
         }
 
+        $contained = [
+            0 => ['the first', 'first one', 'first slot', 'first appointment'],
+            1 => ['the second', 'second one', 'second slot', 'second appointment'],
+            2 => ['the third', 'third one', 'third slot', 'third appointment'],
+        ];
+        foreach ($contained as $index => $phrases) {
+            if ($index >= $count) {
+                continue;
+            }
+            foreach ($phrases as $phrase) {
+                if (str_contains($normalized, mb_strtolower($phrase))) {
+                    return $index;
+                }
+            }
+        }
+
         return null;
     }
 }

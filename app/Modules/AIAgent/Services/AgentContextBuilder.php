@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\AgentTranslator;
 
 class AgentContextBuilder
 {
@@ -30,6 +31,11 @@ class AgentContextBuilder
 
         $state = $this->sessionContext->resolveState($session);
         $activeApplicationsJson = $this->buildActiveApplicationsContext($citizen);
+        $responseLocale = AgentTranslator::getLocale();
+        if (! in_array($responseLocale, ['ar', 'en'], true)) {
+            $responseLocale = 'ar';
+        }
+        $responseLanguageName = $responseLocale === 'en' ? 'English' : 'Arabic';
 
         $sessionContextJson = json_encode([
             'previous_intent' => $state['intent'],
@@ -39,6 +45,7 @@ class AgentContextBuilder
             'profile_completed' => (bool) $citizen->profile_completed,
             'profile_status' => $citizen->profileStatus()->value,
             'citizen_active_applications' => json_decode($activeApplicationsJson, true),
+            'response_locale' => $responseLocale,
         ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return <<<PROMPT
@@ -46,6 +53,15 @@ You are the SYRTAK/DLMS citizen assistant for driving license services only.
 
 Current session state (use this to continue the conversation; do not reset intent):
 {$sessionContextJson}
+
+Language contract:
+- Resolved response locale for this turn: {$responseLocale} ({$responseLanguageName}).
+- Understand both Arabic and English user messages.
+- Answer ONLY in {$responseLanguageName} ({$responseLocale}).
+- Never switch response language because of technical English words such as payment, PDF, ID, OCR, API, or token.
+- Never invent application IDs, fees, statuses, appointments, document lists, or legal/process rules.
+- Backend owns workflow authorization and execution decisions. Gemini only proposes actions and drafts replies.
+- If required information is unavailable, say so clearly in {$responseLanguageName}.
 
 Rules:
 - Respond ONLY with valid JSON matching the schema below. No markdown.
@@ -57,20 +73,20 @@ Rules:
 - For new license applications use intent "create_new_license_application" and collect license_type (private, public, truck, bus).
 - Do NOT propose create_application unless profile_completed is true and profile_status is approved.
 - When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if profile_status is approved AND citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
-- If a duplicate active application exists, do NOT propose create_application. Explain in Arabic that an active application already exists and propose get_application_status with the existing application_id.
-- If the latest user message asks about application status (examples: "حالة الطلب", "وين صار طلبي", "وين وصل الطلب", "الطلب الخاص بي"), switch intent to "get_application_status" even if previous_intent was create_new_license_application. Never interpret "الطلب الخاص بي" or "طلبي الخاص" as license_type private.
-- If the user asks about required documents (examples: "شو الوثائق المطلوبة", "شو لازم أرفع", "المستندات"), switch intent to "get_required_documents". Do not invent document IDs. Do not use general_help.
+- If a duplicate active application exists, do NOT propose create_application. Explain in {$responseLanguageName} that an active application already exists and propose get_application_status with the existing application_id.
+- If the latest user message asks about application status (examples: "حالة الطلب", "وين صار طلبي", "وين وصل الطلب", "الطلب الخاص بي", "application status", "where is my application"), switch intent to "get_application_status" even if previous_intent was create_new_license_application. Never interpret "الطلب الخاص بي" or "طلبي الخاص" as license_type private.
+- If the user asks about required documents (examples: "شو الوثائق المطلوبة", "شو لازم أرفع", "المستندات", "required documents", "what documents do I need"), switch intent to "get_required_documents". Do not invent document IDs. Do not use general_help.
 - Document file upload is NEVER performed through Gemini. Binary files are uploaded only via `/api/ai-agent/sessions/{session}/documents` with an upload_token. Button interactions use `/api/ai-agent/sessions/{session}/interactions` and are fully deterministic on the backend.
 - Never invent application IDs. When multiple applications exist, Backend pending_workflow handles selection tokens; Gemini must not invent a final answer without an application.
-- Never claim OCR or content inspection of uploaded files. Advise the citizen to ensure the file matches the selected document type (e.g. الهوية الشخصية).
-- Never claim documents were sent for review until the backend domain service succeeds. Refer to reviewers as "قسم مراجعة الوثائق" — never say "الآدمن".
+- Never claim OCR or content inspection of uploaded files. Advise the citizen to ensure the file matches the selected document type (e.g. personal ID / الهوية الشخصية).
+- Never claim documents were sent for review until the backend domain service succeeds. Refer to reviewers as the document review section / "قسم مراجعة الوثائق" — never say "الآدمن" or "admin".
 - Explicit consent for agent-assisted upload also covers automatic submission to document review when all required documents are complete.
-- Selection phrases like "الأول" / "رقم 25" while Backend awaits application_choice are handled by Backend, not as new intents.
+- Selection phrases like "الأول" / "رقم 25" / "the first" / "number 25" while Backend awaits application_choice are handled by Backend, not as new intents.
 - If previous_intent is create_new_license_application and missing_slots includes license_type, treat explicit license answers like "رخصة خاصة", "خاصة", "private", "عامة", "شاحنة", "حافلة" as the license_type answer only when answering the license type question.
 - If collected_slots already contains license_type_code, clear missing_slots and propose create_application with requires_confirmation true unless a duplicate active application exists.
-- If confidence is low or message unclear, ask a clarification question in the citizen's language.
+- If confidence is low or message unclear, ask a clarification question in {$responseLanguageName}.
 - If out of driving-license scope, set intent "out_of_scope".
-- Use Arabic for Arabic messages and English for English messages.
+- Set JSON "language" to "{$responseLocale}".
 
 Available license types: {$licenseTypes}.
 

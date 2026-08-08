@@ -35,6 +35,7 @@ class AIAgentService
         private readonly AgentPendingWorkflowService $pendingWorkflow,
         private readonly AgentLocaleContext $localeContext,
         private readonly AgentSessionLocaleManager $sessionLocaleManager,
+        private readonly AgentResponseLocale $responseLocale,
     ) {}
 
     /**
@@ -69,6 +70,7 @@ class AIAgentService
             $detection['confidence'],
             $detection['source']
         );
+        app()->setLocale($requestLocale);
 
         // Update session locale if confident or explicit
         $this->sessionLocaleManager->updateIfConfident($session, $detection);
@@ -111,14 +113,16 @@ class AIAgentService
 
             // Conversational document-upload decisions are deterministic and must not go to Gemini.
             if ($this->documentFlow->shouldHandleTextDecision($session, $userMessage)) {
-                return $this->documentFlow->handleTextDecision($user, $session, $userMessage);
+                return $this->responseLocale->decorate(
+                    $this->documentFlow->handleTextDecision($user, $session, $userMessage)
+                );
             }
 
             // Pending application selection / expiry must be resolved before Gemini / general_help.
             if ($this->pendingWorkflow->shouldHandlePendingMessage($session)) {
                 $pendingResult = $this->pendingWorkflow->handleAwaitingMessage($user, $session, $userMessage);
                 if ($pendingResult !== null) {
-                    return $pendingResult;
+                    return $this->responseLocale->decorate($pendingResult);
                 }
                 // null => clear topic change; fall through to normal intent detection.
                 $session->refresh();
@@ -127,7 +131,9 @@ class AIAgentService
             // Submit-for-review phrases also contain "الوثائق" — do not steal them into the upload offer flow.
             if (AgentWorkflowPhraseMatcher::isRequiredDocumentsQuery($userMessage)
                 && ! AgentWorkflowPhraseMatcher::isSubmitDocumentsForReviewQuery($userMessage)) {
-                return $this->documentFlow->startRequiredDocumentsFlow($user, $session);
+                return $this->responseLocale->decorate(
+                    $this->documentFlow->startRequiredDocumentsFlow($user, $session)
+                );
             }
 
             $startedAt = hrtime(true);
@@ -170,27 +176,33 @@ class AIAgentService
 
             // Multi-application intents: create pending_workflow and return selection buttons.
             if (in_array('application_choice', $payload['missing_slots'] ?? [], true)) {
-                return $this->pendingWorkflow->enrichPayloadIfNeeded($user, $session, $payload, $userMessage);
+                return $this->responseLocale->decorate(
+                    $this->pendingWorkflow->enrichPayloadIfNeeded($user, $session, $payload, $userMessage)
+                );
             }
 
             // Renew / lost / damaged: multi-license selection.
             if (in_array('related_license_id', $payload['missing_slots'] ?? [], true)) {
-                return $this->pendingWorkflow->enrichLicenseSelectionIfNeeded(
-                    $user,
-                    $session,
-                    $payload,
-                    $userMessage
+                return $this->responseLocale->decorate(
+                    $this->pendingWorkflow->enrichLicenseSelectionIfNeeded(
+                        $user,
+                        $session,
+                        $payload,
+                        $userMessage
+                    )
                 );
             }
 
             // Appointment / slot selection continuation (single-app book/reschedule/cancel).
             if (in_array('appointment_slot_choice', $payload['missing_slots'] ?? [], true)
                 || in_array('appointment_choice', $payload['missing_slots'] ?? [], true)) {
-                return $this->pendingWorkflow->enrichAppointmentContinuationIfNeeded(
-                    $user,
-                    $session,
-                    $payload,
-                    $userMessage
+                return $this->responseLocale->decorate(
+                    $this->pendingWorkflow->enrichAppointmentContinuationIfNeeded(
+                        $user,
+                        $session,
+                        $payload,
+                        $userMessage
+                    )
                 );
             }
 
@@ -323,6 +335,7 @@ class AIAgentService
 
         $response = [
             'session_id' => $session->id,
+            'language' => $this->localeContext->getLocale(),
             'locale' => $this->localeContext->getLocale(),
             'text_direction' => $this->localeContext->getTextDirection(),
             'reply' => (string) ($actionResult['reply'] ?? ''),
@@ -368,7 +381,7 @@ class AIAgentService
             $response['suggested_next_actions'] = ['get_available_tests', 'get_appointment_slots'];
         }
 
-        return AgentTranslator::localizePayload($response);
+        return $this->responseLocale->decorate(AgentTranslator::localizePayload($response));
     }
 
     /**
@@ -455,6 +468,7 @@ class AIAgentService
     ): array {
         $response = [
             'session_id' => $session->id,
+            'language' => $this->localeContext->getLocale(),
             'locale' => $this->localeContext->getLocale(),
             'text_direction' => $this->localeContext->getTextDirection(),
             'reply' => $payload['reply'],
@@ -489,7 +503,7 @@ class AIAgentService
             $response['requires_confirmation'] = $pendingAction->requires_confirmation;
         }
 
-        return $response;
+        return $this->responseLocale->decorate($response);
     }
 
     /**

@@ -101,9 +101,20 @@ class AgentLanguageDetector
             ];
         }
 
-        // 2. Check for short responses with clear language
+        // 2. Check for short responses with clear language.
+        // While a session already has a preferred locale, inherit it so yes/no/first
+        // do not flip AR↔EN mid-workflow (Phase 2.6).
         $shortResponse = $this->detectShortResponse($normalized);
         if ($shortResponse !== null) {
+            if ($sessionLocale !== null && in_array($sessionLocale, ['ar', 'en'], true)) {
+                return [
+                    'locale' => $sessionLocale,
+                    'confidence' => 0.35,
+                    'source' => 'short_response_inherit_session',
+                    'is_explicit' => false,
+                ];
+            }
+
             return [
                 'locale' => $shortResponse,
                 'confidence' => 0.95,

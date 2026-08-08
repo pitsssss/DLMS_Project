@@ -6,6 +6,13 @@ use App\Enums\ApplicationStatus;
 
 class ApplicationStatusLabelMapper
 {
+    public static function label(ApplicationStatus|string|null $status): string
+    {
+        return AgentTranslator::getLocale() === 'en'
+            ? self::labelEn($status)
+            : self::labelAr($status);
+    }
+
     public static function labelAr(ApplicationStatus|string|null $status): string
     {
         $value = $status instanceof ApplicationStatus ? $status->value : (string) $status;
@@ -25,6 +32,28 @@ class ApplicationStatusLabelMapper
             ApplicationStatus::Rejected->value => 'مرفوض',
             ApplicationStatus::Cancelled->value => 'ملغى',
             default => $value !== '' ? $value : 'غير معروف',
+        };
+    }
+
+    public static function labelEn(ApplicationStatus|string|null $status): string
+    {
+        $value = $status instanceof ApplicationStatus ? $status->value : (string) $status;
+
+        return match ($value) {
+            ApplicationStatus::Draft->value => 'Draft',
+            ApplicationStatus::DocumentsUnderReview->value => 'Documents under review',
+            ApplicationStatus::DocumentsRejected->value => 'Documents rejected',
+            ApplicationStatus::PaymentPending->value => 'Awaiting payment',
+            ApplicationStatus::PaymentCompleted->value => 'Payment completed',
+            ApplicationStatus::AppointmentPending->value => 'Awaiting appointment booking',
+            ApplicationStatus::InTesting->value => 'In testing',
+            ApplicationStatus::WaitingRetest->value => 'Awaiting retest',
+            ApplicationStatus::Approved->value => 'Eligible for license issuance',
+            ApplicationStatus::AdministrativeReview->value => 'Under administrative review',
+            ApplicationStatus::LicenseIssued->value => 'License issued',
+            ApplicationStatus::Rejected->value => 'Rejected',
+            ApplicationStatus::Cancelled->value => 'Cancelled',
+            default => $value !== '' ? $value : 'Unknown',
         };
     }
 }

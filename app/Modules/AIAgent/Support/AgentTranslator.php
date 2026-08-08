@@ -31,12 +31,17 @@ class AgentTranslator
         return $trimmed;
     }
 
-    public static function message(string $key, array $replace = []): string
+    public static function message(string $key, array $replace = [], ?string $locale = null): string
     {
         $fullKey = str_starts_with($key, 'messages.') ? $key : 'messages.'.$key;
-        $locale = self::getLocale();
+        $locale = $locale ?? self::getLocale();
+        if (! in_array($locale, ['ar', 'en'], true)) {
+            $locale = AgentLocaleContext::getDefaultLocale();
+        }
 
-        if (Lang::has($fullKey, $locale)) {
+        // Do not use Laravel's locale fallback chain — it would return Arabic
+        // strings when an English lang file key is missing.
+        if (Lang::has($fullKey, $locale, false)) {
             $translated = Lang::get($fullKey, $replace, $locale);
 
             if (is_string($translated) && $translated !== $fullKey) {
@@ -44,7 +49,7 @@ class AgentTranslator
             }
         }
 
-        return self::fallbackForKey($fullKey, $replace);
+        return self::fallbackForKey($fullKey, $replace, $locale);
     }
 
     /**
@@ -108,15 +113,18 @@ class AgentTranslator
     /**
      * @param  array<string, mixed>  $replace
      */
-    private static function fallbackForKey(string $fullKey, array $replace): string
+    private static function fallbackForKey(string $fullKey, array $replace, ?string $locale = null): string
     {
         $suffix = str_replace('messages.', '', $fullKey);
-        $locale = self::getLocale();
+        $locale = $locale ?? self::getLocale();
+        if (! in_array($locale, ['ar', 'en'], true)) {
+            $locale = AgentLocaleContext::getDefaultLocale();
+        }
 
         if (str_starts_with($suffix, 'ai_agent.application_next_step.')) {
             $status = substr($suffix, strlen('ai_agent.application_next_step.'));
 
-            return self::applicationNextStepFallback($status, $replace);
+            return self::applicationNextStepFallback($status, $replace, $locale);
         }
 
         if (str_starts_with($suffix, 'ai_agent.workflow.no_application.')) {
@@ -227,12 +235,24 @@ class AgentTranslator
                 .($replace['time'] ?? '')
                 .'.',
             'ai_agent.appointments.current.multiple' => 'لديك أكثر من موعد مرتبط بهذا الطلب.',
+            'ai_agent.appointments.current.line' => '- '
+                .($replace['test'] ?? 'الاختبار')
+                .' بتاريخ '
+                .($replace['date'] ?? '')
+                .' الساعة '
+                .($replace['time'] ?? ''),
             'ai_agent.appointments.current.none' => 'لا يوجد لديك موعد محجوز حالياً لهذا الطلب. يمكنك عرض المواعيد المتاحة وحجز موعد مناسب.',
             'ai_agent.appointments.current.no_application' => 'لا يوجد لديك طلب حالي لعرض موعده.',
             'ai_agent.appointments.current.choose_application' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد عرض موعده.'
                 .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
             'ai_agent.appointments.slots.choose' => 'هذه المواعيد المتاحة. يرجى اختيار الموعد المناسب.',
+            'ai_agent.appointments.slots.choose_for_test' => 'هذه هي المواعيد المتاحة لـ'
+                .($replace['test'] ?? 'الاختبار')
+                .'. اختر الموعد المناسب من القائمة.',
             'ai_agent.appointments.slots.none' => 'لا توجد مواعيد متاحة حالياً. يرجى المحاولة لاحقاً.',
+            'ai_agent.appointments.slots.none_for_test' => 'لا توجد مواعيد متاحة حالياً لـ'
+                .($replace['test'] ?? 'الاختبار')
+                .'. يرجى المحاولة لاحقاً.',
             'ai_agent.appointments.slots.stale' => 'الموعد المحدد لم يعد متاحاً. يرجى اختيار موعد آخر.',
             'ai_agent.appointments.slots.invalid_choice' => 'الخيار المحدد غير ضمن المواعيد المعروضة.',
             'ai_agent.appointments.slots.error_application' => 'تعذر تحديد الطلب لحجز الموعد.',
@@ -306,6 +326,165 @@ class AgentTranslator
             'ai_agent.tests.multiple_available' => 'الاختبارات المتاحة حالياً هي: '
                 .($replace['names'] ?? '')
                 .'.',
+            'ai_agent.application_status.simple' => 'حالة الطلب '
+                .($replace['number'] ?? '')
+                .' هي: '
+                .($replace['status'] ?? '')
+                .'.',
+            'ai_agent.test_results.empty' => 'لا توجد نتائج اختبار مسجلة لهذا الطلب حالياً.',
+            'ai_agent.test_results.header' => 'هذه نتائج الاختبارات المسجلة لديك:',
+            'ai_agent.test_results.test_fallback' => 'الاختبار',
+            'ai_agent.test_results.attempt' => ' (المحاولة '.($replace['attempt'] ?? '').')',
+            'ai_agent.test_results.on_date' => ' بتاريخ '.($replace['date'] ?? ''),
+            'ai_agent.test_results.line' => '- '
+                .($replace['test'] ?? '')
+                .': '
+                .($replace['result'] ?? '')
+                .($replace['attempt_part'] ?? '')
+                .($replace['date_part'] ?? '')
+                .'.',
+            'ai_agent.test_results.result.passed' => 'ناجح',
+            'ai_agent.test_results.result.failed' => 'راسب',
+            'ai_agent.test_results.result.no_show' => 'غائب',
+            'ai_agent.document_flow.selection_required' => 'يرجى اختيار رفع الوثائق عبر المساعد أو الرفع اليدوي.',
+            'ai_agent.document_flow.no_eligible_application' => 'لا يوجد لديك حاليًا طلب يسمح برفع الوثائق.',
+            'ai_agent.document_flow.multiple_applications' => 'لديك أكثر من طلب يحتاج إلى استكمال الوثائق. يرجى اختيار الطلب المطلوب.',
+            'ai_agent.document_flow.application_option' => ($replace['service'] ?? 'طلب')
+                .' — رخصة '
+                .($replace['license'] ?? '')
+                .' — رقم '
+                .($replace['id'] ?? ''),
+            'ai_agent.document_flow.service_fallback' => 'طلب',
+            'ai_agent.document_flow.unknown_interaction' => 'إجراء التفاعل غير معروف.',
+            'ai_agent.document_flow.file_required' => 'يرجى إرفاق ملف الوثيقة المطلوبة.',
+            'ai_agent.document_flow.multiple_files_with_label' => 'تم إرفاق أكثر من ملف. لقد اخترت رفع وثيقة «'
+                .($replace['label'] ?? 'الوثيقة')
+                .'»، لذا يرجى إرفاق ملف واحد فقط يخص هذه الوثيقة.',
+            'ai_agent.document_flow.multiple_files_reply' => 'تم إرفاق أكثر من ملف، بينما تم اختيار وثيقة «'
+                .($replace['label'] ?? 'الوثيقة')
+                .'». يرجى إرفاق ملف واحد فقط يخص الوثيقة المختارة، ثم إعادة المحاولة.',
+            'ai_agent.document_flow.multiple_files_simple' => 'تم إرفاق أكثر من ملف. يرجى إرفاق ملف واحد فقط.',
+            'ai_agent.document_flow.upload_token_app_mismatch' => 'تعارض بين رمز الرفع ومعرّف الطلب المرسل.',
+            'ai_agent.document_flow.upload_token_doc_mismatch' => 'تعارض بين رمز الرفع ومعرّف الوثيقة المرسل.',
+            'ai_agent.document_flow.upload_failed' => 'تعذر رفع الوثيقة.',
+            'ai_agent.document_flow.upload_state_conflict' => 'تعذر إنهاء معالجة رفع الوثيقة بسبب تعارض في الحالة.',
+            'ai_agent.document_flow.document_fallback' => 'الوثيقة',
+            'ai_agent.document_flow.uploaded_remaining' => 'تم رفع وثيقة «'
+                .($replace['label'] ?? 'الوثيقة')
+                .'» بنجاح. بقيت الوثائق التالية: '
+                .($replace['remaining'] ?? '')
+                .'. يرجى اختيار الوثيقة التالية.',
+            'ai_agent.document_flow.uploaded_complete' => 'تم رفع وثيقة «'
+                .($replace['label'] ?? 'الوثيقة')
+                .'» بنجاح. جميع الوثائق المطلوبة مكتملة.',
+            'ai_agent.document_flow.already_submitted' => 'تم إرسال الوثائق للمراجعة مسبقًا.',
+            'ai_agent.document_flow.consent_confirmation_message' => 'موافقة صريحة سابقة ضمن مسار رفع الوثائق عبر المساعد.',
+            'ai_agent.document_flow.submitted_for_review' => 'تم رفع جميع الوثائق المطلوبة وإرسالها إلى قسم مراجعة الوثائق بنجاح. أصبحت حالة طلبك الآن «الوثائق قيد المراجعة». يرجى انتظار نتيجة المراجعة، وسيتم إشعارك عند تحديث حالة الطلب.',
+            'ai_agent.document_flow.submission_failed_after_upload' => 'تم رفع جميع الوثائق، لكن تعذّر إرسالها للمراجعة بسبب تغيّر حالة الطلب. يرجى تحديث حالة الطلب والمحاولة مجددًا.',
+            'ai_agent.document_flow.upload_offer' => 'الوثائق المطلوبة لاستكمال طلبك هي: '
+                .($replace['documents'] ?? '')
+                .".\n\n"
+                .'هل ترغب في رفع هذه الوثائق من خلال المساعد؟ عند اكتمال رفع جميع الوثائق، سأقوم بإرسالها مباشرةً إلى قسم مراجعة الوثائق.',
+            'ai_agent.document_flow.button_agent_upload' => 'نعم، رفعها وإرسالها عبر المساعد',
+            'ai_agent.document_flow.button_manual_upload' => 'لا، سأرفعها يدويًا',
+            'ai_agent.document_flow.cannot_confirm_agent_upload' => 'لا يمكن تأكيد رفع الوثائق عبر المساعد في هذه المرحلة.',
+            'ai_agent.document_flow.no_documents_to_upload' => 'لا توجد وثائق تحتاج إلى رفع حاليًا لهذا الطلب.',
+            'ai_agent.document_flow.choose_document' => 'يرجى اختيار الوثيقة التي ترغب في رفعها الآن.',
+            'ai_agent.document_flow.cannot_choose_manual' => 'لا يمكن اختيار الرفع اليدوي في هذه المرحلة.',
+            'ai_agent.document_flow.manual_guidance' => 'حسنًا. يمكنك رفع الوثائق يدويًا من صفحة وثائق الطلب. انتقل إلى قائمة طلباتك، اختر الطلب المطلوب، ثم افتح قسم الوثائق وارفع الملفات المطلوبة.',
+            'ai_agent.document_flow.button_go_to_documents' => 'الانتقال إلى صفحة الوثائق',
+            'ai_agent.document_flow.application_selection_unexpected' => 'اختيار الطلب غير متوقع في هذه المرحلة.',
+            'ai_agent.document_flow.application_not_eligible' => 'الطلب المحدد لم يعد يسمح برفع الوثائق.',
+            'ai_agent.document_flow.document_selection_unexpected' => 'اختيار الوثيقة غير متوقع في هذه المرحلة.',
+            'ai_agent.document_flow.selection_token_app_mismatch' => 'رمز اختيار الوثيقة لا يطابق الطلب المرتبط بالجلسة.',
+            'ai_agent.document_flow.selection_token_invalid' => 'رمز اختيار الوثيقة غير صالح.',
+            'ai_agent.document_flow.required_document_missing' => 'الوثيقة المطلوبة غير موجودة.',
+            'ai_agent.document_flow.document_not_required' => 'هذه الوثيقة غير مطلوبة لهذا الطلب.',
+            'ai_agent.document_flow.cannot_replace_approved' => 'لا يمكن استبدال وثيقة معتمدة.',
+            'ai_agent.document_flow.awaiting_file' => 'يرجى الآن رفع ملف وثيقة «'
+                .($replace['label'] ?? 'الوثيقة')
+                .'». تأكد من إرفاق ملف واحد فقط يخص هذه الوثيقة تحديدًا، وألا ترفق وثيقة أخرى بدلًا منها.',
+            'ai_agent.document_flow.cancelled' => 'تم إلغاء مسار رفع الوثائق عبر المساعد. يمكنك طلب الوثائق المطلوبة في أي وقت.',
+            'ai_agent.document_flow.choose_application_first' => 'يرجى اختيار الطلب أولًا.',
+            'ai_agent.document_flow.session_application_not_eligible' => 'الطلب المرتبط بالجلسة لم يعد يسمح برفع الوثائق.',
+            'ai_agent.document_flow.reupload_hint' => 'يرجى إعادة رفع الوثيقة',
+            'ai_agent.document_flow.names_unspecified' => 'غير محددة',
+            'ai_agent.document_flow.session_closed' => 'جلسة المساعد الذكي مغلقة.',
+            'ai_agent.pending.expired' => 'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+            'ai_agent.pending.not_found' => 'لا توجد عملية اختيار طلب قيد الانتظار.',
+            'ai_agent.pending.state_invalid' => 'حالة عملية اختيار الطلب غير صالحة لهذا الإجراء.',
+            'ai_agent.pending.retry_required' => 'تعذر استكمال العملية مؤقتًا. يرجى إعادة اختيار الطلب.',
+            'ai_agent.pending.appointment_choice_missing' => 'لا توجد عملية اختيار موعد قيد الانتظار.',
+            'ai_agent.pending.license_choice_missing' => 'لا توجد عملية اختيار رخصة قيد الانتظار.',
+            'ai_agent.selection.ambiguous' => 'وجدت أكثر من طلب مطابق. يرجى اختيار الطلب المقصود بدقة.',
+            'ai_agent.selection.unresolved' => 'لم أتمكن من تحديد الطلب المقصود. يرجى اختيار أحد الطلبات المعروضة.',
+            'ai_agent.selection.path_unavailable' => 'اختيار الطلب غير متاح عبر هذا المسار حاليًا.',
+            'ai_agent.selection.no_longer_available' => 'لم تعد الطلبات المعروضة متاحة. يرجى إعادة طلب الخدمة.',
+            'ai_agent.selection.prompt' => 'يرجى اختيار أحد الطلبات المعروضة.',
+            'ai_agent.selection.invalid' => 'الطلب المحدد غير موجود ضمن الخيارات المعروضة.',
+            'ai_agent.selection.no_longer_eligible' => 'الطلب المحدد لم يعد مؤهلاً لهذه العملية.',
+            'ai_agent.selection.multiple_prompt' => 'لديك أكثر من طلب قيد المتابعة. يرجى اختيار الطلب المطلوب.',
+            'ai_agent.selection.confirm_continue' => 'تم تحديد الطلب. هل تؤكد المتابعة؟',
+            'ai_agent.selection.cancelled' => 'تم إلغاء عملية اختيار الطلب. يمكنك طلب أي خدمة أخرى.',
+            'ai_agent.selection.subtitle' => 'رخصة '
+                .($replace['license'] ?? '')
+                .' — '
+                .($replace['status'] ?? ''),
+            'ai_agent.selection.application_summary_line' => '- '
+                .($replace['number'] ?? '')
+                .' — رخصة قيادة '
+                .($replace['license'] ?? '')
+                .' — '
+                .($replace['status'] ?? ''),
+            'ai_agent.selection.appointment_token_invalid' => 'رمز اختيار الموعد غير صالح.',
+            'ai_agent.selection.license_token_invalid' => 'رمز اختيار الرخصة غير صالح.',
+            'ai_agent.application.not_owned' => 'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+            'ai_agent.action.arguments_incomplete' => 'لا يمكن المتابعة قبل اكتمال البيانات المطلوبة.',
+            'ai_agent.existing_active_application_for_license' => 'يوجد لديك طلب فعال مسبقاً لنفس الرخصة ونفس الخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.',
+            'ai_agent.policy.tests_not_required' => 'هذه الخدمة لا تتطلب حجز اختبارات. الخطوة الحالية هي متابعة الوثائق والدفع حتى إصدار الرخصة.',
+            'ai_agent.policy.cannot_pay' => 'لا يمكنك الدفع حالياً لأن الطلب ما زال في مرحلة '
+                .($replace['stage'] ?? '')
+                .'. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.cannot_book_appointment' => 'لا يمكنك حجز موعد قبل إكمال المتطلبات السابقة. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.cannot_show_fee' => 'لا يمكن عرض رسوم هذا الطلب في مرحلة '
+                .($replace['stage'] ?? '')
+                .'. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.action_blocked' => 'لا يمكن تنفيذ هذه العملية في مرحلة '
+                .($replace['stage'] ?? '')
+                .'. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_before_payment' => 'لا يمكنك عرض الاختبارات المتاحة قبل إكمال عملية الدفع. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_while_draft' => 'لا يمكنك عرض الاختبارات المتاحة حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_blocked' => 'لا يمكنك عرض الاختبارات المتاحة في مرحلة '
+                .($replace['stage'] ?? '')
+                .'. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_before_payment' => 'لا يمكنك حجز موعد قبل دفع الرسوم. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_while_draft' => 'لا يمكنك عرض مواعيد الاختبارات حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_blocked' => 'لا يمكنك عرض مواعيد الاختبارات في مرحلة '
+                .($replace['stage'] ?? '')
+                .'. الخطوة الحالية هي '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.profile.pending_review' => 'ملفك الشخصي قيد المراجعة حالياً. لا يمكنك تنفيذ هذه العملية قبل الموافقة على البيانات.',
+            'ai_agent.profile.rejected' => 'تم رفض بيانات ملفك الشخصي. يرجى تعديل البيانات وإعادة إرسالها للمراجعة قبل استخدام الخدمات.',
+            'ai_agent.profile.incomplete' => 'يرجى إكمال بيانات الملف الشخصي قبل استخدام هذه الخدمة.',
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.',
         };
     }
@@ -345,12 +524,24 @@ class AgentTranslator
                 .($replace['time'] ?? '')
                 .'.',
             'ai_agent.appointments.current.multiple' => 'You have more than one appointment related to this application.',
+            'ai_agent.appointments.current.line' => '- '
+                .($replace['test'] ?? 'the test')
+                .' on '
+                .($replace['date'] ?? '')
+                .' at '
+                .($replace['time'] ?? ''),
             'ai_agent.appointments.current.none' => 'You have no current appointment booked for this application. You can view available slots and book a suitable appointment.',
             'ai_agent.appointments.current.no_application' => 'You have no current application to view its appointment.',
             'ai_agent.appointments.current.choose_application' => 'You have more than one application in progress. Please specify the application number for which you want to view the appointment.'
                 .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
             'ai_agent.appointments.slots.choose' => 'Here are the available slots. Please choose a suitable appointment.',
+            'ai_agent.appointments.slots.choose_for_test' => 'Here are the available slots for '
+                .($replace['test'] ?? 'the test')
+                .'. Choose a suitable slot from the list.',
             'ai_agent.appointments.slots.none' => 'There are no available slots right now. Please try again later.',
+            'ai_agent.appointments.slots.none_for_test' => 'There are no available slots right now for '
+                .($replace['test'] ?? 'the test')
+                .'. Please try again later.',
             'ai_agent.appointments.slots.stale' => 'The selected slot is no longer available. Please choose another slot.',
             'ai_agent.appointments.slots.invalid_choice' => 'The selected option is not among the offered slots.',
             'ai_agent.appointments.slots.error_application' => 'Could not resolve the application for booking.',
@@ -424,6 +615,164 @@ class AgentTranslator
             'ai_agent.tests.multiple_available' => 'The currently available tests are: '
                 .($replace['names'] ?? '')
                 .'.',
+            'ai_agent.application_status.simple' => 'Application '
+                .($replace['number'] ?? '')
+                .' status is: '
+                .($replace['status'] ?? '')
+                .'.',
+            'ai_agent.test_results.empty' => 'There are no test results recorded for this application right now.',
+            'ai_agent.test_results.header' => 'Here are your recorded test results:',
+            'ai_agent.test_results.test_fallback' => 'the test',
+            'ai_agent.test_results.attempt' => ' (attempt '.($replace['attempt'] ?? '').')',
+            'ai_agent.test_results.on_date' => ' on '.($replace['date'] ?? ''),
+            'ai_agent.test_results.line' => '- '
+                .($replace['test'] ?? '')
+                .': '
+                .($replace['result'] ?? '')
+                .($replace['attempt_part'] ?? '')
+                .($replace['date_part'] ?? '')
+                .'.',
+            'ai_agent.test_results.result.passed' => 'Passed',
+            'ai_agent.test_results.result.failed' => 'Failed',
+            'ai_agent.test_results.result.no_show' => 'No show',
+            'ai_agent.document_flow.selection_required' => 'Please choose upload via the assistant or manual upload.',
+            'ai_agent.document_flow.no_eligible_application' => 'You currently have no application that allows document upload.',
+            'ai_agent.document_flow.multiple_applications' => 'You have more than one application that needs documents. Please choose the required application.',
+            'ai_agent.document_flow.application_option' => ($replace['service'] ?? 'Application')
+                .' — '
+                .($replace['license'] ?? '')
+                .' license — #'
+                .($replace['id'] ?? ''),
+            'ai_agent.document_flow.service_fallback' => 'Application',
+            'ai_agent.document_flow.unknown_interaction' => 'Unknown interaction action.',
+            'ai_agent.document_flow.file_required' => 'Please attach the required document file.',
+            'ai_agent.document_flow.multiple_files_with_label' => 'More than one file was attached. You chose to upload «'
+                .($replace['label'] ?? 'the document')
+                .'», so please attach only one file for this document.',
+            'ai_agent.document_flow.multiple_files_reply' => 'More than one file was attached, while document «'
+                .($replace['label'] ?? 'the document')
+                .'» was selected. Please attach only one file for the selected document, then try again.',
+            'ai_agent.document_flow.multiple_files_simple' => 'More than one file was attached. Please attach only one file.',
+            'ai_agent.document_flow.upload_token_app_mismatch' => 'Mismatch between the upload token and the submitted application ID.',
+            'ai_agent.document_flow.upload_token_doc_mismatch' => 'Mismatch between the upload token and the submitted document ID.',
+            'ai_agent.document_flow.upload_failed' => 'Could not upload the document.',
+            'ai_agent.document_flow.upload_state_conflict' => 'Could not finish document upload processing due to a state conflict.',
+            'ai_agent.document_flow.document_fallback' => 'the document',
+            'ai_agent.document_flow.uploaded_remaining' => 'Document «'
+                .($replace['label'] ?? 'the document')
+                .'» was uploaded successfully. Remaining documents: '
+                .($replace['remaining'] ?? '')
+                .'. Please choose the next document.',
+            'ai_agent.document_flow.uploaded_complete' => 'Document «'
+                .($replace['label'] ?? 'the document')
+                .'» was uploaded successfully. All required documents are complete.',
+            'ai_agent.document_flow.already_submitted' => 'Documents were already submitted for review.',
+            'ai_agent.document_flow.consent_confirmation_message' => 'Prior explicit consent within the assistant document upload flow.',
+            'ai_agent.document_flow.submitted_for_review' => 'All required documents were uploaded and sent to the document review section successfully. Your application status is now «Documents under review». Please wait for the review result; you will be notified when the status is updated.',
+            'ai_agent.document_flow.submission_failed_after_upload' => 'All documents were uploaded, but they could not be submitted for review because the application status changed. Please refresh the application status and try again.',
+            'ai_agent.document_flow.upload_offer' => 'The required documents to complete your application are: '
+                .($replace['documents'] ?? '')
+                .".\n\n"
+                .'Would you like to upload these documents through the assistant? When all documents are uploaded, I will send them directly to the document review section.',
+            'ai_agent.document_flow.button_agent_upload' => 'Yes, upload and submit via assistant',
+            'ai_agent.document_flow.button_manual_upload' => 'No, I will upload manually',
+            'ai_agent.document_flow.cannot_confirm_agent_upload' => 'Assistant document upload cannot be confirmed at this stage.',
+            'ai_agent.document_flow.no_documents_to_upload' => 'There are no documents that need uploading for this application right now.',
+            'ai_agent.document_flow.choose_document' => 'Please choose the document you want to upload now.',
+            'ai_agent.document_flow.cannot_choose_manual' => 'Manual upload cannot be chosen at this stage.',
+            'ai_agent.document_flow.manual_guidance' => 'Okay. You can upload documents manually from the application documents page. Go to your applications list, choose the application, open the documents section, and upload the required files.',
+            'ai_agent.document_flow.button_go_to_documents' => 'Go to documents page',
+            'ai_agent.document_flow.application_selection_unexpected' => 'Application selection is unexpected at this stage.',
+            'ai_agent.document_flow.application_not_eligible' => 'The selected application no longer allows document upload.',
+            'ai_agent.document_flow.document_selection_unexpected' => 'Document selection is unexpected at this stage.',
+            'ai_agent.document_flow.selection_token_app_mismatch' => 'The document selection token does not match the application bound to this session.',
+            'ai_agent.document_flow.selection_token_invalid' => 'The document selection token is invalid.',
+            'ai_agent.document_flow.required_document_missing' => 'The required document was not found.',
+            'ai_agent.document_flow.document_not_required' => 'This document is not required for this application.',
+            'ai_agent.document_flow.cannot_replace_approved' => 'An approved document cannot be replaced.',
+            'ai_agent.document_flow.awaiting_file' => 'Please upload the file for document «'
+                .($replace['label'] ?? 'the document')
+                .'» now. Make sure to attach only one file for this specific document, and do not attach a different document instead.',
+            'ai_agent.document_flow.cancelled' => 'The assistant document upload flow was cancelled. You can request the required documents at any time.',
+            'ai_agent.document_flow.choose_application_first' => 'Please choose the application first.',
+            'ai_agent.document_flow.session_application_not_eligible' => 'The application bound to this session no longer allows document upload.',
+            'ai_agent.document_flow.reupload_hint' => 'Please re-upload the document',
+            'ai_agent.document_flow.names_unspecified' => 'unspecified',
+            'ai_agent.document_flow.session_closed' => 'The AI assistant session is closed.',
+            'ai_agent.pending.expired' => 'The application selection process has expired. Please request the service again.',
+            'ai_agent.pending.not_found' => 'There is no pending application selection process.',
+            'ai_agent.pending.state_invalid' => 'The application selection process state is invalid for this action.',
+            'ai_agent.pending.retry_required' => 'Could not continue the process temporarily. Please select the application again.',
+            'ai_agent.pending.appointment_choice_missing' => 'There is no pending appointment selection process.',
+            'ai_agent.pending.license_choice_missing' => 'There is no pending license selection process.',
+            'ai_agent.selection.ambiguous' => 'I found more than one matching application. Please choose the intended application carefully.',
+            'ai_agent.selection.unresolved' => 'I could not determine the intended application. Please choose one of the listed applications.',
+            'ai_agent.selection.path_unavailable' => 'Application selection is not available through this path right now.',
+            'ai_agent.selection.no_longer_available' => 'The listed applications are no longer available. Please request the service again.',
+            'ai_agent.selection.prompt' => 'Please choose one of the listed applications.',
+            'ai_agent.selection.invalid' => 'The selected application is not among the offered options.',
+            'ai_agent.selection.no_longer_eligible' => 'The selected application is no longer eligible for this operation.',
+            'ai_agent.selection.multiple_prompt' => 'You have more than one application in progress. Please choose the required application.',
+            'ai_agent.selection.confirm_continue' => 'The application has been selected. Do you confirm proceeding?',
+            'ai_agent.selection.cancelled' => 'The application selection process has been cancelled. You can request any other service.',
+            'ai_agent.selection.subtitle' => ($replace['license'] ?? '')
+                .' license — '
+                .($replace['status'] ?? ''),
+            'ai_agent.selection.application_summary_line' => '- '
+                .($replace['number'] ?? '')
+                .' — '
+                .($replace['license'] ?? '')
+                .' driving license — '
+                .($replace['status'] ?? ''),
+            'ai_agent.selection.appointment_token_invalid' => 'The appointment selection token is invalid.',
+            'ai_agent.selection.license_token_invalid' => 'The license selection token is invalid.',
+            'ai_agent.application.not_owned' => 'The application was not found or you do not have access to it.',
+            'ai_agent.action.arguments_incomplete' => 'Cannot continue before the required data is complete.',
+            'ai_agent.existing_active_application_for_license' => 'You already have an active application for this license and service. You can continue the current application instead of creating a new one.',
+            'ai_agent.policy.tests_not_required' => 'This service does not require booking tests. The current step is to complete documents and payment until the license is issued.',
+            'ai_agent.policy.cannot_pay' => 'You cannot pay right now because the application is still in the '
+                .($replace['stage'] ?? '')
+                .' stage. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.cannot_book_appointment' => 'You cannot book an appointment before completing the previous requirements. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.cannot_show_fee' => 'The fee for this application cannot be shown in the '
+                .($replace['stage'] ?? '')
+                .' stage. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.action_blocked' => 'This operation cannot be performed in the '
+                .($replace['stage'] ?? '')
+                .' stage. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_before_payment' => 'You cannot view available tests before completing payment. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_while_draft' => 'You cannot view available tests right now because the application is still in draft. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.tests_blocked' => 'You cannot view available tests in the '
+                .($replace['stage'] ?? '')
+                .' stage. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_before_payment' => 'You cannot book an appointment before paying the fees. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_while_draft' => 'You cannot view test appointment slots right now because the application is still in draft. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.policy.slots_blocked' => 'You cannot view test appointment slots in the '
+                .($replace['stage'] ?? '')
+                .' stage. The current step is '
+                .($replace['next_step'] ?? '')
+                .'.',
+            'ai_agent.profile.pending_review' => 'Your profile is currently under review. You cannot perform this operation before the data is approved.',
+            'ai_agent.profile.rejected' => 'Your profile data was rejected. Please edit the data and resubmit it for review before using services.',
+            'ai_agent.profile.incomplete' => 'Please complete your profile data before using this service.',
             default => 'Sorry, unable to display the message at the moment. Please try again later or contact support.',
         };
     }
@@ -431,9 +780,9 @@ class AgentTranslator
     /**
      * @param  array<string, mixed>  $replace
      */
-    private static function applicationNextStepFallback(string $status, array $replace = []): string
+    private static function applicationNextStepFallback(string $status, array $replace = [], ?string $locale = null): string
     {
-        $locale = self::getLocale();
+        $locale = $locale ?? self::getLocale();
         
         return $locale === 'en'
             ? self::applicationNextStepFallbackEn($status, $replace)

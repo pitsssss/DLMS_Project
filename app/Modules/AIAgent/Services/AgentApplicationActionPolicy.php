@@ -5,10 +5,10 @@ namespace App\Modules\AIAgent\Services;
 use App\Enums\ApplicationStatus;
 use App\Models\LicenseApplication;
 use App\Models\User;
-use App\Modules\AIAgent\DTO\AgentWorkflowContext;
-use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentApplicationStatusMap;
 use App\Modules\AIAgent\Support\AgentTranslator;
+use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
+use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use Illuminate\Support\Collection;
 
@@ -27,7 +27,7 @@ class AgentApplicationActionPolicy
                 'reschedule_appointment',
                 'cancel_appointment',
             ], true)) {
-            return 'هذه الخدمة لا تتطلب حجز اختبارات. الخطوة الحالية هي متابعة الوثائق والدفع حتى إصدار الرخصة.';
+            return AgentTranslator::message('ai_agent.policy.tests_not_required');
         }
 
         $status = $application->status instanceof ApplicationStatus
@@ -39,28 +39,17 @@ class AgentApplicationActionPolicy
         }
 
         $definition = AgentApplicationStatusMap::definition($status);
+        $labels = $this->localizedStageLabels($status, $definition);
 
         return match ($actionName) {
-            'start_payment' => 'لا يمكنك الدفع حالياً لأن الطلب ما زال في مرحلة '
-                .$definition['label_ar']
-                .'. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.',
-            'get_available_tests' => $this->availableTestsBlockReason($status, $definition),
-            'get_appointment_slots' => $this->appointmentSlotsBlockReason($status, $definition),
-            'book_appointment' => 'لا يمكنك حجز موعد قبل إكمال المتطلبات السابقة. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.',
-            'get_application_fee' => 'لا يمكن عرض رسوم هذا الطلب في مرحلة '
-                .$definition['label_ar']
-                .'. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.',
-            default => 'لا يمكن تنفيذ هذه العملية في مرحلة '
-                .$definition['label_ar']
-                .'. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.',
+            'start_payment' => AgentTranslator::message('ai_agent.policy.cannot_pay', $labels),
+            'get_available_tests' => $this->availableTestsBlockReason($status, $labels),
+            'get_appointment_slots' => $this->appointmentSlotsBlockReason($status, $labels),
+            'book_appointment' => AgentTranslator::message('ai_agent.policy.cannot_book_appointment', [
+                'next_step' => $labels['next_step'],
+            ]),
+            'get_application_fee' => AgentTranslator::message('ai_agent.policy.cannot_show_fee', $labels),
+            default => AgentTranslator::message('ai_agent.policy.action_blocked', $labels),
         };
     }
 
@@ -73,10 +62,10 @@ class AgentApplicationActionPolicy
         $status = (string) ($citizen->profile_status?->value ?? $citizen->profile_status ?? '');
 
         return match ($status) {
-            'pending_review' => 'ملفك الشخصي قيد المراجعة حالياً. لا يمكنك تنفيذ هذه العملية قبل الموافقة على البيانات.',
-            'rejected' => 'تم رفض بيانات ملفك الشخصي. يرجى تعديل البيانات وإعادة إرسالها للمراجعة قبل استخدام الخدمات.',
+            'pending_review' => AgentTranslator::message('ai_agent.profile.pending_review'),
+            'rejected' => AgentTranslator::message('ai_agent.profile.rejected'),
             default => ! $citizen->profile_completed
-                ? 'يرجى إكمال بيانات الملف الشخصي قبل استخدام هذه الخدمة.'
+                ? AgentTranslator::message('ai_agent.profile.incomplete')
                 : null,
         };
     }
@@ -89,13 +78,18 @@ class AgentApplicationActionPolicy
     public function multipleApplicationsReply(string $intentKey, Collection $applications, string $language = 'ar'): string
     {
         $summary = $applications
-            ->map(function (LicenseApplication $application) use ($language): string {
-                $licenseLabel = \App\Modules\AIAgent\Support\LicenseTypeSlotExtractor::labelAr(
-                    (string) ($application->licenseType?->code ?? '')
-                );
-                $statusLabel = \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelAr($application->status);
+            ->map(function (LicenseApplication $application): string {
+                $licenseCode = (string) ($application->licenseType?->code ?? '');
+                $licenseLabel = AgentTranslator::getLocale() === 'en'
+                    ? LicenseTypeSlotExtractor::labelEn($licenseCode)
+                    : LicenseTypeSlotExtractor::labelAr($licenseCode);
+                $statusLabel = ApplicationStatusLabelMapper::label($application->status);
 
-                return '- '.$application->application_number.' — رخصة قيادة '.$licenseLabel.' — '.$statusLabel;
+                return AgentTranslator::message('ai_agent.selection.application_summary_line', [
+                    'number' => $application->application_number,
+                    'license' => $licenseLabel,
+                    'status' => $statusLabel,
+                ]);
             })
             ->implode("\n");
 
@@ -105,50 +99,80 @@ class AgentApplicationActionPolicy
     }
 
     /**
-     * @param  array<string, mixed>  $definition
+     * @param  array{stage: string, next_step: string}  $labels
      */
-    private function availableTestsBlockReason(ApplicationStatus $status, array $definition): string
+    private function availableTestsBlockReason(ApplicationStatus $status, array $labels): string
     {
         if ($status === ApplicationStatus::PaymentPending) {
-            return 'لا يمكنك عرض الاختبارات المتاحة قبل إكمال عملية الدفع. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.';
+            return AgentTranslator::message('ai_agent.policy.tests_before_payment', [
+                'next_step' => $labels['next_step'],
+            ]);
         }
 
         if ($status === ApplicationStatus::Draft) {
-            return 'لا يمكنك عرض الاختبارات المتاحة حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.';
+            return AgentTranslator::message('ai_agent.policy.tests_while_draft', [
+                'next_step' => $labels['next_step'],
+            ]);
         }
 
-        return 'لا يمكنك عرض الاختبارات المتاحة في مرحلة '
-            .$definition['label_ar']
-            .'. الخطوة الحالية هي '
-            .$definition['next_step_ar']
-            .'.';
+        return AgentTranslator::message('ai_agent.policy.tests_blocked', $labels);
+    }
+
+    /**
+     * @param  array{stage: string, next_step: string}  $labels
+     */
+    private function appointmentSlotsBlockReason(ApplicationStatus $status, array $labels): string
+    {
+        if ($status === ApplicationStatus::PaymentPending) {
+            return AgentTranslator::message('ai_agent.policy.slots_before_payment', [
+                'next_step' => $labels['next_step'],
+            ]);
+        }
+
+        if ($status === ApplicationStatus::Draft) {
+            return AgentTranslator::message('ai_agent.policy.slots_while_draft', [
+                'next_step' => $labels['next_step'],
+            ]);
+        }
+
+        return AgentTranslator::message('ai_agent.policy.slots_blocked', $labels);
     }
 
     /**
      * @param  array<string, mixed>  $definition
+     * @return array{stage: string, next_step: string}
      */
-    private function appointmentSlotsBlockReason(ApplicationStatus $status, array $definition): string
+    private function localizedStageLabels(ApplicationStatus $status, array $definition): array
     {
-        if ($status === ApplicationStatus::PaymentPending) {
-            return 'لا يمكنك حجز موعد قبل دفع الرسوم. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.';
+        if (AgentTranslator::getLocale() === 'en') {
+            return [
+                'stage' => ApplicationStatusLabelMapper::labelEn($status),
+                'next_step' => $this->nextStepEn($status),
+            ];
         }
 
-        if ($status === ApplicationStatus::Draft) {
-            return 'لا يمكنك عرض مواعيد الاختبارات حالياً لأن الطلب ما زال في مرحلة المسودة. الخطوة الحالية هي '
-                .$definition['next_step_ar']
-                .'.';
-        }
+        return [
+            'stage' => (string) ($definition['label_ar'] ?? ''),
+            'next_step' => (string) ($definition['next_step_ar'] ?? ''),
+        ];
+    }
 
-        return 'لا يمكنك عرض مواعيد الاختبارات في مرحلة '
-            .$definition['label_ar']
-            .'. الخطوة الحالية هي '
-            .$definition['next_step_ar']
-            .'.';
+    private function nextStepEn(ApplicationStatus $status): string
+    {
+        return match ($status) {
+            ApplicationStatus::Draft => 'upload the required documents and submit them for review',
+            ApplicationStatus::DocumentsUnderReview => 'wait for employee review',
+            ApplicationStatus::DocumentsRejected => 'review the rejection reason and re-upload the documents',
+            ApplicationStatus::PaymentPending => 'pay the fees',
+            ApplicationStatus::PaymentCompleted => 'book an appointment for the first available test',
+            ApplicationStatus::AppointmentPending => 'book an appointment for the available test',
+            ApplicationStatus::InTesting => 'follow the current test or wait for the result to be recorded',
+            ApplicationStatus::WaitingRetest => 'book a retest appointment for the same failed test',
+            ApplicationStatus::Approved => 'wait for the license to be issued by the relevant employee',
+            ApplicationStatus::AdministrativeReview => 'wait for the administrative decision',
+            ApplicationStatus::LicenseIssued => 'view the license details',
+            ApplicationStatus::Rejected => 'review the rejection reason',
+            ApplicationStatus::Cancelled => 'you can create a new application if you want',
+        };
     }
 }

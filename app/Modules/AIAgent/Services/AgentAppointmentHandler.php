@@ -194,7 +194,7 @@ class AgentAppointmentHandler
             $appointment = $appointments[0];
 
             return AgentTranslator::message('ai_agent.appointments.current.single', [
-                'test' => trim((string) ($appointment['test_type']['name'] ?? 'الاختبار')),
+                'test' => trim((string) ($appointment['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback'))),
                 'date' => trim((string) ($appointment['date'] ?? '')),
                 'time' => trim((string) ($appointment['start_time'] ?? '')),
             ]);
@@ -202,11 +202,15 @@ class AgentAppointmentHandler
 
         $lines = collect($appointments)
             ->map(function (array $appointment): string {
-                $testName = trim((string) ($appointment['test_type']['name'] ?? 'الاختبار'));
+                $testName = trim((string) ($appointment['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
                 $date = trim((string) ($appointment['date'] ?? ''));
                 $time = trim((string) ($appointment['start_time'] ?? ''));
 
-                return "- {$testName} بتاريخ {$date} الساعة {$time}";
+                return AgentTranslator::message('ai_agent.appointments.current.line', [
+                    'test' => $testName,
+                    'date' => $date,
+                    'time' => $time,
+                ]);
             })
             ->implode("\n");
 
@@ -218,14 +222,14 @@ class AgentAppointmentHandler
      */
     public function replyFromSlotsResult(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? 'الاختبار'));
+        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
         $slots = $result['slots'] ?? [];
 
         if (! is_array($slots) || $slots === []) {
-            return "لا توجد مواعيد متاحة حالياً لـ{$testName}. يرجى المحاولة لاحقاً.";
+            return AgentTranslator::message('ai_agent.appointments.slots.none_for_test', ['test' => $testName]);
         }
 
-        return "هذه هي المواعيد المتاحة لـ{$testName}. اختر الموعد المناسب من القائمة.";
+        return AgentTranslator::message('ai_agent.appointments.slots.choose_for_test', ['test' => $testName]);
     }
 
     /**

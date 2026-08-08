@@ -142,6 +142,11 @@ class AgentMessageIntentMatcher
             return false;
         }
 
+        // Payment status also contains the word "status" / Arabic "حالة".
+        if (AgentWorkflowPhraseMatcher::isPaymentStatusQuery($message)) {
+            return false;
+        }
+
         $normalized = self::normalize($message);
 
         if ($normalized === '') {

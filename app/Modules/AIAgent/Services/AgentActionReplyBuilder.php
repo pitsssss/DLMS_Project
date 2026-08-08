@@ -93,11 +93,18 @@ class AgentActionReplyBuilder
     private function applicationStatusReply(array $result): string
     {
         $number = (string) ($result['application_number'] ?? '');
-        $statusLabel = (string) ($result['status_label_ar'] ?? '');
-        if ($statusLabel === '') {
-            $statusLabel = ApplicationStatusLabelMapper::labelAr(
-                ApplicationStatus::tryFrom((string) ($result['status'] ?? ''))
-            );
+        $status = ApplicationStatus::tryFrom((string) ($result['status'] ?? ''));
+
+        if (AgentTranslator::getLocale() === 'en') {
+            $statusLabel = trim((string) ($result['status_label_en'] ?? ''));
+            if ($statusLabel === '') {
+                $statusLabel = ApplicationStatusLabelMapper::labelEn($status ?? (string) ($result['status'] ?? ''));
+            }
+        } else {
+            $statusLabel = trim((string) ($result['status_label_ar'] ?? ''));
+            if ($statusLabel === '') {
+                $statusLabel = ApplicationStatusLabelMapper::labelAr($status ?? (string) ($result['status'] ?? ''));
+            }
         }
 
         $nextStep = (string) ($result['next_step_message'] ?? '');
@@ -106,10 +113,13 @@ class AgentActionReplyBuilder
                 'number' => $number,
                 'status' => $statusLabel,
                 'next_step' => $nextStep,
-            ]);
+            ], AgentTranslator::getLocale());
         }
 
-        return "حالة الطلب {$number} هي: {$statusLabel}.";
+        return AgentTranslator::message('ai_agent.application_status.simple', [
+            'number' => $number,
+            'status' => $statusLabel,
+        ], AgentTranslator::getLocale());
     }
 
     /**
@@ -279,27 +289,43 @@ class AgentActionReplyBuilder
         $items = is_array($result['items'] ?? null) ? $result['items'] : [];
 
         if ($items === []) {
-            return 'لا توجد نتائج اختبار مسجلة لهذا الطلب حالياً.';
+            return AgentTranslator::message('ai_agent.test_results.empty');
         }
 
         $lines = collect($items)
             ->map(function (array $item): string {
-                $testName = trim((string) ($item['test_type']['name'] ?? 'الاختبار'));
+                $testName = trim((string) ($item['test_type']['name']
+                    ?? AgentTranslator::message('ai_agent.test_results.test_fallback')));
                 $status = (string) ($item['result'] ?? '');
-                $translated = $status !== '' ? __('messages.tests.result_'.$status) : '';
+                $translated = match ($status) {
+                    'passed', 'failed', 'no_show' => AgentTranslator::message('ai_agent.test_results.result.'.$status),
+                    default => $status,
+                };
                 $attempt = (string) ($item['attempt_number'] ?? '');
                 $date = trim((string) ($item['recorded_at'] ?? ''));
 
-                $datePart = $date !== '' ? substr($date, 0, 10) : '';
-                $suffix = $datePart !== '' ? " بتاريخ {$datePart}" : '';
+                $datePart = $date !== ''
+                    ? AgentTranslator::message('ai_agent.test_results.on_date', [
+                        'date' => substr($date, 0, 10),
+                    ])
+                    : '';
 
-                $attemptPart = $attempt !== '' ? " (المحاولة {$attempt})" : '';
+                $attemptPart = $attempt !== ''
+                    ? AgentTranslator::message('ai_agent.test_results.attempt', [
+                        'attempt' => $attempt,
+                    ])
+                    : '';
 
-                return "- {$testName}: {$translated}{$attemptPart}{$suffix}.";
+                return AgentTranslator::message('ai_agent.test_results.line', [
+                    'test' => $testName,
+                    'result' => $translated,
+                    'attempt_part' => $attemptPart,
+                    'date_part' => $datePart,
+                ]);
             })
             ->implode("\n");
 
-        return "هذه نتائج الاختبارات المسجلة لديك:\n{$lines}";
+        return AgentTranslator::message('ai_agent.test_results.header')."\n{$lines}";
     }
 
     /**

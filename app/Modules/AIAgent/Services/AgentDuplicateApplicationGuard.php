@@ -45,13 +45,10 @@ class AgentDuplicateApplicationGuard
 
         $existing->loadMissing(['licenseType', 'serviceType']);
 
-        $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
-            ? $payload['language']
-            : 'ar';
-
-        $label = LicenseTypeSlotExtractor::labelAr(
-            $existing->licenseType?->code ?? $licenseTypeCode
-        );
+        $code = $existing->licenseType?->code ?? $licenseTypeCode;
+        $label = AgentTranslator::getLocale() === 'en'
+            ? LicenseTypeSlotExtractor::labelEn($code)
+            : LicenseTypeSlotExtractor::labelAr($code);
 
         $payload['intent'] = AgentIntent::GetApplicationStatus->value;
         $payload['missing_slots'] = [];
@@ -66,9 +63,7 @@ class AgentDuplicateApplicationGuard
         $payload['confidence'] = max((float) ($payload['confidence'] ?? 0), 0.9);
         $payload['requires_human_support'] = false;
         $payload['safety_status'] = 'safe';
-        $payload['reply'] = $language === 'ar'
-            ? AgentTranslator::message('ai_agent.existing_active_application', ['label' => $label])
-            : 'You already have an active '.$licenseTypeCode.' license application. You can continue the existing application instead of creating a new one.';
+        $payload['reply'] = AgentTranslator::message('ai_agent.existing_active_application', ['label' => $label]);
 
         return $payload;
     }
@@ -95,10 +90,6 @@ class AgentDuplicateApplicationGuard
 
         $existing->loadMissing(['licenseType', 'serviceType', 'relatedLicense']);
 
-        $language = in_array($payload['language'] ?? null, ['ar', 'en'], true)
-            ? $payload['language']
-            : 'ar';
-
         $payload['intent'] = AgentIntent::GetApplicationStatus->value;
         $payload['missing_slots'] = [];
         $payload['proposed_action'] = [
@@ -112,9 +103,7 @@ class AgentDuplicateApplicationGuard
         $payload['confidence'] = max((float) ($payload['confidence'] ?? 0), 0.9);
         $payload['requires_human_support'] = false;
         $payload['safety_status'] = 'safe';
-        $payload['reply'] = $language === 'ar'
-            ? 'يوجد لديك طلب فعال مسبقاً لنفس الرخصة ونفس الخدمة. يمكنك متابعة الطلب الحالي بدلاً من إنشاء طلب جديد.'
-            : 'You already have an active application for this license and service.';
+        $payload['reply'] = AgentTranslator::message('ai_agent.existing_active_application_for_license');
 
         return $payload;
     }

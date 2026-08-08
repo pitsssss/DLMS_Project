@@ -11,6 +11,7 @@ use App\Models\TestType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Applications\Resources\ApplicationResource;
@@ -139,12 +140,16 @@ class AgentActionExecutor
         $application = $this->applications->getForCitizen($user, $applicationId);
         $application->loadMissing(['licenseType', 'serviceType']);
 
-        $step = $this->nextStepService->nextStepForApplication($application);
+        $step = $this->nextStepService->nextStepForApplication(
+            $application,
+            AgentTranslator::getLocale()
+        );
 
         return array_merge(
             (new ApplicationResource($application))->resolve(),
             [
                 'status_label_ar' => $step['status_label_ar'],
+                'status_label_en' => $step['status_label_en'] ?? ApplicationStatusLabelMapper::labelEn($application->status),
                 'next_step_key' => $step['next_step_key'],
                 'next_step_message' => $step['next_step_message'],
             ]
@@ -161,13 +166,17 @@ class AgentActionExecutor
         $application = $this->applications->getForCitizen($user, $applicationId);
         $application->loadMissing(['licenseType', 'serviceType']);
 
-        $step = $this->nextStepService->nextStepForApplication($application);
+        $step = $this->nextStepService->nextStepForApplication(
+            $application,
+            AgentTranslator::getLocale()
+        );
 
         return [
             'application_id' => $application->id,
             'application_number' => $application->application_number,
             'status' => $step['status'],
             'status_label_ar' => $step['status_label_ar'],
+            'status_label_en' => $step['status_label_en'] ?? ApplicationStatusLabelMapper::labelEn($application->status),
             'next_step_key' => $step['next_step_key'],
             'next_step_message' => $step['next_step_message'],
             'suggested_action' => $step['suggested_action'],

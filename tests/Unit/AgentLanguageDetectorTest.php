@@ -99,6 +99,18 @@ class AgentLanguageDetectorTest extends TestCase
         $this->assertEquals('short_response', $result['source']);
     }
 
+    public function test_short_response_inherits_session_locale(): void
+    {
+        $enYes = $this->detector->detect('yes', 'ar');
+        $this->assertEquals('ar', $enYes['locale']);
+        $this->assertEquals('short_response_inherit_session', $enYes['source']);
+        $this->assertLessThan(0.7, $enYes['confidence']);
+
+        $arNo = $this->detector->detect('لا', 'en');
+        $this->assertEquals('en', $arNo['locale']);
+        $this->assertEquals('short_response_inherit_session', $arNo['source']);
+    }
+
     public function test_handles_empty_string(): void
     {
         $result = $this->detector->detect('');

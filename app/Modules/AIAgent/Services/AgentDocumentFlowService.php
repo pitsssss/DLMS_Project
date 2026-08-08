@@ -16,6 +16,7 @@ use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentDocumentFlowPhraseMatcher;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Modules\Applications\Services\ApplicationDocumentService;
@@ -71,7 +72,7 @@ class AgentDocumentFlowService
         }
 
         throw new ApiException(
-            'يرجى اختيار رفع الوثائق عبر المساعد أو الرفع اليدوي.',
+            AgentTranslator::message('ai_agent.document_flow.selection_required'),
             422,
             [],
             [],
@@ -99,7 +100,7 @@ class AgentDocumentFlowService
             return $this->response(
                 $session,
                 'document_flow_error',
-                'لا يوجد لديك حاليًا طلب يسمح برفع الوثائق.',
+                AgentTranslator::message('ai_agent.document_flow.no_eligible_application'),
                 [],
                 [
                     'executed_action' => null,
@@ -120,16 +121,22 @@ class AgentDocumentFlowService
             return $this->response(
                 $session,
                 'application_selection_required',
-                'لديك أكثر من طلب يحتاج إلى استكمال الوثائق. يرجى اختيار الطلب المطلوب.',
+                AgentTranslator::message('ai_agent.document_flow.multiple_applications'),
                 [
                     'applications' => $eligible->map(function (LicenseApplication $application) use ($citizen, $session): array {
-                        $licenseLabel = LicenseTypeSlotExtractor::labelAr(
-                            (string) ($application->licenseType?->code ?? '')
-                        );
-                        $serviceLabel = (string) ($application->serviceType?->name ?? 'طلب');
+                        $licenseCode = (string) ($application->licenseType?->code ?? '');
+                        $licenseLabel = AgentTranslator::getLocale() === 'en'
+                            ? LicenseTypeSlotExtractor::labelEn($licenseCode)
+                            : LicenseTypeSlotExtractor::labelAr($licenseCode);
+                        $serviceLabel = (string) ($application->serviceType?->name
+                            ?? AgentTranslator::message('ai_agent.document_flow.service_fallback'));
 
                         return [
-                            'label' => "{$serviceLabel} — رخصة {$licenseLabel} — رقم {$application->id}",
+                            'label' => AgentTranslator::message('ai_agent.document_flow.application_option', [
+                                'service' => $serviceLabel,
+                                'license' => $licenseLabel,
+                                'id' => $application->id,
+                            ]),
                             'action' => 'select_application',
                             'selection_token' => $this->selectionTokens->issue(
                                 $citizen,
@@ -168,7 +175,7 @@ class AgentDocumentFlowService
             'select_required_document' => $this->selectRequiredDocument($citizen, $session, (string) $selectionToken),
             'cancel_document_upload' => $this->cancelFlow($session),
             default => throw new ApiException(
-                'إجراء التفاعل غير معروف.',
+                AgentTranslator::message('ai_agent.document_flow.unknown_interaction'),
                 422,
                 ['action' => ['Unsupported interaction action.']],
                 [],
@@ -193,12 +200,13 @@ class AgentDocumentFlowService
     ): array {
         $this->assertSessionActive($session);
 
-        $label = (string) ($this->getFlow($session)['required_document_label'] ?? 'الوثيقة');
+        $label = (string) ($this->getFlow($session)['required_document_label']
+            ?? AgentTranslator::message('ai_agent.document_flow.document_fallback'));
         $fileCount = count($files);
 
         if ($fileCount === 0) {
             throw new ApiException(
-                'يرجى إرفاق ملف الوثيقة المطلوبة.',
+                AgentTranslator::message('ai_agent.document_flow.file_required'),
                 422,
                 [],
                 [],
@@ -208,7 +216,7 @@ class AgentDocumentFlowService
 
         if ($fileCount > 1) {
             throw new ApiException(
-                "تم إرفاق أكثر من ملف. لقد اخترت رفع وثيقة «{$label}»، لذا يرجى إرفاق ملف واحد فقط يخص هذه الوثيقة.",
+                AgentTranslator::message('ai_agent.document_flow.multiple_files_with_label', ['label' => $label]),
                 422,
                 [],
                 [],
@@ -219,7 +227,7 @@ class AgentDocumentFlowService
                     'maximum_files' => 1,
                     'upload_token_still_valid' => true,
                     'message_type' => 'multiple_files_rejected',
-                    'reply' => "تم إرفاق أكثر من ملف، بينما تم اختيار وثيقة «{$label}». يرجى إرفاق ملف واحد فقط يخص الوثيقة المختارة، ثم إعادة المحاولة.",
+                    'reply' => AgentTranslator::message('ai_agent.document_flow.multiple_files_reply', ['label' => $label]),
                 ]
             );
         }
@@ -234,7 +242,7 @@ class AgentDocumentFlowService
 
             if ($legacyApplicationId !== null && $legacyApplicationId !== $binding['application_id']) {
                 throw new ApiException(
-                    'تعارض بين رمز الرفع ومعرّف الطلب المرسل.',
+                    AgentTranslator::message('ai_agent.document_flow.upload_token_app_mismatch'),
                     422,
                     [],
                     [],
@@ -244,7 +252,7 @@ class AgentDocumentFlowService
 
             if ($legacyRequiredDocumentId !== null && $legacyRequiredDocumentId !== $binding['required_document_id']) {
                 throw new ApiException(
-                    'تعارض بين رمز الرفع ومعرّف الوثيقة المرسل.',
+                    AgentTranslator::message('ai_agent.document_flow.upload_token_doc_mismatch'),
                     422,
                     [],
                     [],
@@ -281,7 +289,13 @@ class AgentDocumentFlowService
                 throw $e;
             }
 
-            throw new ApiException('تعذر رفع الوثيقة.', 422, [], [], 'INVALID_DOCUMENT_FILE');
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.document_flow.upload_failed'),
+                422,
+                [],
+                [],
+                'INVALID_DOCUMENT_FILE'
+            );
         }
 
         return DB::transaction(function () use ($citizen, $session, $binding, $uploaded) {
@@ -290,7 +304,7 @@ class AgentDocumentFlowService
 
             if ((string) ($flow['upload_token_status'] ?? '') !== 'processing') {
                 throw new ApiException(
-                    'تعذر إنهاء معالجة رفع الوثيقة بسبب تعارض في الحالة.',
+                    AgentTranslator::message('ai_agent.document_flow.upload_state_conflict'),
                     422,
                     [],
                     [],
@@ -332,11 +346,13 @@ class AgentDocumentFlowService
             ->firstOrFail();
 
         $checklistMeta = $this->buildChecklistMeta($citizen, $applicationId);
-        $label = (string) ($uploaded->requiredDocument?->name ?? 'الوثيقة');
+        $label = (string) ($uploaded->requiredDocument?->name
+            ?? AgentTranslator::message('ai_agent.document_flow.document_fallback'));
 
         if (! $checklistMeta['all_required_uploaded']) {
             $remaining = $this->buildUploadableDocumentButtons($citizen, $session, $application);
-            $remainingNames = implode(' و', array_map(
+            $separator = AgentTranslator::getLocale() === 'en' ? ' and ' : ' و';
+            $remainingNames = implode($separator, array_map(
                 static fn (array $item): string => (string) ($item['label'] ?? ''),
                 $remaining
             ));
@@ -346,7 +362,10 @@ class AgentDocumentFlowService
                 'application_id' => $applicationId,
             ]));
 
-            $reply = "تم رفع وثيقة «{$label}» بنجاح. بقيت الوثائق التالية: {$remainingNames}. يرجى اختيار الوثيقة التالية.";
+            $reply = AgentTranslator::message('ai_agent.document_flow.uploaded_remaining', [
+                'label' => $label,
+                'remaining' => $remainingNames,
+            ]);
 
             $this->storeAssistantMessage($session, $reply, [
                 'message_type' => 'document_uploaded',
@@ -376,7 +395,9 @@ class AgentDocumentFlowService
                 'application_id' => $applicationId,
             ]));
 
-            $reply = "تم رفع وثيقة «{$label}» بنجاح. جميع الوثائق المطلوبة مكتملة.";
+            $reply = AgentTranslator::message('ai_agent.document_flow.uploaded_complete', [
+                'label' => $label,
+            ]);
             $this->storeAssistantMessage($session, $reply, ['message_type' => 'document_uploaded']);
 
             return $this->response($session, 'document_uploaded', $reply, [
@@ -411,7 +432,7 @@ class AgentDocumentFlowService
         if (($flow['state'] ?? null) === DocumentFlowState::Completed->value
             && ($flow['submitted_for_review'] ?? false) === true) {
             throw new ApiException(
-                'تم إرسال الوثائق للمراجعة مسبقًا.',
+                AgentTranslator::message('ai_agent.document_flow.already_submitted'),
                 422,
                 [],
                 [],
@@ -436,7 +457,7 @@ class AgentDocumentFlowService
                 ],
                 'status' => AgentActionStatus::Confirmed,
                 'requires_confirmation' => false,
-                'confirmation_message' => 'موافقة صريحة سابقة ضمن مسار رفع الوثائق عبر المساعد.',
+                'confirmation_message' => AgentTranslator::message('ai_agent.document_flow.consent_confirmation_message'),
                 'confirmed_at' => now(),
             ]);
 
@@ -459,7 +480,7 @@ class AgentDocumentFlowService
                 'upload_token_status' => 'consumed',
             ]));
 
-            $reply = 'تم رفع جميع الوثائق المطلوبة وإرسالها إلى قسم مراجعة الوثائق بنجاح. أصبحت حالة طلبك الآن «الوثائق قيد المراجعة». يرجى انتظار نتيجة المراجعة، وسيتم إشعارك عند تحديث حالة الطلب.';
+            $reply = AgentTranslator::message('ai_agent.document_flow.submitted_for_review');
 
             $this->storeAssistantMessage($session, $reply, [
                 'message_type' => 'documents_submitted_for_review',
@@ -488,7 +509,7 @@ class AgentDocumentFlowService
                 'submitted_for_review' => false,
             ]));
 
-            $reply = 'تم رفع جميع الوثائق، لكن تعذّر إرسالها للمراجعة بسبب تغيّر حالة الطلب. يرجى تحديث حالة الطلب والمحاولة مجددًا.';
+            $reply = AgentTranslator::message('ai_agent.document_flow.submission_failed_after_upload');
             $this->storeAssistantMessage($session, $reply, [
                 'message_type' => 'documents_uploaded_submission_failed',
             ]);
@@ -559,8 +580,9 @@ class AgentDocumentFlowService
             'executed_at' => now(),
         ]);
 
-        $reply = "الوثائق المطلوبة لاستكمال طلبك هي: {$documentsList}.\n\n"
-            .'هل ترغب في رفع هذه الوثائق من خلال المساعد؟ عند اكتمال رفع جميع الوثائق، سأقوم بإرسالها مباشرةً إلى قسم مراجعة الوثائق.';
+        $reply = AgentTranslator::message('ai_agent.document_flow.upload_offer', [
+            'documents' => $documentsList,
+        ]);
 
         $this->storeAssistantMessage($session, $reply, [
             'message_type' => 'document_upload_offer',
@@ -571,11 +593,11 @@ class AgentDocumentFlowService
             'documents' => $this->buildDocumentSummaries($checklist),
             'buttons' => [
                 [
-                    'label' => 'نعم، رفعها وإرسالها عبر المساعد',
+                    'label' => AgentTranslator::message('ai_agent.document_flow.button_agent_upload'),
                     'action' => 'choose_agent_document_upload',
                 ],
                 [
-                    'label' => 'لا، سأرفعها يدويًا',
+                    'label' => AgentTranslator::message('ai_agent.document_flow.button_manual_upload'),
                     'action' => 'choose_manual_document_upload',
                 ],
             ],
@@ -602,7 +624,7 @@ class AgentDocumentFlowService
         $state = $this->getState($session);
         if (! $state->allowsUploadOfferDecision()) {
             throw new ApiException(
-                'لا يمكن تأكيد رفع الوثائق عبر المساعد في هذه المرحلة.',
+                AgentTranslator::message('ai_agent.document_flow.cannot_confirm_agent_upload'),
                 422,
                 [],
                 [],
@@ -625,7 +647,7 @@ class AgentDocumentFlowService
         $documents = $this->buildUploadableDocumentButtons($citizen, $session, $application);
         if ($documents === []) {
             throw new ApiException(
-                'لا توجد وثائق تحتاج إلى رفع حاليًا لهذا الطلب.',
+                AgentTranslator::message('ai_agent.document_flow.no_documents_to_upload'),
                 422,
                 [],
                 [],
@@ -633,7 +655,7 @@ class AgentDocumentFlowService
             );
         }
 
-        $reply = 'يرجى اختيار الوثيقة التي ترغب في رفعها الآن.';
+        $reply = AgentTranslator::message('ai_agent.document_flow.choose_document');
         $this->storeAssistantMessage($session, $reply, ['message_type' => 'required_document_selection']);
 
         return $this->response($session, 'required_document_selection', $reply, [
@@ -651,7 +673,7 @@ class AgentDocumentFlowService
         $state = $this->getState($session);
         if (! $state->allowsUploadOfferDecision()) {
             throw new ApiException(
-                'لا يمكن اختيار الرفع اليدوي في هذه المرحلة.',
+                AgentTranslator::message('ai_agent.document_flow.cannot_choose_manual'),
                 422,
                 [],
                 [],
@@ -676,7 +698,7 @@ class AgentDocumentFlowService
             'submitted_for_review' => false,
         ]);
 
-        $reply = 'حسنًا. يمكنك رفع الوثائق يدويًا من صفحة وثائق الطلب. انتقل إلى قائمة طلباتك، اختر الطلب المطلوب، ثم افتح قسم الوثائق وارفع الملفات المطلوبة.';
+        $reply = AgentTranslator::message('ai_agent.document_flow.manual_guidance');
         $this->storeAssistantMessage($session, $reply, ['message_type' => 'manual_document_upload_guidance']);
 
         return $this->response($session, 'manual_document_upload_guidance', $reply, [
@@ -684,7 +706,7 @@ class AgentDocumentFlowService
                 'screen' => 'application_documents',
                 'params' => ['application_id' => $application->id],
             ],
-            'button_label' => 'الانتقال إلى صفحة الوثائق',
+            'button_label' => AgentTranslator::message('ai_agent.document_flow.button_go_to_documents'),
         ], [
             'application' => $this->applicationPayload($application),
         ]);
@@ -697,7 +719,7 @@ class AgentDocumentFlowService
     {
         if ($this->getState($session) !== DocumentFlowState::ApplicationSelection) {
             throw new ApiException(
-                'اختيار الطلب غير متوقع في هذه المرحلة.',
+                AgentTranslator::message('ai_agent.document_flow.application_selection_unexpected'),
                 422,
                 [],
                 [],
@@ -720,7 +742,7 @@ class AgentDocumentFlowService
 
         if ($application === null || ! $this->isEligibleForUpload($application)) {
             throw new ApiException(
-                'الطلب المحدد لم يعد يسمح برفع الوثائق.',
+                AgentTranslator::message('ai_agent.document_flow.application_not_eligible'),
                 422,
                 [],
                 [],
@@ -738,7 +760,7 @@ class AgentDocumentFlowService
     {
         if (! $this->getState($session)->allowsDocumentSelection()) {
             throw new ApiException(
-                'اختيار الوثيقة غير متوقع في هذه المرحلة.',
+                AgentTranslator::message('ai_agent.document_flow.document_selection_unexpected'),
                 422,
                 [],
                 [],
@@ -756,7 +778,7 @@ class AgentDocumentFlowService
         $application = $this->resolveBoundEligibleApplication($citizen, $session);
         if ((int) $application->id !== (int) $payload['aid']) {
             throw new ApiException(
-                'رمز اختيار الوثيقة لا يطابق الطلب المرتبط بالجلسة.',
+                AgentTranslator::message('ai_agent.document_flow.selection_token_app_mismatch'),
                 422,
                 [],
                 [],
@@ -767,7 +789,7 @@ class AgentDocumentFlowService
         $requiredDocumentId = (int) ($payload['rid'] ?? 0);
         if ($requiredDocumentId <= 0) {
             throw new ApiException(
-                'رمز اختيار الوثيقة غير صالح.',
+                AgentTranslator::message('ai_agent.document_flow.selection_token_invalid'),
                 422,
                 [],
                 [],
@@ -782,7 +804,7 @@ class AgentDocumentFlowService
 
         if ($required === null) {
             throw new ApiException(
-                'الوثيقة المطلوبة غير موجودة.',
+                AgentTranslator::message('ai_agent.document_flow.required_document_missing'),
                 422,
                 [],
                 [],
@@ -794,7 +816,7 @@ class AgentDocumentFlowService
         $item = collect($checklist)->firstWhere('id', $required->id);
         if ($item === null) {
             throw new ApiException(
-                'هذه الوثيقة غير مطلوبة لهذا الطلب.',
+                AgentTranslator::message('ai_agent.document_flow.document_not_required'),
                 422,
                 [],
                 [],
@@ -805,7 +827,7 @@ class AgentDocumentFlowService
         $latest = is_array($item['latest_document'] ?? null) ? $item['latest_document'] : null;
         if (($latest['status'] ?? null) === DocumentStatus::Approved->value) {
             throw new ApiException(
-                'لا يمكن استبدال وثيقة معتمدة.',
+                AgentTranslator::message('ai_agent.document_flow.cannot_replace_approved'),
                 422,
                 [],
                 [],
@@ -829,7 +851,9 @@ class AgentDocumentFlowService
             'upload_token_expires_at' => now()->addSeconds($ttl)->toIso8601String(),
         ]));
 
-        $reply = "يرجى الآن رفع ملف وثيقة «{$required->name}». تأكد من إرفاق ملف واحد فقط يخص هذه الوثيقة تحديدًا، وألا ترفق وثيقة أخرى بدلًا منها.";
+        $reply = AgentTranslator::message('ai_agent.document_flow.awaiting_file', [
+            'label' => $required->name,
+        ]);
         $this->storeAssistantMessage($session, $reply, ['message_type' => 'file_upload_required']);
 
         return $this->response($session, 'file_upload_required', $reply, [
@@ -861,7 +885,7 @@ class AgentDocumentFlowService
             'required_document_label' => null,
         ]);
 
-        $reply = 'تم إلغاء مسار رفع الوثائق عبر المساعد. يمكنك طلب الوثائق المطلوبة في أي وقت.';
+        $reply = AgentTranslator::message('ai_agent.document_flow.cancelled');
         $this->storeAssistantMessage($session, $reply, ['message_type' => 'document_flow_error']);
 
         return $this->response($session, 'document_flow_error', $reply, []);
@@ -903,7 +927,7 @@ class AgentDocumentFlowService
 
         if ($applicationId <= 0) {
             throw new ApiException(
-                'يرجى اختيار الطلب أولًا.',
+                AgentTranslator::message('ai_agent.document_flow.choose_application_first'),
                 422,
                 [],
                 [],
@@ -919,7 +943,7 @@ class AgentDocumentFlowService
 
         if ($application === null || ! $this->isEligibleForUpload($application)) {
             throw new ApiException(
-                'الطلب المرتبط بالجلسة لم يعد يسمح برفع الوثائق.',
+                AgentTranslator::message('ai_agent.document_flow.session_application_not_eligible'),
                 422,
                 [],
                 [],
@@ -979,7 +1003,7 @@ class AgentDocumentFlowService
                     $latest['rejection']['details']
                     ?? $latest['rejection']['label']
                     ?? $latest['rejection_reason']
-                    ?? 'يرجى إعادة رفع الوثيقة'
+                    ?? AgentTranslator::message('ai_agent.document_flow.reupload_hint')
                 );
             }
 
@@ -1078,7 +1102,7 @@ class AgentDocumentFlowService
     private function formatDocumentNames(array $names): string
     {
         if ($names === []) {
-            return 'غير محددة';
+            return AgentTranslator::message('ai_agent.document_flow.names_unspecified');
         }
 
         if (count($names) === 1) {
@@ -1086,8 +1110,11 @@ class AgentDocumentFlowService
         }
 
         $last = array_pop($names);
+        $isEn = AgentTranslator::getLocale() === 'en';
 
-        return implode('، ', $names).'، و'.$last;
+        return $isEn
+            ? implode(', ', $names).', and '.$last
+            : implode('، ', $names).'، و'.$last;
     }
 
     /**
@@ -1118,7 +1145,7 @@ class AgentDocumentFlowService
         return [
             'id' => $application->id,
             'status' => $status,
-            'status_label' => ApplicationStatusLabelMapper::labelAr($application->status),
+            'status_label' => ApplicationStatusLabelMapper::label($application->status),
         ];
     }
 
@@ -1185,7 +1212,7 @@ class AgentDocumentFlowService
     {
         if ($session->status === AgentSessionStatus::Closed) {
             throw new ApiException(
-                'جلسة المساعد الذكي مغلقة.',
+                AgentTranslator::message('ai_agent.document_flow.session_closed'),
                 422,
                 [],
                 [],

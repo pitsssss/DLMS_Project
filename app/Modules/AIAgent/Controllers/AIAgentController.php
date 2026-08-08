@@ -12,7 +12,9 @@ use App\Modules\AIAgent\Services\AIAgentActionService;
 use App\Modules\AIAgent\Services\AgentDocumentFlowService;
 use App\Modules\AIAgent\Services\AgentDocumentUploadService;
 use App\Modules\AIAgent\Services\AgentPendingWorkflowService;
+use App\Modules\AIAgent\Services\AgentResponseLocale;
 use App\Modules\AIAgent\Services\AIAgentService;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 
@@ -61,16 +63,29 @@ class AIAgentController extends Controller
         );
     }
 
-    public function confirmAction(Request $request, int $action, AIAgentActionService $actions)
+    public function confirmAction(Request $request, int $action, AIAgentActionService $actions, AgentResponseLocale $responseLocale)
     {
-        $data = $actions->confirm($request->user(), $action);
+        // Restore session locale from the action's session when confirming outside /message.
+        $model = \App\Modules\AIAgent\Models\AIAgentAction::query()->findOrFail($action);
+        $session = \App\Modules\AIAgent\Models\AIAgentSession::query()->find($model->session_id);
+        if ($session !== null) {
+            $responseLocale->applySessionLocale($session);
+        }
+
+        $data = $responseLocale->decorate($actions->confirm($request->user(), $action));
 
         return $this->successResponse($data, 'messages.ai_agent.action_executed');
     }
 
-    public function cancelAction(Request $request, int $action, AIAgentActionService $actions)
+    public function cancelAction(Request $request, int $action, AIAgentActionService $actions, AgentResponseLocale $responseLocale)
     {
-        $data = $actions->cancel($request->user(), $action);
+        $model = \App\Modules\AIAgent\Models\AIAgentAction::query()->findOrFail($action);
+        $session = \App\Modules\AIAgent\Models\AIAgentSession::query()->find($model->session_id);
+        if ($session !== null) {
+            $responseLocale->applySessionLocale($session);
+        }
+
+        $data = $responseLocale->decorate($actions->cancel($request->user(), $action));
 
         return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
     }
@@ -82,8 +97,10 @@ class AIAgentController extends Controller
         AgentDocumentFlowService $documentFlow,
         AgentPendingWorkflowService $pendingWorkflow,
         AIAgentActionService $actions,
+        AgentResponseLocale $responseLocale,
     ) {
         $sessionModel = $agent->getSessionForUser($request->user(), $session);
+        $responseLocale->applySessionLocale($sessionModel);
         $validated = $request->validated();
         $action = (string) $validated['action'];
         $token = isset($validated['selection_token']) ? (string) $validated['selection_token'] : null;
@@ -93,77 +110,77 @@ class AIAgentController extends Controller
         );
 
         if ($action === 'cancel_pending_workflow') {
-            $data = $pendingWorkflow->cancelPending($request->user(), $sessionModel);
+            $data = $responseLocale->decorate($pendingWorkflow->cancelPending($request->user(), $sessionModel));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'show_application_choices_again') {
-            $data = $pendingWorkflow->showChoicesAgain($request->user(), $sessionModel);
+            $data = $responseLocale->decorate($pendingWorkflow->showChoicesAgain($request->user(), $sessionModel));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'select_application' && $documentState !== \App\Modules\AIAgent\Enums\DocumentFlowState::ApplicationSelection) {
-            $data = $pendingWorkflow->selectApplicationByToken(
+            $data = $responseLocale->decorate($pendingWorkflow->selectApplicationByToken(
                 $request->user(),
                 $sessionModel,
                 (string) $token
-            );
+            ));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'select_appointment_slot') {
-            $data = $pendingWorkflow->selectAppointmentSlotByToken(
+            $data = $responseLocale->decorate($pendingWorkflow->selectAppointmentSlotByToken(
                 $request->user(),
                 $sessionModel,
                 (string) $token
-            );
+            ));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'select_appointment') {
-            $data = $pendingWorkflow->selectAppointmentByToken(
+            $data = $responseLocale->decorate($pendingWorkflow->selectAppointmentByToken(
                 $request->user(),
                 $sessionModel,
                 (string) $token
-            );
+            ));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'select_license') {
-            $data = $pendingWorkflow->selectLicenseByToken(
+            $data = $responseLocale->decorate($pendingWorkflow->selectLicenseByToken(
                 $request->user(),
                 $sessionModel,
                 (string) $token
-            );
+            ));
 
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
         if ($action === 'confirm_pending_action') {
             $actionId = (int) ($validated['action_id'] ?? 0);
-            $data = $actions->confirm($request->user(), $actionId);
+            $data = $responseLocale->decorate($actions->confirm($request->user(), $actionId));
 
             return $this->successResponse($data, 'messages.ai_agent.action_executed');
         }
 
         if ($action === 'cancel_pending_action') {
             $actionId = (int) ($validated['action_id'] ?? 0);
-            $data = $actions->cancel($request->user(), $actionId);
+            $data = $responseLocale->decorate($actions->cancel($request->user(), $actionId));
 
             return $this->successResponse($data, 'messages.ai_agent.action_cancelled');
         }
 
-        $data = $documentFlow->handleInteraction(
+        $data = $responseLocale->decorate($documentFlow->handleInteraction(
             $request->user(),
             $sessionModel,
             $action,
             $token
-        );
+        ));
 
         return $this->successResponse($data, 'messages.ai_agent.response_generated');
     }
@@ -174,26 +191,28 @@ class AIAgentController extends Controller
         AgentDocumentUploadService $uploadService,
         AgentDocumentFlowService $documentFlow,
         AIAgentService $agent,
+        AgentResponseLocale $responseLocale,
     ) {
         $files = $this->flattenUploadedFiles($request->allFiles());
 
         if ($request->isTokenMode()) {
             $sessionModel = $agent->getSessionForUser($request->user(), $session);
-            $data = $documentFlow->uploadWithToken(
+            $responseLocale->applySessionLocale($sessionModel);
+            $data = $responseLocale->decorate($documentFlow->uploadWithToken(
                 $request->user(),
                 $sessionModel,
                 (string) $request->input('upload_token'),
                 $files,
                 $request->filled('application_id') ? (int) $request->input('application_id') : null,
                 $request->filled('required_document_id') ? (int) $request->input('required_document_id') : null,
-            );
+            ));
 
             return $this->successResponse($data, 'messages.documents.uploaded');
         }
 
         if (count($files) === 0) {
             throw new ApiException(
-                'يرجى إرفاق ملف الوثيقة المطلوبة.',
+                AgentTranslator::message('ai_agent.document_flow.file_required'),
                 422,
                 [],
                 [],
@@ -203,7 +222,7 @@ class AIAgentController extends Controller
 
         if (count($files) > 1) {
             throw new ApiException(
-                'تم إرفاق أكثر من ملف. يرجى إرفاق ملف واحد فقط.',
+                AgentTranslator::message('ai_agent.document_flow.multiple_files_simple'),
                 422,
                 [],
                 [],

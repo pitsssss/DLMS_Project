@@ -4942,6 +4942,202 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "14f. AI Agent — Bilingual Master (Phase 2.6)",
+                    "description": "AR master, EN master, and mid-session language switch. Auto-saves session_id.",
+                    "item": [
+                        {
+                            "name": "01. AR Master — New License Ask",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "if(d.session_id) pm.collectionVariables.set('ai_agent_session_id', d.session_id);",
+                                            "if(d.pending_action?.id) pm.collectionVariables.set('ai_agent_action_id', d.pending_action.id);",
+                                            "pm.test('language ar', () => pm.expect(d.language).to.eql('ar'));"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"بدي رخصة جديدة\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "02. EN Master — New License Ask",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "if(d.session_id) pm.collectionVariables.set('ai_agent_session_id', d.session_id);",
+                                            "pm.test('language en', () => pm.expect(d.language).to.eql('en'));"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"I want a new driving license\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "03. Language Switch — AR Status (multi-app)",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "if(d.session_id) pm.collectionVariables.set('ai_agent_session_id', d.session_id);",
+                                            "pm.test('language ar', () => pm.expect(d.language).to.eql('ar'));"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"شو حالة طلبي؟\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "04. Language Switch — EN Select First",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "pm.test('language en', () => pm.expect(d.language).to.eql('en'));",
+                                            "pm.test('not general_help', () => pm.expect(d.intent).to.not.eql('general_help'));"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"show me the first one\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "05. Language Switch — Back to AR Next Step",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "pm.test('language ar', () => pm.expect(d.language).to.eql('ar'));"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"بدي أعرف الخطوة التالية\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        }
+                    ]
                 }
             ],
             "description": ""

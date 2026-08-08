@@ -57,26 +57,27 @@ class AgentApplicationNextStepService
         ]);
     }
 
-    public function nextStepMessageForStatus(string $status): string
+    public function nextStepMessageForStatus(string $status, ?string $language = null): string
     {
         $normalized = trim($status);
+        $language = $language ?? AgentTranslator::getLocale();
 
         if ($normalized === '') {
-            return AgentTranslator::message('ai_agent.application_next_step.unknown');
+            return AgentTranslator::message('ai_agent.application_next_step.unknown', [], $language);
         }
 
         $key = 'ai_agent.application_next_step.'.$normalized;
-        $message = AgentTranslator::message($key);
+        $message = AgentTranslator::message($key, [], $language);
 
         if (str_starts_with($message, 'messages.')) {
-            return AgentTranslator::message('ai_agent.application_next_step.unknown');
+            return AgentTranslator::message('ai_agent.application_next_step.unknown', [], $language);
         }
 
         return $message;
     }
 
     /**
-     * @return array{reply: string, next_step_key: string, next_step_message: string, suggested_action: string|null, status: string, status_label_ar: string}
+     * @return array{reply: string, next_step_key: string, next_step_message: string, suggested_action: string|null, status: string, status_label_ar: string, status_label_en?: string}
      */
     public function nextStepForApplication(LicenseApplication $application, string $language = 'ar'): array
     {
@@ -85,8 +86,10 @@ class AgentApplicationNextStepService
             : ApplicationStatus::tryFrom((string) $application->status) ?? ApplicationStatus::Draft;
 
         $key = $status->value;
-        $statusLabel = ApplicationStatusLabelMapper::labelAr($status);
-        $message = $this->nextStepMessageForStatus($key);
+        $statusLabel = $language === 'en'
+            ? ApplicationStatusLabelMapper::labelEn($status)
+            : ApplicationStatusLabelMapper::labelAr($status);
+        $message = $this->nextStepMessageForStatus($key, $language);
 
         if ($language === 'en') {
             return [
@@ -95,7 +98,8 @@ class AgentApplicationNextStepService
                 'next_step_message' => $message,
                 'suggested_action' => $this->suggestedActionForApplication($application),
                 'status' => $status->value,
-                'status_label_ar' => $statusLabel,
+                'status_label_ar' => ApplicationStatusLabelMapper::labelAr($status),
+                'status_label_en' => $statusLabel,
             ];
         }
 
@@ -106,6 +110,7 @@ class AgentApplicationNextStepService
             'suggested_action' => $this->suggestedActionForApplication($application),
             'status' => $status->value,
             'status_label_ar' => $statusLabel,
+            'status_label_en' => ApplicationStatusLabelMapper::labelEn($status),
         ];
     }
 
@@ -117,9 +122,15 @@ class AgentApplicationNextStepService
         $step = $this->nextStepForApplication($application, $language);
 
         if ($language === 'en') {
+            $statusLabel = (string) ($step['status_label_en'] ?? $step['status_label_ar']);
+
             return [
-                'reply' => "Application {$application->application_number} status: {$step['status_label_ar']}. {$step['reply']}",
-                'status_label_ar' => $step['status_label_ar'],
+                'reply' => AgentTranslator::message('ai_agent.application_status.with_next_step', [
+                    'number' => $application->application_number,
+                    'status' => $statusLabel,
+                    'next_step' => $step['next_step_message'],
+                ], 'en'),
+                'status_label_ar' => (string) $step['status_label_ar'],
             ];
         }
 
@@ -128,7 +139,7 @@ class AgentApplicationNextStepService
                 'number' => $application->application_number,
                 'status' => $step['status_label_ar'],
                 'next_step' => $step['next_step_message'],
-            ]),
+            ], 'ar'),
             'status_label_ar' => $step['status_label_ar'],
         ];
     }

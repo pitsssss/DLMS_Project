@@ -28,7 +28,7 @@ class AgentApplicationStatusHandler
 
         if ($applications->isEmpty()) {
             return $this->basePayload($language, [
-                'reply' => AgentTranslator::message('ai_agent.no_active_applications'),
+                'reply' => AgentTranslator::message('ai_agent.no_active_applications', [], $language),
                 'proposed_action' => null,
                 'requires_confirmation' => false,
                 'message_type' => 'no_eligible_application',
@@ -42,7 +42,7 @@ class AgentApplicationStatusHandler
         return $this->basePayload($language, [
             'reply' => AgentTranslator::message('ai_agent.multiple_active_applications', [
                 'summary' => $this->formatApplicationList($applications, $language),
-            ]),
+            ], $language),
             'proposed_action' => null,
             'missing_slots' => ['application_choice'],
             'requires_confirmation' => false,
@@ -116,14 +116,19 @@ class AgentApplicationStatusHandler
     {
         return $applications
             ->map(function (LicenseApplication $application) use ($language): string {
+                if ($language === 'en') {
+                    $licenseLabel = LicenseTypeSlotExtractor::labelEn(
+                        (string) ($application->licenseType?->code ?? '')
+                    );
+                    $statusLabel = ApplicationStatusLabelMapper::labelEn($application->status);
+
+                    return '- '.$application->application_number.' ('.$licenseLabel.'): '.$statusLabel;
+                }
+
                 $licenseLabel = LicenseTypeSlotExtractor::labelAr(
                     (string) ($application->licenseType?->code ?? '')
                 );
                 $statusLabel = ApplicationStatusLabelMapper::labelAr($application->status);
-
-                if ($language === 'en') {
-                    return '- '.$application->application_number.' ('.$licenseLabel.'): '.$statusLabel;
-                }
 
                 return '- '.$application->application_number.' — رخصة قيادة '.$licenseLabel.' — '.$statusLabel;
             })

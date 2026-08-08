@@ -118,7 +118,7 @@ class AgentPendingWorkflowService
         return [
             'session_id' => $session->id,
             'message_type' => 'application_selection_expired',
-            'reply' => 'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+            'reply' => AgentTranslator::message('ai_agent.pending.expired'),
             'intent' => $intent,
             'confidence' => 1.0,
             'missing_slots' => [],
@@ -138,7 +138,7 @@ class AgentPendingWorkflowService
         if ($inspection['status'] === PendingWorkflowInspectionStatus::Expired) {
             $this->clear($session);
             throw new ApiException(
-                'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+                AgentTranslator::message('ai_agent.pending.expired'),
                 422,
                 [],
                 [],
@@ -148,7 +148,7 @@ class AgentPendingWorkflowService
 
         if ($inspection['status'] !== PendingWorkflowInspectionStatus::Active || $inspection['workflow'] === null) {
             throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.not_found'),
                 422,
                 [],
                 [],
@@ -469,7 +469,7 @@ class AgentPendingWorkflowService
                 $narrowed,
                 [
                     'intent' => $workflow['intent'],
-                    'reply' => 'وجدت أكثر من طلب مطابق. يرجى اختيار الطلب المقصود بدقة.',
+                    'reply' => AgentTranslator::message('ai_agent.selection.ambiguous'),
                     'missing_slots' => ['application_choice'],
                     'confidence' => 1.0,
                     'requires_confirmation' => false,
@@ -485,7 +485,7 @@ class AgentPendingWorkflowService
             $candidates,
             [
                 'intent' => $workflow['intent'],
-                'reply' => 'لم أتمكن من تحديد الطلب المقصود. يرجى اختيار أحد الطلبات المعروضة.',
+                'reply' => AgentTranslator::message('ai_agent.selection.unresolved'),
                 'missing_slots' => ['application_choice'],
                 'confidence' => 1.0,
                 'requires_confirmation' => false,
@@ -501,7 +501,7 @@ class AgentPendingWorkflowService
     {
         if ($this->documentFlowOwnsApplicationSelection($session)) {
             throw new ApiException(
-                'اختيار الطلب غير متاح عبر هذا المسار حاليًا.',
+                AgentTranslator::message('ai_agent.selection.path_unavailable'),
                 422,
                 [],
                 [],
@@ -517,7 +517,7 @@ class AgentPendingWorkflowService
             PendingWorkflowState::Failed->value,
         ], true)) {
             throw new ApiException(
-                'حالة عملية اختيار الطلب غير صالحة لهذا الإجراء.',
+                AgentTranslator::message('ai_agent.pending.state_invalid'),
                 422,
                 [],
                 [],
@@ -608,7 +608,7 @@ class AgentPendingWorkflowService
         if ($candidates->isEmpty()) {
             $this->clear($session);
             throw new ApiException(
-                'لم تعد الطلبات المعروضة متاحة. يرجى إعادة طلب الخدمة.',
+                AgentTranslator::message('ai_agent.selection.no_longer_available'),
                 422,
                 [],
                 [],
@@ -626,7 +626,7 @@ class AgentPendingWorkflowService
             $candidates,
             [
                 'intent' => $workflow['intent'] ?? '',
-                'reply' => 'يرجى اختيار أحد الطلبات المعروضة.',
+                'reply' => AgentTranslator::message('ai_agent.selection.prompt'),
                 'missing_slots' => ['application_choice'],
                 'confidence' => 1.0,
                 'requires_confirmation' => false,
@@ -640,7 +640,7 @@ class AgentPendingWorkflowService
         $workflow = $this->getWorkflow($session);
         if ($workflow === null) {
             throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.not_found'),
                 422,
                 [],
                 [],
@@ -663,7 +663,7 @@ class AgentPendingWorkflowService
         $workflow = $this->getWorkflow($session);
         if ($workflow === null) {
             throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.not_found'),
                 422,
                 [],
                 [],
@@ -674,7 +674,7 @@ class AgentPendingWorkflowService
         if ($this->isExpired($workflow)) {
             $this->clear($session);
             throw new ApiException(
-                'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+                AgentTranslator::message('ai_agent.pending.expired'),
                 422,
                 [],
                 [],
@@ -689,7 +689,7 @@ class AgentPendingWorkflowService
             PendingWorkflowState::Resuming->value,
         ], true)) {
             throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.not_found'),
                 422,
                 [],
                 [],
@@ -700,7 +700,7 @@ class AgentPendingWorkflowService
         $candidateIds = array_map('intval', $workflow['candidate_application_ids'] ?? []);
         if (! in_array($applicationId, $candidateIds, true)) {
             throw new ApiException(
-                'الطلب المحدد غير موجود ضمن الخيارات المعروضة.',
+                AgentTranslator::message('ai_agent.selection.invalid'),
                 422,
                 [],
                 [],
@@ -718,7 +718,7 @@ class AgentPendingWorkflowService
         if ($application === null) {
             $this->clear($session);
             throw new ApiException(
-                'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                AgentTranslator::message('ai_agent.application.not_owned'),
                 404,
                 [],
                 [],
@@ -729,7 +729,7 @@ class AgentPendingWorkflowService
         if (! $this->isEligibleForIntent($application, $intent)) {
             $this->clear($session);
             throw new ApiException(
-                'الطلب المحدد لم يعد مؤهلاً لهذه العملية.',
+                AgentTranslator::message('ai_agent.selection.no_longer_eligible'),
                 422,
                 [],
                 [],
@@ -770,7 +770,7 @@ class AgentPendingWorkflowService
             }
 
             throw new ApiException(
-                'تعذر استكمال العملية مؤقتًا. يرجى إعادة اختيار الطلب.',
+                AgentTranslator::message('ai_agent.pending.retry_required'),
                 422,
                 [],
                 [],
@@ -868,13 +868,18 @@ class AgentPendingWorkflowService
                 ? $application->status->value
                 : (string) $application->status;
             $serviceLabel = (string) ($application->serviceType?->name ?? $serviceCode);
-            $licenseLabel = LicenseTypeSlotExtractor::labelAr($licenseCode);
-            $statusLabel = ApplicationStatusLabelMapper::labelAr($application->status);
+            $licenseLabel = AgentTranslator::getLocale() === 'en'
+                ? LicenseTypeSlotExtractor::labelEn($licenseCode)
+                : LicenseTypeSlotExtractor::labelAr($licenseCode);
+            $statusLabel = ApplicationStatusLabelMapper::label($application->status);
             $reference = (string) ($application->application_number ?: $application->id);
 
             return [
                 'label' => "{$serviceLabel} — {$reference}",
-                'subtitle' => "رخصة {$licenseLabel} — {$statusLabel}",
+                'subtitle' => AgentTranslator::message('ai_agent.selection.subtitle', [
+                    'license' => $licenseLabel,
+                    'status' => $statusLabel,
+                ]),
                 'service_type' => $serviceCode,
                 'service_type_label' => $serviceLabel,
                 'license_type' => $licenseCode,
@@ -894,7 +899,7 @@ class AgentPendingWorkflowService
             ];
         })->values()->all();
 
-        $reply = (string) ($base['reply'] ?? 'لديك أكثر من طلب قيد المتابعة. يرجى اختيار الطلب المطلوب.');
+        $reply = (string) ($base['reply'] ?? AgentTranslator::message('ai_agent.selection.multiple_prompt'));
 
         $this->storeAssistantMessage($session, $reply, [
             'message_type' => 'application_selection_required',
@@ -926,7 +931,7 @@ class AgentPendingWorkflowService
         string $intent,
         LicenseApplication $application,
     ): array {
-        $language = 'ar';
+        $language = AgentTranslator::getLocale();
         $actionName = AgentWorkflowIntentCatalog::actionName($intent);
 
         // Force session target for handlers that resolve via last_application_id.
@@ -1078,7 +1083,7 @@ class AgentPendingWorkflowService
             }
 
             throw new ApiException(
-                'لا يمكن المتابعة قبل اكتمال البيانات المطلوبة.',
+                AgentTranslator::message('ai_agent.action.arguments_incomplete'),
                 422,
                 ['missing_arguments' => $missingArgs],
                 [],
@@ -1102,7 +1107,7 @@ class AgentPendingWorkflowService
             'confirmation_message' => (string) ($payload['reply'] ?? ''),
         ]);
 
-        $reply = (string) ($payload['reply'] ?? 'تم تحديد الطلب. هل تؤكد المتابعة؟');
+        $reply = (string) ($payload['reply'] ?? AgentTranslator::message('ai_agent.selection.confirm_continue'));
         $this->storeAssistantMessage($session, $reply, [
             'message_type' => 'application_selected_confirmation_required',
             'action_id' => $action->id,
@@ -1193,7 +1198,7 @@ class AgentPendingWorkflowService
             if ($application === null) {
                 $this->clear($session);
                 throw new ApiException(
-                    'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                    AgentTranslator::message('ai_agent.application.not_owned'),
                     404,
                     [],
                     [],
@@ -1207,7 +1212,7 @@ class AgentPendingWorkflowService
         if ($application === null) {
             $this->clear($session);
             throw new ApiException(
-                'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                AgentTranslator::message('ai_agent.application.not_owned'),
                 404,
                 [],
                 [],
@@ -1292,7 +1297,7 @@ class AgentPendingWorkflowService
         if ($application === null) {
             $this->clear($session);
             throw new ApiException(
-                'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                AgentTranslator::message('ai_agent.application.not_owned'),
                 404,
                 [],
                 [],
@@ -1416,7 +1421,7 @@ class AgentPendingWorkflowService
         $workflow = $this->assertActiveForInteraction($session);
         if (($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
             throw new ApiException(
-                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.appointment_choice_missing'),
                 422,
                 [],
                 [],
@@ -1436,7 +1441,7 @@ class AgentPendingWorkflowService
         $slotId = (int) ($verified['slot_id'] ?? 0);
         if ($slotId < 1) {
             throw new ApiException(
-                'رمز اختيار الموعد غير صالح.',
+                AgentTranslator::message('ai_agent.selection.appointment_token_invalid'),
                 422,
                 [],
                 [],
@@ -1455,7 +1460,7 @@ class AgentPendingWorkflowService
         $workflow = $this->assertActiveForInteraction($session);
         if (($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingAppointmentChoice->value) {
             throw new ApiException(
-                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.appointment_choice_missing'),
                 422,
                 [],
                 [],
@@ -1475,7 +1480,7 @@ class AgentPendingWorkflowService
         $appointmentId = (int) ($verified['appointment_id'] ?? 0);
         if ($appointmentId < 1) {
             throw new ApiException(
-                'رمز اختيار الموعد غير صالح.',
+                AgentTranslator::message('ai_agent.selection.appointment_token_invalid'),
                 422,
                 [],
                 [],
@@ -1588,7 +1593,7 @@ class AgentPendingWorkflowService
         $workflow = $this->getWorkflow($session);
         if ($workflow === null) {
             throw new ApiException(
-                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.appointment_choice_missing'),
                 422,
                 [],
                 [],
@@ -1790,7 +1795,7 @@ class AgentPendingWorkflowService
         $licenseId = (int) ($verified['license_id'] ?? 0);
         if ($licenseId < 1) {
             throw new ApiException(
-                'رمز اختيار الرخصة غير صالح.',
+                AgentTranslator::message('ai_agent.selection.license_token_invalid'),
                 422,
                 [],
                 [],
@@ -1809,7 +1814,7 @@ class AgentPendingWorkflowService
         $workflow = $this->getWorkflow($session);
         if ($workflow === null) {
             throw new ApiException(
-                'لا توجد عملية اختيار رخصة قيد الانتظار.',
+                AgentTranslator::message('ai_agent.pending.license_choice_missing'),
                 422,
                 [],
                 [],
@@ -1969,7 +1974,7 @@ class AgentPendingWorkflowService
             ],
             default => [
                 'intent' => $intent,
-                'reply' => 'تم تحديد الطلب. هل تؤكد المتابعة؟',
+                'reply' => AgentTranslator::message('ai_agent.selection.confirm_continue'),
                 'proposed_action' => [
                     'name' => AgentWorkflowIntentCatalog::actionName($intent),
                     'arguments' => ['application_id' => $application->id],
@@ -2101,11 +2106,13 @@ class AgentPendingWorkflowService
             'service_type' => $serviceCode,
             'service_type_label' => (string) ($application->serviceType?->name ?? $serviceCode),
             'license_type' => $licenseCode,
-            'license_type_label' => LicenseTypeSlotExtractor::labelAr($licenseCode),
+            'license_type_label' => AgentTranslator::getLocale() === 'en'
+                ? LicenseTypeSlotExtractor::labelEn($licenseCode)
+                : LicenseTypeSlotExtractor::labelAr($licenseCode),
             'status' => $application->status instanceof ApplicationStatus
                 ? $application->status->value
                 : (string) $application->status,
-            'status_label' => ApplicationStatusLabelMapper::labelAr($application->status),
+            'status_label' => ApplicationStatusLabelMapper::label($application->status),
         ];
     }
 
@@ -2131,7 +2138,7 @@ class AgentPendingWorkflowService
     private function cancel(AIAgentSession $session, array $workflow): array
     {
         $this->clear($session);
-        $reply = 'تم إلغاء عملية اختيار الطلب. يمكنك طلب أي خدمة أخرى.';
+        $reply = AgentTranslator::message('ai_agent.selection.cancelled');
         $this->storeAssistantMessage($session, $reply, [
             'message_type' => 'application_selection_cancelled',
         ]);
