@@ -34,10 +34,7 @@ return new class extends Migration
             $table->string('national_id')->nullable()->unique();
             $table->string('email')->nullable()->unique();
             $table->string('password');
-            $table->foreignId('role_id')
-            ->nullable()
-            ->constrained('roles')
-            ->nullOnDelete();
+            $table->foreignId('role_id')->constrained('roles')->restrictOnDelete();
             $table->string('user_type', 32);
             $table->date('birth_date')->nullable();
             $table->string('governorate')->nullable();
