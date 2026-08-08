@@ -7,6 +7,7 @@ use App\Models\LicenseApplication;
 use App\Models\Notification;
 use App\Models\User;
 use App\Modules\Notifications\Repositories\NotificationRepository;
+use App\Support\RecipientNotificationTranslator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -33,47 +34,73 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Create a notification using the recipient's stored language preference.
+     * Does not mutate application/request locale.
+     *
+     * @param  array<string, mixed>  $replace
+     * @param  array<string, mixed>|null  $data
+     */
+    public function sendLocalizedToUser(
+        int $userId,
+        string $titleKey,
+        string $bodyKey,
+        array $replace = [],
+        ?string $type = null,
+        ?array $data = null
+    ): Notification {
+        $locale = RecipientNotificationTranslator::localeForUserId($userId);
+
+        return $this->sendToUser(
+            $userId,
+            RecipientNotificationTranslator::get($titleKey, $replace, $locale),
+            RecipientNotificationTranslator::get($bodyKey, $replace, $locale),
+            $type,
+            $data
+        );
+    }
+
     public function notifyApplicationStatusChange(LicenseApplication $application, ApplicationStatus $newStatus): void
     {
         $messages = [
             ApplicationStatus::PaymentPending->value => [
-                'title' => __('messages.notifications.payment_required_title'),
-                'body' => __('messages.notifications.payment_required_body'),
+                'title' => 'messages.notifications.payment_required_title',
+                'body' => 'messages.notifications.payment_required_body',
                 'type' => 'application.payment_pending',
             ],
             ApplicationStatus::DocumentsRejected->value => [
-                'title' => __('messages.notifications.documents_rejected_title'),
-                'body' => __('messages.notifications.documents_rejected_body'),
+                'title' => 'messages.notifications.documents_rejected_title',
+                'body' => 'messages.notifications.documents_rejected_body',
                 'type' => 'application.documents_rejected',
             ],
             ApplicationStatus::DocumentsUnderReview->value => [
-                'title' => __('messages.notifications.documents_under_review_title'),
-                'body' => __('messages.notifications.documents_under_review_body'),
+                'title' => 'messages.notifications.documents_under_review_title',
+                'body' => 'messages.notifications.documents_under_review_body',
                 'type' => 'application.documents_under_review',
             ],
             ApplicationStatus::AppointmentPending->value => [
-                'title' => __('messages.notifications.appointment_pending_title'),
-                'body' => __('messages.notifications.appointment_pending_body'),
+                'title' => 'messages.notifications.appointment_pending_title',
+                'body' => 'messages.notifications.appointment_pending_body',
                 'type' => 'application.appointment_pending',
             ],
             ApplicationStatus::Approved->value => [
-                'title' => __('messages.notifications.approved_title'),
-                'body' => __('messages.notifications.approved_body'),
+                'title' => 'messages.notifications.approved_title',
+                'body' => 'messages.notifications.approved_body',
                 'type' => 'application.approved',
             ],
             ApplicationStatus::LicenseIssued->value => [
-                'title' => __('messages.notifications.license_issued_title'),
-                'body' => __('messages.notifications.license_issued_body'),
+                'title' => 'messages.notifications.license_issued_title',
+                'body' => 'messages.notifications.license_issued_body',
                 'type' => 'application.license_issued',
             ],
             ApplicationStatus::WaitingRetest->value => [
-                'title' => __('messages.notifications.retest_title'),
-                'body' => __('messages.notifications.retest_body'),
+                'title' => 'messages.notifications.retest_title',
+                'body' => 'messages.notifications.retest_body',
                 'type' => 'application.waiting_retest',
             ],
             ApplicationStatus::AdministrativeReview->value => [
-                'title' => __('messages.notifications.admin_review_title'),
-                'body' => __('messages.notifications.admin_review_body'),
+                'title' => 'messages.notifications.admin_review_title',
+                'body' => 'messages.notifications.admin_review_body',
                 'type' => 'application.administrative_review',
             ],
         ];
@@ -83,10 +110,11 @@ class NotificationService
             return;
         }
 
-        $this->sendToUser(
+        $this->sendLocalizedToUser(
             $application->citizen_id,
             $message['title'],
             $message['body'],
+            [],
             $message['type'],
             [
                 'application_id' => $application->id,

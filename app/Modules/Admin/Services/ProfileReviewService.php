@@ -88,10 +88,11 @@ class ProfileReviewService
                 ['profile_status' => ProfileStatus::Approved->value]
             );
 
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $citizen->id,
-                __('messages.notifications.profile_approved_title'),
-                __('messages.notifications.profile_approved_body'),
+                'messages.notifications.profile_approved_title',
+                'messages.notifications.profile_approved_body',
+                [],
                 'profile.approved',
                 ['profile_status' => ProfileStatus::Approved->value]
             );
@@ -129,10 +130,11 @@ class ProfileReviewService
                 ]
             );
 
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $citizen->id,
-                __('messages.notifications.profile_rejected_title'),
-                __('messages.notifications.profile_rejected_body'),
+                'messages.notifications.profile_rejected_title',
+                'messages.notifications.profile_rejected_body',
+                [],
                 'profile.rejected',
                 [
                     'profile_status' => ProfileStatus::Rejected->value,

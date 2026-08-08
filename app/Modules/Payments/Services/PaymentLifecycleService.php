@@ -279,15 +279,16 @@ class PaymentLifecycleService
     {
         try {
             $payment->loadMissing('application');
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 (int) $payment->user_id,
-                __('messages.notifications.payment_completed_title'),
-                __('messages.notifications.payment_completed_body', [
+                'messages.notifications.payment_completed_title',
+                'messages.notifications.payment_completed_body',
+                [
                     'payment_number' => $payment->payment_number,
                     'application_number' => $payment->application?->application_number ?? '',
                     'amount' => Money::format((string) $payment->amount),
                     'currency' => $payment->currency,
-                ]),
+                ],
                 'payment.completed',
                 [
                     'payment_id' => $payment->id,

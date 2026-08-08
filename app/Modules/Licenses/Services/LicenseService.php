@@ -104,10 +104,11 @@ class LicenseService
                 ]
             );
 
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $application->citizen_id,
-                Msg::get('notifications.license_issued_title'),
-                Msg::get('notifications.license_issued_body'),
+                'messages.notifications.license_issued_title',
+                'messages.notifications.license_issued_body',
+                [],
                 'license.issued',
                 ['license_id' => $license->id, 'application_id' => $application->id]
             );
@@ -348,10 +349,11 @@ class LicenseService
                 ]
             );
 
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $license->citizen_id,
-                Msg::get('notifications.license_blocked_title'),
-                Msg::get('notifications.license_blocked_body'),
+                'messages.notifications.license_blocked_title',
+                'messages.notifications.license_blocked_body',
+                [],
                 'license.blocked',
                 ['license_id' => $license->id, 'license_number' => $license->license_number]
             );
@@ -403,10 +405,11 @@ class LicenseService
                 ['status' => $newStatus->value]
             );
 
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $license->citizen_id,
-                Msg::get('notifications.license_unblocked_title'),
-                Msg::get('notifications.license_unblocked_body'),
+                'messages.notifications.license_unblocked_title',
+                'messages.notifications.license_unblocked_body',
+                [],
                 'license.unblocked',
                 ['license_id' => $license->id]
             );

@@ -323,10 +323,11 @@ class ApplicationService
             ]
         );
 
-        $this->notifications->sendToUser(
+        $this->notifications->sendLocalizedToUser(
             $citizen->id,
-            __('messages.notifications.application_created_title'),
-            __('messages.notifications.application_created_body'),
+            'messages.notifications.application_created_title',
+            'messages.notifications.application_created_body',
+            [],
             'application.created',
             ['application_id' => $application->id]
         );

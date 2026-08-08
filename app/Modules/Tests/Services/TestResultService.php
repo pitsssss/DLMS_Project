@@ -15,6 +15,7 @@ use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
+use App\Support\RecipientNotificationTranslator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -113,13 +114,20 @@ class TestResultService
                 ['result' => $result->value, 'test_type_id' => $testType->id, 'application_id' => $application->id]
             );
 
-            $this->notifications->sendToUser(
+            $locale = RecipientNotificationTranslator::localeForUserId((int) $application->citizen_id);
+
+            $this->notifications->sendLocalizedToUser(
                 $application->citizen_id,
-                __('messages.notifications.test_result_title'),
-                __('messages.notifications.test_result_body', [
+                'messages.notifications.test_result_title',
+                'messages.notifications.test_result_body',
+                [
                     'test_name' => $testType->name,
-                    'result' => __('messages.tests.result_'.$result->value),
-                ]),
+                    'result' => RecipientNotificationTranslator::get(
+                        'messages.tests.result_'.$result->value,
+                        [],
+                        $locale
+                    ),
+                ],
                 'test_result.'.$result->value,
                 ['application_id' => $application->id, 'test_result_id' => $testResult->id]
             );

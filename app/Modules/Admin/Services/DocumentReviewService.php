@@ -14,6 +14,7 @@ use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Services\AuditLogService;
 use App\Support\Msg;
+use App\Support\RecipientNotificationTranslator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -82,8 +83,9 @@ class DocumentReviewService
                 'document' => $fresh,
                 'notification' => [
                     'user_id' => $application->citizen_id,
-                    'title' => Msg::get('notifications.document_approved_title'),
-                    'body' => Msg::get('notifications.document_approved_body'),
+                    'title_key' => 'messages.notifications.document_approved_title',
+                    'body_key' => 'messages.notifications.document_approved_body',
+                    'replace' => [],
                     'type' => 'document.approved',
                     'data' => [
                         'document_id' => $document->id,
@@ -150,24 +152,36 @@ class DocumentReviewService
             );
 
             $fresh = $document->fresh(['requiredDocument', 'application']);
-            $documentName = $fresh?->requiredDocument?->name ?? Msg::get('documents.generic_document_name');
+            $locale = RecipientNotificationTranslator::localeForUserId((int) $application->citizen_id);
+            $documentName = $fresh?->requiredDocument?->name
+                ?? RecipientNotificationTranslator::get('messages.documents.generic_document_name', [], $locale);
             $applicationNumber = $application->application_number;
+            $reasonLabel = RecipientNotificationTranslator::get(
+                'messages.documents.rejection_reasons.'.$reason->value,
+                [],
+                $locale
+            );
 
             $detailsSuffix = $details !== null
-                ? ' '.Msg::get('notifications.document_rejected_details', ['details' => $details])
+                ? ' '.RecipientNotificationTranslator::get(
+                    'messages.notifications.document_rejected_details',
+                    ['details' => $details],
+                    $locale
+                )
                 : '';
 
             return [
                 'document' => $fresh,
                 'notification' => [
                     'user_id' => $application->citizen_id,
-                    'title' => Msg::get('notifications.document_rejected_title'),
-                    'body' => Msg::get('notifications.document_rejected_body', [
+                    'title_key' => 'messages.notifications.document_rejected_title',
+                    'body_key' => 'messages.notifications.document_rejected_body',
+                    'replace' => [
                         'document_name' => $documentName,
                         'application_number' => $applicationNumber,
-                        'reason' => $reason->label(),
+                        'reason' => $reasonLabel,
                         'details_suffix' => $detailsSuffix,
-                    ]),
+                    ],
                     'type' => 'document.rejected',
                     'data' => [
                         'document_id' => $document->id,
@@ -293,7 +307,7 @@ class DocumentReviewService
     }
 
     /**
-     * @param  array{user_id: int, title: string, body: string, type: string, data: array<string, mixed>}|null  $notification
+     * @param  array{user_id: int, title_key: string, body_key: string, replace?: array<string, mixed>, type: string, data: array<string, mixed>}|null  $notification
      */
     private function dispatchNotification(?array $notification): void
     {
@@ -302,10 +316,11 @@ class DocumentReviewService
         }
 
         try {
-            $this->notifications->sendToUser(
+            $this->notifications->sendLocalizedToUser(
                 $notification['user_id'],
-                $notification['title'],
-                $notification['body'],
+                $notification['title_key'],
+                $notification['body_key'],
+                $notification['replace'] ?? [],
                 $notification['type'],
                 $notification['data']
             );

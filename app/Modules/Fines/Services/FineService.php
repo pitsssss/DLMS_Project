@@ -74,10 +74,11 @@ class FineService
             ['amount' => $amount, 'citizen_id' => $citizenId, 'status' => FineStatus::Unpaid->value]
         );
 
-        $this->notifications->sendToUser(
+        $this->notifications->sendLocalizedToUser(
             $citizenId,
-            __('messages.notifications.fine_issued_title'),
-            __('messages.notifications.fine_issued_body', ['amount' => $amount, 'reason' => $reason]),
+            'messages.notifications.fine_issued_title',
+            'messages.notifications.fine_issued_body',
+            ['amount' => $amount, 'reason' => $reason],
             'fine.created',
             ['fine_id' => $fine->id]
         );
@@ -125,10 +126,11 @@ class FineService
             $fine->save();
 
             if (isset($data['status']) && FineStatus::from($data['status']) === FineStatus::Paid) {
-                $this->notifications->sendToUser(
+                $this->notifications->sendLocalizedToUser(
                     $fine->citizen_id,
-                    __('messages.notifications.fine_paid_title'),
-                    __('messages.notifications.fine_paid_body'),
+                    'messages.notifications.fine_paid_title',
+                    'messages.notifications.fine_paid_body',
+                    [],
                     'fine.paid',
                     ['fine_id' => $fine->id]
                 );
