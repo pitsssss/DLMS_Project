@@ -8,6 +8,7 @@ use App\Models\LicenseApplication;
 use App\Models\TestAppointment;
 use App\Models\TestType;
 use App\Modules\Appointments\Support\AvailableTestReasonCode;
+use App\Support\CitizenCatalogLabel;
 use App\Support\CitizenMessageTranslator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
@@ -194,8 +195,10 @@ class AvailableTestReasonResolver
             $previous = $this->firstUnpassedPriorTest($testType, $requiredTestTypes, $passedTestTypeIds);
 
             return CitizenMessageTranslator::get($key, [
-                'previous_test' => $previous?->name ?? CitizenMessageTranslator::get('messages.tests.availability.previous_test_fallback'),
-                'current_test' => $testType->name,
+                'previous_test' => $previous !== null
+                    ? CitizenCatalogLabel::testType((string) $previous->code, $previous->name)
+                    : CitizenMessageTranslator::get('messages.tests.availability.previous_test_fallback'),
+                'current_test' => CitizenCatalogLabel::testType((string) $testType->code, $testType->name),
             ]);
         }
 

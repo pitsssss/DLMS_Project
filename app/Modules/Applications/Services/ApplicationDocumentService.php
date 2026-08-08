@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Resources\ApplicationDocumentResource;
 use App\Modules\Applications\Support\AllowedDocumentMime;
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,7 @@ class ApplicationDocumentService
 
                 return [
                     'id' => $rd->id,
-                    'name' => $rd->name,
+                    'name' => CitizenCatalogLabel::requiredDocument((string) $rd->code, $rd->name),
                     'code' => $rd->code,
                     'is_required' => $rd->is_required,
                     'allowed_extensions' => $rd->allowed_extensions,

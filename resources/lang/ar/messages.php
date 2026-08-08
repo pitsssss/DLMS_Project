@@ -890,5 +890,37 @@ return [
             'theory' => 'الفحص النظري',
             'practical' => 'الفحص العملي',
         ],
+        'service_types' => [
+            'new_license' => [
+                'name' => 'إصدار رخصة جديدة',
+                'description' => 'قدّم طلب رخصة جديدة وتابع جميع مراحله إلكترونياً.',
+            ],
+            'renew_license' => [
+                'name' => 'تجديد رخصة',
+                'description' => 'جدّد رخصتك بسهولة قبل انتهاء صلاحيتها أو خلال فترة السماح.',
+            ],
+            'lost_replacement' => [
+                'name' => 'بدل فاقد',
+                'description' => 'اطلب نسخة جديدة عند فقدان رخصتك.',
+            ],
+            'damaged_replacement' => [
+                'name' => 'بدل تالف',
+                'description' => 'استبدل رخصتك التالفة بنسخة جديدة.',
+            ],
+            'license_unblock' => [
+                'name' => 'فك حظر رخصة',
+                'description' => 'قدّم طلب فك الحظر عن رخصتك بعد استيفاء الشروط المطلوبة.',
+            ],
+        ],
+        'required_documents' => [
+            'national_id_copy' => 'صورة عن الهوية الشخصية',
+            'personal_photo' => 'صورة شخصية',
+            'blood_donation_certificate' => 'شهادة تبرع بالدم',
+            'medical_report' => 'تقرير طبي',
+            'recent_personal_photo' => 'صورة شخصية حديثة',
+            'medical_report_renewal' => 'تقرير طبي إن وجد ضمن متطلبات التجديد',
+            'loss_declaration' => 'تصريح فقدان أو تعهد فقدان',
+            'damaged_license_proof' => 'صورة الرخصة التالفة أو إثبات التلف',
+        ],
     ],
 ];

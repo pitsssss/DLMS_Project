@@ -616,8 +616,8 @@ class AIAgentActionExecutionTest extends TestCase
         $this->assertStringNotContainsString('messages.', $message);
         $this->assertStringNotContainsString('messages.', json_encode($response->json(), JSON_UNESCAPED_UNICODE));
         $this->assertStringContainsString('لا يمكن حجز هذا الاختبار حالياً', $message);
-        $this->assertStringContainsString('اختبار النظر', $message);
-        $this->assertStringContainsString('الاختبار النظري', $message);
+        $this->assertStringContainsString('فحص النظر', $message);
+        $this->assertStringContainsString('الفحص النظري', $message);
 
         $action->refresh();
         $this->assertSame(AgentActionStatus::Failed, $action->status);

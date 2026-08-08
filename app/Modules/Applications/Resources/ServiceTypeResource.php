@@ -2,6 +2,7 @@
 
 namespace App\Modules\Applications\Resources;
 
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,12 +14,13 @@ class ServiceTypeResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $code = (string) $this->code;
+
         return [
             'id' => $this->id,
-            // Database name is canonical (seeded + dashboard-editable).
-            'name' => $this->name,
+            'name' => CitizenCatalogLabel::serviceType($code, $this->name),
             'code' => $this->code,
-            'description' => $this->description ?? '',
+            'description' => CitizenCatalogLabel::serviceTypeDescription($code, $this->description ?? ''),
         ];
     }
 }

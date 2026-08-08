@@ -2,6 +2,7 @@
 
 namespace App\Modules\Payments\Resources;
 
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,7 +28,7 @@ class PaymentResource extends JsonResource
             'fee' => $this->whenLoaded('fee', function () {
                 return [
                     'id' => $this->fee->id,
-                    'name' => $this->fee->name,
+                    'name' => CitizenCatalogLabel::fee((string) $this->fee->code, $this->fee->name),
                     'code' => $this->fee->code,
                 ];
             }),

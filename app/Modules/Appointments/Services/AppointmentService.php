@@ -15,6 +15,7 @@ use App\Modules\Appointments\Repositories\AppointmentSlotRepository;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Services\AuditLogService;
 use App\Support\BusinessClock;
+use App\Support\CitizenCatalogLabel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -112,8 +113,11 @@ class AppointmentService
 
             if ($slot->test_type_id !== $bookable->id) {
                 throw new ApiException('messages.appointments.previous_test_not_passed', 422, [], [
-                    'previous_test' => $bookable->name,
-                    'current_test' => $slot->testType?->name ?? '',
+                    'previous_test' => CitizenCatalogLabel::testType((string) $bookable->code, $bookable->name),
+                    'current_test' => CitizenCatalogLabel::testType(
+                        (string) ($slot->testType?->code ?? ''),
+                        $slot->testType?->name ?? ''
+                    ),
                 ]);
             }
 

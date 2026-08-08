@@ -159,7 +159,7 @@ class CitizenBilingualMessagesTest extends TestCase
 
         $theoryAr = collect($ar->json('data.tests'))->firstWhere('code', 'theory');
         $this->assertNotNull($theoryAr);
-        $this->assertStringContainsString('اختبار النظر', (string) $theoryAr['reason']);
+        $this->assertStringContainsString('فحص النظر', (string) $theoryAr['reason']);
         $this->assertStringNotContainsString(':previous_test', (string) $theoryAr['reason']);
 
         $en = $this->withHeader('Accept-Language', 'en')

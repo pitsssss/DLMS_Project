@@ -169,8 +169,8 @@ class AvailableTestsApiTest extends TestCase
 
         $this->assertFalse($theory['is_available']);
         $this->assertEquals(AvailableTestReasonCode::PREVIOUS_TEST_NOT_PASSED, $theory['reason_code']);
-        $this->assertStringContainsString('اختبار النظر', (string) $theory['reason']);
-        $this->assertStringContainsString('الاختبار النظري', (string) $theory['reason']);
+        $this->assertStringContainsString('فحص النظر', (string) $theory['reason']);
+        $this->assertStringContainsString('الفحص النظري', (string) $theory['reason']);
 
         $this->assertFalse($practical['is_available']);
         $this->assertContains($practical['reason_code'], [
@@ -231,7 +231,7 @@ class AvailableTestsApiTest extends TestCase
 
         $this->assertFalse($practical['is_available']);
         $this->assertEquals(AvailableTestReasonCode::PREVIOUS_TEST_NOT_PASSED, $practical['reason_code']);
-        $this->assertStringContainsString('الاختبار النظري', (string) $practical['reason']);
+        $this->assertStringContainsString('الفحص النظري', (string) $practical['reason']);
     }
 
     public function test_after_theory_passed_practical_becomes_available(): void
@@ -475,7 +475,7 @@ class AvailableTestsApiTest extends TestCase
 
         $this->assertEquals(AvailableTestReasonCode::PREVIOUS_TEST_NOT_PASSED, $theory['reason_code']);
         $this->assertSame(
-            'يجب اجتياز اختبار النظر أولاً قبل حجز الاختبار النظري.',
+            'يجب اجتياز فحص النظر أولاً قبل حجز الفحص النظري.',
             $theory['reason']
         );
     }
@@ -499,7 +499,7 @@ class AvailableTestsApiTest extends TestCase
         $this->assertFalse($theory['is_available']);
         $this->assertSame(AvailableTestReasonCode::PREVIOUS_TEST_NOT_PASSED, $theory['reason_code']);
         $this->assertSame(
-            'يجب اجتياز اختبار النظر أولاً قبل حجز الاختبار النظري.',
+            'يجب اجتياز فحص النظر أولاً قبل حجز الفحص النظري.',
             $theory['reason']
         );
     }

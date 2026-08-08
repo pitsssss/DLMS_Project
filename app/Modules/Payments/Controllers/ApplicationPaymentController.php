@@ -8,6 +8,7 @@ use App\Modules\Payments\Requests\StoreApplicationPaymentRequest;
 use App\Modules\Payments\Resources\PaymentResource;
 use App\Modules\Payments\Services\ApplicationPaymentService;
 use App\Modules\Payments\Services\PaymentProviderManager;
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Http\Request;
 
 class ApplicationPaymentController extends Controller
@@ -24,7 +25,7 @@ class ApplicationPaymentController extends Controller
             'application_status' => $applicationModel->status->value,
             'fee' => [
                 'id' => $fee->id,
-                'name' => $fee->name,
+                'name' => CitizenCatalogLabel::fee((string) $fee->code, $fee->name),
                 'code' => $fee->code,
                 'amount' => $fee->amount,
                 'currency' => $fee->currency,

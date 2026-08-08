@@ -2,6 +2,7 @@
 
 namespace App\Modules\Applications\Resources;
 
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,14 +22,20 @@ class ApplicationResource extends JsonResource
             'license_type' => $this->whenLoaded('licenseType', function () {
                 return [
                     'id' => $this->licenseType->id,
-                    'name' => $this->licenseType->name,
+                    'name' => CitizenCatalogLabel::licenseType(
+                        (string) $this->licenseType->code,
+                        $this->licenseType->name
+                    ),
                     'code' => $this->licenseType->code,
                 ];
             }),
             'service_type' => $this->whenLoaded('serviceType', function () {
                 return [
                     'id' => $this->serviceType->id,
-                    'name' => $this->serviceType->name,
+                    'name' => CitizenCatalogLabel::serviceType(
+                        (string) $this->serviceType->code,
+                        $this->serviceType->name
+                    ),
                     'code' => $this->serviceType->code,
                 ];
             }),
@@ -53,7 +60,10 @@ class ApplicationResource extends JsonResource
 
                 return [
                     'id' => $this->currentTestType->id,
-                    'name' => $this->currentTestType->name,
+                    'name' => CitizenCatalogLabel::testType(
+                        (string) $this->currentTestType->code,
+                        $this->currentTestType->name
+                    ),
                     'code' => $this->currentTestType->code,
                 ];
             }),

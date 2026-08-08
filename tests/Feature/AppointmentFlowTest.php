@@ -241,8 +241,8 @@ class AppointmentFlowTest extends TestCase
         $message = (string) $response->json('message');
         $this->assertStringNotContainsString('messages.', $message);
         $this->assertStringContainsString('لا يمكن حجز هذا الاختبار حالياً', $message);
-        $this->assertStringContainsString('اختبار النظر', $message);
-        $this->assertStringContainsString('الاختبار النظري', $message);
+        $this->assertStringContainsString('فحص النظر', $message);
+        $this->assertStringContainsString('الفحص النظري', $message);
         $this->assertEquals(0, \App\Models\TestAppointment::query()->where('application_id', $application->id)->count());
     }
 }

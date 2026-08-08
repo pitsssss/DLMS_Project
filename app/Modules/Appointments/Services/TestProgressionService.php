@@ -10,6 +10,7 @@ use App\Models\LicenseApplication;
 use App\Models\TestAppointment;
 use App\Models\TestResult;
 use App\Models\TestType;
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Database\Eloquent\Collection;
 
 class TestProgressionService
@@ -138,7 +139,7 @@ class TestProgressionService
             $items[] = [
                 'id' => $testType->id,
                 'test_type_id' => $testType->id,
-                'name' => $testType->name,
+                'name' => CitizenCatalogLabel::testType((string) $testType->code, $testType->name),
                 'code' => $testType->code,
                 'sequence_order' => $testType->sequence_order,
                 'max_attempts' => $testType->max_attempts,

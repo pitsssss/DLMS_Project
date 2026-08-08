@@ -583,5 +583,37 @@ return [
             'theory' => 'Theory test',
             'practical' => 'Practical test',
         ],
+        'service_types' => [
+            'new_license' => [
+                'name' => 'New license',
+                'description' => 'Apply for a new license and complete all steps online.',
+            ],
+            'renew_license' => [
+                'name' => 'License renewal',
+                'description' => 'Renew your license before it expires or during the grace period.',
+            ],
+            'lost_replacement' => [
+                'name' => 'Lost replacement',
+                'description' => 'Request a replacement when your license is lost.',
+            ],
+            'damaged_replacement' => [
+                'name' => 'Damaged replacement',
+                'description' => 'Replace your damaged license with a new copy.',
+            ],
+            'license_unblock' => [
+                'name' => 'License unblock',
+                'description' => 'Apply to unblock your license after meeting the required conditions.',
+            ],
+        ],
+        'required_documents' => [
+            'national_id_copy' => 'National ID copy',
+            'personal_photo' => 'Personal photo',
+            'blood_donation_certificate' => 'Blood donation certificate',
+            'medical_report' => 'Medical report',
+            'recent_personal_photo' => 'Recent personal photo',
+            'medical_report_renewal' => 'Medical report if required for renewal',
+            'loss_declaration' => 'Loss declaration or affidavit',
+            'damaged_license_proof' => 'Damaged license photo or damage proof',
+        ],
     ],
 ];

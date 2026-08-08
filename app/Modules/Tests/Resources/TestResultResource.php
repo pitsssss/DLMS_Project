@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tests\Resources;
 
+use App\Support\CitizenCatalogLabel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,7 +21,7 @@ class TestResultResource extends JsonResource
             'test_type_id' => $this->test_type_id,
             'test_type' => $this->whenLoaded('testType', fn () => [
                 'id' => $this->testType->id,
-                'name' => $this->testType->name,
+                'name' => CitizenCatalogLabel::testType((string) $this->testType->code, $this->testType->name),
                 'code' => $this->testType->code,
             ]),
             'result' => $this->result->value,

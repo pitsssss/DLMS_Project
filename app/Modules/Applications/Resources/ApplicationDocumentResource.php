@@ -5,6 +5,7 @@ namespace App\Modules\Applications\Resources;
 use App\Enums\DocumentRejectionReason;
 use App\Enums\DocumentStatus;
 use App\Support\ArabicMessageTranslator;
+use App\Support\CitizenCatalogLabel;
 use App\Support\CitizenMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -31,7 +32,10 @@ class ApplicationDocumentResource extends JsonResource
             'required_document' => $this->whenLoaded('requiredDocument', function () {
                 return [
                     'id' => $this->requiredDocument->id,
-                    'name' => $this->requiredDocument->name,
+                    'name' => CitizenCatalogLabel::requiredDocument(
+                        (string) $this->requiredDocument->code,
+                        $this->requiredDocument->name
+                    ),
                     'code' => $this->requiredDocument->code,
                 ];
             }),
