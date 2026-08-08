@@ -1962,7 +1962,8 @@ class AgentPendingWorkflowService
                 'reply' => $this->requiredDocumentsHandler->formatReply(
                     $application,
                     app(\App\Modules\Applications\Services\ApplicationDocumentService::class)
-                        ->requiredChecklist($citizen, $application->id)
+                        ->requiredChecklist($citizen, $application->id),
+                    $language
                 ),
                 'proposed_action' => [
                     'name' => 'get_required_documents',

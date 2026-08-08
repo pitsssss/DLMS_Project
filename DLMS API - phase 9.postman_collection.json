@@ -1667,6 +1667,23 @@
         },
         {
           "name": "29. List Appointment Slots (citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var slots = (j.data && j.data.items) ? j.data.items : j.data;",
+                  "  if (Array.isArray(slots) && slots.length && slots[0].id) {",
+                  "    pm.collectionVariables.set('appointment_slot_id', String(slots[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -2570,6 +2587,22 @@
       "value": "password"
     },
     {
+      "key": "seed_admin_phone",
+      "value": "0999999999"
+    },
+    {
+      "key": "seed_employee_phone",
+      "value": "0988888888"
+    },
+    {
+      "key": "seed_citizen_phone",
+      "value": "0977777777"
+    },
+    {
+      "key": "seed_citizen_token",
+      "value": ""
+    },
+    {
       "key": "admin_token",
       "value": ""
     },
@@ -2618,6 +2651,10 @@
       "value": ""
     },
     {
+      "key": "appointment_slot_id",
+      "value": ""
+    },
+    {
       "key": "appointment_id",
       "value": ""
     },
@@ -2627,6 +2664,10 @@
     },
     {
       "key": "fine_id",
+      "value": ""
+    },
+    {
+      "key": "notification_id",
       "value": ""
     },
     {

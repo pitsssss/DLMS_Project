@@ -30,7 +30,7 @@ class AgentRequiredDocumentsHandler
 
         if ($resolution === null) {
             return $this->basePayload($language, [
-                'reply' => AgentTranslator::message('ai_agent.required_documents.no_applications'),
+                'reply' => AgentTranslator::message('ai_agent.required_documents.no_applications', [], $language),
                 'proposed_action' => null,
             ]);
         }
@@ -39,7 +39,7 @@ class AgentRequiredDocumentsHandler
             return $this->basePayload($language, [
                 'reply' => AgentTranslator::message('ai_agent.required_documents.multiple_applications', [
                     'summary' => $this->formatApplicationList($resolution, $language),
-                ]),
+                ], $language),
                 'proposed_action' => null,
                 'missing_slots' => ['application_choice'],
             ]);
@@ -47,9 +47,9 @@ class AgentRequiredDocumentsHandler
 
         try {
             $checklist = $this->documents->requiredChecklist($citizen, $resolution->id);
-            $reply = $this->formatReply($resolution, $checklist);
+            $reply = $this->formatReply($resolution, $checklist, $language);
         } catch (\Throwable) {
-            $reply = AgentTranslator::message('ai_agent.required_documents.unavailable');
+            $reply = AgentTranslator::message('ai_agent.required_documents.unavailable', [], $language);
         }
 
         return $this->basePayload($language, [
@@ -66,26 +66,28 @@ class AgentRequiredDocumentsHandler
     /**
      * @param  array<string, mixed>  $result
      */
-    public function replyFromActionResult(array $result): string
+    public function replyFromActionResult(array $result, ?string $language = null): string
     {
+        $language = $language ?? AgentTranslator::getLocale();
         $checklist = $result['required_documents'] ?? [];
         if (! is_array($checklist) || $checklist === []) {
-            return AgentTranslator::message('ai_agent.required_documents.unavailable');
+            return AgentTranslator::message('ai_agent.required_documents.unavailable', [], $language);
         }
 
         $status = ApplicationStatus::tryFrom((string) ($result['status'] ?? '')) ?? ApplicationStatus::Draft;
 
         return $this->formatReplyText(
             $status,
-            $this->documentNamesFromChecklist($checklist),
+            $this->documentNamesFromChecklist($checklist, $language),
             $this->hasUploadedDocuments($checklist),
+            $language,
         );
     }
 
     /**
      * @param  list<array<string, mixed>>  $checklist
      */
-    public function formatReply(LicenseApplication $application, array $checklist): string
+    public function formatReply(LicenseApplication $application, array $checklist, string $language = 'ar'): string
     {
         $status = $application->status instanceof ApplicationStatus
             ? $application->status
@@ -93,8 +95,9 @@ class AgentRequiredDocumentsHandler
 
         return $this->formatReplyText(
             $status,
-            $this->documentNamesFromChecklist($checklist),
+            $this->documentNamesFromChecklist($checklist, $language),
             $this->hasUploadedDocuments($checklist),
+            $language,
         );
     }
 
@@ -105,23 +108,25 @@ class AgentRequiredDocumentsHandler
         ApplicationStatus $status,
         array $documentNames,
         bool $hasUploaded,
+        string $language = 'ar',
     ): string
     {
         if ($documentNames === []) {
-            return AgentTranslator::message('ai_agent.required_documents.unavailable');
+            return AgentTranslator::message('ai_agent.required_documents.unavailable', [], $language);
         }
 
-        $documentsList = implode('، ', $documentNames);
+        $separator = $language === 'en' ? ', ' : '، ';
+        $documentsList = implode($separator, $documentNames);
         $reply = AgentTranslator::message('ai_agent.required_documents.list', [
             'documents' => $documentsList,
-        ]);
+        ], $language);
 
         if ($this->isPastDocumentUploadStage($status)) {
-            $reply .= ' '.AgentTranslator::message('ai_agent.required_documents.stage_completed_hint');
+            $reply .= ' '.AgentTranslator::message('ai_agent.required_documents.stage_completed_hint', [], $language);
         } elseif ($hasUploaded) {
-            $reply .= ' '.AgentTranslator::message('ai_agent.required_documents.already_uploaded_hint');
+            $reply .= ' '.AgentTranslator::message('ai_agent.required_documents.already_uploaded_hint', [], $language);
         } else {
-            $reply .= ' يمكنك رفع هذه الوثائق من صفحة وثائق الطلب.';
+            $reply .= ' '.AgentTranslator::message('ai_agent.required_documents.upload_hint', [], $language);
         }
 
         return trim($reply);
@@ -148,14 +153,14 @@ class AgentRequiredDocumentsHandler
      * @param  list<array<string, mixed>>  $checklist
      * @return list<string>
      */
-    private function documentNamesFromChecklist(array $checklist): array
+    private function documentNamesFromChecklist(array $checklist, string $language = 'ar'): array
     {
         $names = [];
         foreach ($checklist as $item) {
             if (! is_array($item)) {
                 continue;
             }
-            $name = AgentCatalogLocalizer::documentFromItem($item);
+            $name = AgentCatalogLocalizer::documentFromItem($item, $language);
             if ($name !== '') {
                 $names[] = $name;
             }

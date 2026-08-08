@@ -226,6 +226,7 @@ class AgentTranslator
                 .($replace['documents'] ?? '').'.',
             'ai_agent.required_documents.already_uploaded_hint' => 'بعض الوثائق مرفوعة مسبقاً، ويمكنك متابعة حالة كل وثيقة من صفحة وثائق الطلب.',
             'ai_agent.required_documents.stage_completed_hint' => 'تمت مراجعة وثائق هذا الطلب أو تجاوز مرحلة الوثائق. يمكنك متابعة الخطوة الحالية من حالة الطلب.',
+            'ai_agent.required_documents.upload_hint' => 'يمكنك رفع هذه الوثائق من صفحة وثائق الطلب.',
             'ai_agent.required_documents.unavailable' => 'لم أتمكن من جلب الوثائق المطلوبة لهذا الطلب حالياً.',
             'ai_agent.appointments.current.single' => 'نعم، تم حجز موعد لاختبار '
                 .($replace['test'] ?? 'الاختبار')
@@ -536,6 +537,7 @@ class AgentTranslator
                 .($replace['documents'] ?? '').'.',
             'ai_agent.required_documents.already_uploaded_hint' => 'Some documents are already uploaded, and you can track the status of each document from the application documents page.',
             'ai_agent.required_documents.stage_completed_hint' => 'The documents for this application have been reviewed or the documents stage has been completed. You can track the current step from the application status.',
+            'ai_agent.required_documents.upload_hint' => 'You can upload these documents from the application documents page.',
             'ai_agent.required_documents.unavailable' => 'I could not fetch the required documents for this application at the moment.',
             'ai_agent.appointments.current.single' => 'Yes, an appointment has been booked for '
                 .($replace['test'] ?? 'the test')
