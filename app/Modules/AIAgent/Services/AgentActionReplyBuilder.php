@@ -3,6 +3,7 @@
 namespace App\Modules\AIAgent\Services;
 
 use App\Modules\AIAgent\Models\AIAgentAction;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
@@ -219,7 +220,9 @@ class AgentActionReplyBuilder
      */
     private function bookAppointmentReply(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+        $testName = AgentCatalogLocalizer::testTypeFromPayload(
+            is_array($result['test_type'] ?? null) ? $result['test_type'] : null
+        );
         $date = trim((string) ($result['date'] ?? ''));
         $time = trim((string) ($result['start_time'] ?? ''));
 
@@ -241,7 +244,9 @@ class AgentActionReplyBuilder
      */
     private function rescheduleAppointmentReply(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+        $testName = AgentCatalogLocalizer::testTypeFromPayload(
+            is_array($result['test_type'] ?? null) ? $result['test_type'] : null
+        );
         $date = trim((string) ($result['date'] ?? ''));
         $time = trim((string) ($result['start_time'] ?? ''));
 
@@ -257,7 +262,9 @@ class AgentActionReplyBuilder
      */
     private function cancelAppointmentReply(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+        $testName = AgentCatalogLocalizer::testTypeFromPayload(
+            is_array($result['test_type'] ?? null) ? $result['test_type'] : null
+        );
 
         return AgentTranslator::message('ai_agent.appointments.cancel.success', [
             'test' => $testName,
@@ -294,8 +301,9 @@ class AgentActionReplyBuilder
 
         $lines = collect($items)
             ->map(function (array $item): string {
-                $testName = trim((string) ($item['test_type']['name']
-                    ?? AgentTranslator::message('ai_agent.test_results.test_fallback')));
+                $testName = AgentCatalogLocalizer::testTypeFromPayload(
+                    is_array($item['test_type'] ?? null) ? $item['test_type'] : null
+                );
                 $status = (string) ($item['result'] ?? '');
                 $translated = match ($status) {
                     'passed', 'failed', 'no_show' => AgentTranslator::message('ai_agent.test_results.result.'.$status),

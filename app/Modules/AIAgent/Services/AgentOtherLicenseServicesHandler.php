@@ -6,6 +6,7 @@ use App\Enums\ServiceCode;
 use App\Models\License;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Modules\Applications\Services\LicenseServiceEligibilityService;
@@ -76,9 +77,7 @@ class AgentOtherLicenseServicesHandler
         License $license,
     ): array {
         $code = (string) ($license->licenseType?->code ?? '');
-        $label = AgentTranslator::getLocale() === 'en'
-            ? LicenseTypeSlotExtractor::labelEn($code)
-            : LicenseTypeSlotExtractor::labelAr($code);
+        $label = AgentCatalogLocalizer::licenseType($code, null, $language);
 
         $serviceLabel = AgentTranslator::message('ai_agent.other_license.service.'.$service->value);
 

@@ -7,6 +7,7 @@ use App\Models\License;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentApplicationTextSelector;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 use App\Modules\Applications\Services\LicenseServiceEligibilityService;
@@ -48,13 +49,9 @@ class AgentLicenseOptionService
         string $intent,
     ): array {
         $ttl = (int) config('ai.agent.selection_token_ttl_seconds', 1800);
-        $isEn = AgentTranslator::getLocale() === 'en';
-
-        return $licenses->map(function (License $license) use ($citizen, $session, $workflowId, $intent, $ttl, $isEn): array {
+        return $licenses->map(function (License $license) use ($citizen, $session, $workflowId, $intent, $ttl): array {
             $code = (string) ($license->licenseType?->code ?? '');
-            $typeLabel = $isEn
-                ? LicenseTypeSlotExtractor::labelEn($code)
-                : LicenseTypeSlotExtractor::labelAr($code);
+            $typeLabel = AgentCatalogLocalizer::licenseType($code);
             $number = (string) $license->license_number;
             $status = $license->status?->value ?? (string) $license->status;
             $expiry = $license->expiry_date?->format('Y-m-d') ?? '';

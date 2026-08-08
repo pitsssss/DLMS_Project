@@ -100,8 +100,11 @@ class AgentWorkflowOrchestrator
 
         if ($context->hasMultipleApplications()) {
             $summary = ($context->applicationChoices ?? collect())
-                ->map(function (\App\Models\LicenseApplication $application): string {
-                    $statusLabel = \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelAr($application->status);
+                ->map(function (\App\Models\LicenseApplication $application) use ($language): string {
+                    $statusLabel = $language === 'en'
+                        ? \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelEn($application->status)
+                        : \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelAr($application->status);
+
                     return '- '.$application->application_number.' — '.$statusLabel;
                 })
                 ->implode("\n");
@@ -109,7 +112,7 @@ class AgentWorkflowOrchestrator
             return $this->responseBuilder->basePayload(AgentIntent::SubmitDocumentsForReview, $language, [
                 'reply' => AgentTranslator::message('ai_agent.required_documents.multiple_applications', [
                     'summary' => $summary,
-                ]),
+                ], $language),
                 'proposed_action' => null,
                 'missing_slots' => ['application_choice'],
                 'requires_confirmation' => false,

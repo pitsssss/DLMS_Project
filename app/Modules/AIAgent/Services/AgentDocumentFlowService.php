@@ -15,6 +15,7 @@ use App\Modules\AIAgent\Enums\DocumentFlowState;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentDocumentFlowPhraseMatcher;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
@@ -125,11 +126,12 @@ class AgentDocumentFlowService
                 [
                     'applications' => $eligible->map(function (LicenseApplication $application) use ($citizen, $session): array {
                         $licenseCode = (string) ($application->licenseType?->code ?? '');
-                        $licenseLabel = AgentTranslator::getLocale() === 'en'
-                            ? LicenseTypeSlotExtractor::labelEn($licenseCode)
-                            : LicenseTypeSlotExtractor::labelAr($licenseCode);
-                        $serviceLabel = (string) ($application->serviceType?->name
-                            ?? AgentTranslator::message('ai_agent.document_flow.service_fallback'));
+                        $licenseLabel = AgentCatalogLocalizer::licenseType($licenseCode);
+                        $serviceLabel = AgentCatalogLocalizer::serviceType(
+                            (string) ($application->serviceType?->code ?? ''),
+                            (string) ($application->serviceType?->name
+                                ?? AgentTranslator::message('ai_agent.document_flow.service_fallback'))
+                        );
 
                         return [
                             'label' => AgentTranslator::message('ai_agent.document_flow.application_option', [
@@ -346,8 +348,11 @@ class AgentDocumentFlowService
             ->firstOrFail();
 
         $checklistMeta = $this->buildChecklistMeta($citizen, $applicationId);
-        $label = (string) ($uploaded->requiredDocument?->name
-            ?? AgentTranslator::message('ai_agent.document_flow.document_fallback'));
+        $label = AgentCatalogLocalizer::document(
+            (string) ($uploaded->requiredDocument?->code ?? ''),
+            $uploaded->requiredDocument?->name
+                ?? AgentTranslator::message('ai_agent.document_flow.document_fallback')
+        );
 
         if (! $checklistMeta['all_required_uploaded']) {
             $remaining = $this->buildUploadableDocumentButtons($citizen, $session, $application);
@@ -840,19 +845,24 @@ class AgentDocumentFlowService
         $extensions = $this->normalizeExtensions($required->allowed_extensions);
         $maxSizeKb = (int) ($required->max_size_kb ?: 4096);
 
+        $localizedLabel = AgentCatalogLocalizer::document(
+            (string) ($required->code ?? ''),
+            (string) $required->name
+        );
+
         $this->saveFlow($session, array_merge($this->getFlow($session), [
             'state' => DocumentFlowState::AwaitingFile->value,
             'mode' => 'agent',
             'application_id' => $application->id,
             'required_document_id' => $required->id,
-            'required_document_label' => $required->name,
+            'required_document_label' => $localizedLabel,
             'upload_token_hash' => $this->uploadTokens->hash($plainToken),
             'upload_token_status' => 'active',
             'upload_token_expires_at' => now()->addSeconds($ttl)->toIso8601String(),
         ]));
 
         $reply = AgentTranslator::message('ai_agent.document_flow.awaiting_file', [
-            'label' => $required->name,
+            'label' => $localizedLabel,
         ]);
         $this->storeAssistantMessage($session, $reply, ['message_type' => 'file_upload_required']);
 
@@ -986,7 +996,7 @@ class AgentDocumentFlowService
             );
 
             $entry = [
-                'label' => (string) ($item['name'] ?? ''),
+                'label' => AgentCatalogLocalizer::documentFromItem($item),
                 'status' => $buttonStatus,
                 'action' => 'select_required_document',
                 'selection_token' => $this->selectionTokens->issue(
@@ -1030,7 +1040,7 @@ class AgentDocumentFlowService
                 : (string) ($latest['status'] ?? 'missing');
 
             $items[] = [
-                'label' => (string) ($item['name'] ?? ''),
+                'label' => AgentCatalogLocalizer::documentFromItem($item),
                 'status' => $status === DocumentStatus::Rejected->value ? 'rejected' : (
                     $status === DocumentStatus::Approved->value ? 'approved' : (
                         $status === DocumentStatus::PendingReview->value ? 'pending_review' : 'missing'
@@ -1087,7 +1097,7 @@ class AgentDocumentFlowService
             if (! ($item['is_required'] ?? false)) {
                 continue;
             }
-            $name = trim((string) ($item['name'] ?? ''));
+            $name = AgentCatalogLocalizer::documentFromItem($item);
             if ($name !== '') {
                 $names[] = $name;
             }

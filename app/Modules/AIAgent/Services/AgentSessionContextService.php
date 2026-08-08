@@ -9,6 +9,7 @@ use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentMessageIntentMatcher;
 use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
 
 class AgentSessionContextService
@@ -335,10 +336,10 @@ class AgentSessionContextService
             ($payload['proposed_action']['name'] ?? null) === 'create_application'
             && $this->shouldReplaceReply($payload)
         ) {
-            $label = LicenseTypeSlotExtractor::labelAr($licenseType);
+            $label = AgentCatalogLocalizer::licenseType($licenseType, null, $language);
             $payload['reply'] = $language === 'ar'
                 ? "سيتم تجهيز طلب إصدار رخصة قيادة {$label}. هل تؤكد المتابعة؟"
-                : "I will prepare a new {$licenseType} license application. Do you want to continue?";
+                : "I will prepare a new {$label} license application. Do you want to continue?";
         }
 
         return $payload;

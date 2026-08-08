@@ -18,6 +18,7 @@ use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentActionArgumentValidator;
 use App\Modules\AIAgent\Support\AgentApplicationStatusMap;
 use App\Modules\AIAgent\Support\AgentApplicationTextSelector;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\AgentWorkflowIntentCatalog;
 use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
@@ -867,10 +868,11 @@ class AgentPendingWorkflowService
             $status = $application->status instanceof ApplicationStatus
                 ? $application->status->value
                 : (string) $application->status;
-            $serviceLabel = (string) ($application->serviceType?->name ?? $serviceCode);
-            $licenseLabel = AgentTranslator::getLocale() === 'en'
-                ? LicenseTypeSlotExtractor::labelEn($licenseCode)
-                : LicenseTypeSlotExtractor::labelAr($licenseCode);
+            $serviceLabel = AgentCatalogLocalizer::serviceType(
+                $serviceCode,
+                (string) ($application->serviceType?->name ?? $serviceCode)
+            );
+            $licenseLabel = AgentCatalogLocalizer::licenseType($licenseCode);
             $statusLabel = ApplicationStatusLabelMapper::label($application->status);
             $reference = (string) ($application->application_number ?: $application->id);
 
@@ -2104,11 +2106,12 @@ class AgentPendingWorkflowService
             'id' => $application->id,
             'application_number' => $application->application_number,
             'service_type' => $serviceCode,
-            'service_type_label' => (string) ($application->serviceType?->name ?? $serviceCode),
+            'service_type_label' => AgentCatalogLocalizer::serviceType(
+                $serviceCode,
+                (string) ($application->serviceType?->name ?? $serviceCode)
+            ),
             'license_type' => $licenseCode,
-            'license_type_label' => AgentTranslator::getLocale() === 'en'
-                ? LicenseTypeSlotExtractor::labelEn($licenseCode)
-                : LicenseTypeSlotExtractor::labelAr($licenseCode),
+            'license_type_label' => AgentCatalogLocalizer::licenseType($licenseCode),
             'status' => $application->status instanceof ApplicationStatus
                 ? $application->status->value
                 : (string) $application->status,

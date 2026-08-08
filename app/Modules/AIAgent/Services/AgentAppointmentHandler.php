@@ -6,6 +6,7 @@ use App\Models\LicenseApplication;
 use App\Models\TestType;
 use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTestTypeExtractor;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
@@ -138,11 +139,19 @@ class AgentAppointmentHandler
 
         if ($context->hasMultipleApplications()) {
             $summary = ($context->applicationChoices ?? collect())
-                ->map(function (LicenseApplication $application): string {
-                    $licenseLabel = \App\Modules\AIAgent\Support\LicenseTypeSlotExtractor::labelAr(
-                        (string) ($application->licenseType?->code ?? '')
+                ->map(function (LicenseApplication $application) use ($context): string {
+                    $licenseLabel = AgentCatalogLocalizer::licenseType(
+                        (string) ($application->licenseType?->code ?? ''),
+                        null,
+                        $context->language
                     );
-                    $statusLabel = \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelAr($application->status);
+                    $statusLabel = $context->language === 'en'
+                        ? \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelEn($application->status)
+                        : \App\Modules\AIAgent\Support\ApplicationStatusLabelMapper::labelAr($application->status);
+
+                    if ($context->language === 'en') {
+                        return '- '.$application->application_number.' ('.$licenseLabel.'): '.$statusLabel;
+                    }
 
                     return '- '.$application->application_number.' — رخصة قيادة '.$licenseLabel.' — '.$statusLabel;
                 })
@@ -194,7 +203,9 @@ class AgentAppointmentHandler
             $appointment = $appointments[0];
 
             return AgentTranslator::message('ai_agent.appointments.current.single', [
-                'test' => trim((string) ($appointment['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback'))),
+                'test' => AgentCatalogLocalizer::testTypeFromPayload(
+                    is_array($appointment['test_type'] ?? null) ? $appointment['test_type'] : null
+                ),
                 'date' => trim((string) ($appointment['date'] ?? '')),
                 'time' => trim((string) ($appointment['start_time'] ?? '')),
             ]);
@@ -202,7 +213,9 @@ class AgentAppointmentHandler
 
         $lines = collect($appointments)
             ->map(function (array $appointment): string {
-                $testName = trim((string) ($appointment['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+                $testName = AgentCatalogLocalizer::testTypeFromPayload(
+                    is_array($appointment['test_type'] ?? null) ? $appointment['test_type'] : null
+                );
                 $date = trim((string) ($appointment['date'] ?? ''));
                 $time = trim((string) ($appointment['start_time'] ?? ''));
 
@@ -222,7 +235,9 @@ class AgentAppointmentHandler
      */
     public function replyFromSlotsResult(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+        $testName = AgentCatalogLocalizer::testTypeFromPayload(
+            is_array($result['test_type'] ?? null) ? $result['test_type'] : null
+        );
         $slots = $result['slots'] ?? [];
 
         if (! is_array($slots) || $slots === []) {
@@ -254,9 +269,12 @@ class AgentAppointmentHandler
 
         /** @var TestType $testType */
         $testType = $resolution['test_type'];
+        $testLabel = AgentCatalogLocalizer::testType((string) $testType->code, (string) $testType->name, $context->language);
 
         return $this->responseBuilder->basePayload(AgentIntent::GetAppointmentSlots, $context->language, array_merge([
-            'reply' => 'سأعرض لك المواعيد المتاحة لـ'.$testType->name.'.',
+            'reply' => AgentTranslator::message('ai_agent.appointments.slots.loading_for_test', [
+                'test' => $testLabel,
+            ], $context->language),
             'proposed_action' => [
                 'name' => 'get_appointment_slots',
                 'arguments' => [
@@ -287,11 +305,14 @@ class AgentAppointmentHandler
 
         /** @var TestType $testType */
         $testType = $resolution['test_type'];
+        $testLabel = AgentCatalogLocalizer::testType((string) $testType->code, (string) $testType->name, $context->language);
         $slots = $this->appointments->listAvailableSlots($testType->id);
 
         if ($slots->isEmpty()) {
             return $this->responseBuilder->basePayload(AgentIntent::GetAppointmentSlots, $context->language, [
-                'reply' => 'لا توجد مواعيد متاحة حالياً لـ'.$testType->name.'. يرجى المحاولة لاحقاً.',
+                'reply' => AgentTranslator::message('ai_agent.appointments.slots.none_for_test', [
+                    'test' => $testLabel,
+                ], $context->language),
                 'proposed_action' => [
                     'name' => 'get_appointment_slots',
                     'arguments' => [
@@ -308,11 +329,11 @@ class AgentAppointmentHandler
         $firstSlot = $slots->first();
 
         return $this->responseBuilder->basePayload(AgentIntent::BookAppointment, $context->language, [
-            'reply' => 'يمكنني حجز أول موعد متاح لـ'.$testType->name.' بتاريخ '
-                .$firstSlot->date?->format('Y-m-d')
-                .' الساعة '
-                .$firstSlot->start_time
-                .'. هل تريد تأكيد الحجز؟',
+            'reply' => AgentTranslator::message('ai_agent.appointments.book.first_available_confirm', [
+                'test' => $testLabel,
+                'date' => $firstSlot->date?->format('Y-m-d'),
+                'time' => $firstSlot->start_time,
+            ], $context->language),
             'proposed_action' => [
                 'name' => 'book_appointment',
                 'arguments' => [

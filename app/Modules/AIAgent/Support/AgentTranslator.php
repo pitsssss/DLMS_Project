@@ -249,10 +249,20 @@ class AgentTranslator
             'ai_agent.appointments.slots.choose_for_test' => 'هذه هي المواعيد المتاحة لـ'
                 .($replace['test'] ?? 'الاختبار')
                 .'. اختر الموعد المناسب من القائمة.',
+            'ai_agent.appointments.slots.loading_for_test' => 'سأعرض لك المواعيد المتاحة لـ'
+                .($replace['test'] ?? 'الاختبار')
+                .'.',
             'ai_agent.appointments.slots.none' => 'لا توجد مواعيد متاحة حالياً. يرجى المحاولة لاحقاً.',
             'ai_agent.appointments.slots.none_for_test' => 'لا توجد مواعيد متاحة حالياً لـ'
                 .($replace['test'] ?? 'الاختبار')
                 .'. يرجى المحاولة لاحقاً.',
+            'ai_agent.appointments.book.first_available_confirm' => 'يمكنني حجز أول موعد متاح لـ'
+                .($replace['test'] ?? 'الاختبار')
+                .' بتاريخ '
+                .($replace['date'] ?? '')
+                .' الساعة '
+                .($replace['time'] ?? '')
+                .'. هل تريد تأكيد الحجز؟',
             'ai_agent.appointments.slots.stale' => 'الموعد المحدد لم يعد متاحاً. يرجى اختيار موعد آخر.',
             'ai_agent.appointments.slots.invalid_choice' => 'الخيار المحدد غير ضمن المواعيد المعروضة.',
             'ai_agent.appointments.slots.error_application' => 'تعذر تحديد الطلب لحجز الموعد.',
@@ -410,6 +420,17 @@ class AgentTranslator
             'ai_agent.document_flow.reupload_hint' => 'يرجى إعادة رفع الوثيقة',
             'ai_agent.document_flow.names_unspecified' => 'غير محددة',
             'ai_agent.document_flow.session_closed' => 'جلسة المساعد الذكي مغلقة.',
+            'ai_agent.document_upload.complete_can_submit' => 'تم رفع الوثيقة. جميع الوثائق المطلوبة مكتملة، ويمكنك الآن إرسالها للمراجعة عبر رسالة «أرسل الوثائق للمراجعة».',
+            'ai_agent.document_upload.missing_remaining' => 'تم رفع الوثيقة. ما زال هناك وثائق ناقصة لإرسال الطلب للمراجعة: '
+                .($replace['names'] ?? '')
+                .'.',
+            'ai_agent.document_upload.rejected_remaining' => 'تم رفع الوثيقة. ما زالت هناك وثائق مرفوضة لإرسال الطلب للمراجعة: '
+                .($replace['names'] ?? '')
+                .'. يرجى إعادة رفعها.',
+            'ai_agent.document_upload.success' => 'تم رفع الوثيقة بنجاح.',
+            'ai_agent.document_status.pending_review' => 'بانتظار المراجعة',
+            'ai_agent.document_status.approved' => 'مقبول',
+            'ai_agent.document_status.rejected' => 'مرفوض',
             'ai_agent.pending.expired' => 'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
             'ai_agent.pending.not_found' => 'لا توجد عملية اختيار طلب قيد الانتظار.',
             'ai_agent.pending.state_invalid' => 'حالة عملية اختيار الطلب غير صالحة لهذا الإجراء.',
@@ -538,10 +559,20 @@ class AgentTranslator
             'ai_agent.appointments.slots.choose_for_test' => 'Here are the available slots for '
                 .($replace['test'] ?? 'the test')
                 .'. Choose a suitable slot from the list.',
+            'ai_agent.appointments.slots.loading_for_test' => 'I will show the available slots for '
+                .($replace['test'] ?? 'the test')
+                .'.',
             'ai_agent.appointments.slots.none' => 'There are no available slots right now. Please try again later.',
             'ai_agent.appointments.slots.none_for_test' => 'There are no available slots right now for '
                 .($replace['test'] ?? 'the test')
                 .'. Please try again later.',
+            'ai_agent.appointments.book.first_available_confirm' => 'I can book the first available slot for '
+                .($replace['test'] ?? 'the test')
+                .' on '
+                .($replace['date'] ?? '')
+                .' at '
+                .($replace['time'] ?? '')
+                .'. Do you confirm the booking?',
             'ai_agent.appointments.slots.stale' => 'The selected slot is no longer available. Please choose another slot.',
             'ai_agent.appointments.slots.invalid_choice' => 'The selected option is not among the offered slots.',
             'ai_agent.appointments.slots.error_application' => 'Could not resolve the application for booking.',
@@ -699,6 +730,17 @@ class AgentTranslator
             'ai_agent.document_flow.reupload_hint' => 'Please re-upload the document',
             'ai_agent.document_flow.names_unspecified' => 'unspecified',
             'ai_agent.document_flow.session_closed' => 'The AI assistant session is closed.',
+            'ai_agent.document_upload.complete_can_submit' => 'The document was uploaded. All required documents are complete. You can now submit them for review by saying "submit documents for review".',
+            'ai_agent.document_upload.missing_remaining' => 'The document was uploaded. Documents still missing before review submission: '
+                .($replace['names'] ?? '')
+                .'.',
+            'ai_agent.document_upload.rejected_remaining' => 'The document was uploaded. Rejected documents still need re-upload before review submission: '
+                .($replace['names'] ?? '')
+                .'. Please re-upload them.',
+            'ai_agent.document_upload.success' => 'The document was uploaded successfully.',
+            'ai_agent.document_status.pending_review' => 'Pending review',
+            'ai_agent.document_status.approved' => 'Approved',
+            'ai_agent.document_status.rejected' => 'Rejected',
             'ai_agent.pending.expired' => 'The application selection process has expired. Please request the service again.',
             'ai_agent.pending.not_found' => 'There is no pending application selection process.',
             'ai_agent.pending.state_invalid' => 'The application selection process state is invalid for this action.',

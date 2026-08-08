@@ -10,6 +10,7 @@ use App\Models\TestAppointment;
 use App\Models\TestType;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentAction;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
@@ -321,6 +322,16 @@ class AgentActionExecutor
         $applicationId = $this->requireApplicationId($arguments);
         $application = $this->applications->getForCitizen($user, $applicationId);
         $payload = $this->appointments->availableTestsForApplication($user, $applicationId);
+        if (isset($payload['tests']) && is_array($payload['tests'])) {
+            $payload['tests'] = array_map(static function (array $test): array {
+                $test['name'] = AgentCatalogLocalizer::testType(
+                    (string) ($test['code'] ?? ''),
+                    isset($test['name']) ? (string) $test['name'] : null
+                );
+
+                return $test;
+            }, $payload['tests']);
+        }
 
         return array_merge([
             'application_id' => $applicationId,
@@ -348,7 +359,10 @@ class AgentActionExecutor
             'test_type' => [
                 'id' => $testType->id,
                 'code' => $testType->code,
-                'name' => $testType->name,
+                'name' => AgentCatalogLocalizer::testType(
+                    (string) $testType->code,
+                    (string) $testType->name
+                ),
             ],
             'slots' => collect(AppointmentSlotResource::collection($slots)->resolve())
                 ->map(function (array $slot): array {
@@ -487,6 +501,7 @@ class AgentActionExecutor
             'application_number' => $application->application_number,
             'status' => $application->status->value,
             'status_label_ar' => ApplicationStatusLabelMapper::labelAr($application->status),
+            'status_label_en' => ApplicationStatusLabelMapper::labelEn($application->status),
         ];
     }
 
@@ -511,7 +526,10 @@ class AgentActionExecutor
             'test_type' => [
                 'id' => $appointment->testType?->id,
                 'code' => $appointment->testType?->code,
-                'name' => $appointment->testType?->name,
+                'name' => AgentCatalogLocalizer::testType(
+                    (string) ($appointment->testType?->code ?? ''),
+                    $appointment->testType?->name
+                ),
             ],
             'center' => $slot !== null
                 ? AppointmentSlotResource::resolveCenterPayload($slot)

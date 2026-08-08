@@ -7,6 +7,7 @@ use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
@@ -246,10 +247,14 @@ class AgentApplicationNextStepService
     {
         return $applications
             ->map(function (LicenseApplication $application) use ($language): string {
-                $licenseLabel = LicenseTypeSlotExtractor::labelAr(
-                    (string) ($application->licenseType?->code ?? '')
+                $licenseLabel = AgentCatalogLocalizer::licenseType(
+                    (string) ($application->licenseType?->code ?? ''),
+                    null,
+                    $language
                 );
-                $statusLabel = ApplicationStatusLabelMapper::labelAr($application->status);
+                $statusLabel = $language === 'en'
+                    ? ApplicationStatusLabelMapper::labelEn($application->status)
+                    : ApplicationStatusLabelMapper::labelAr($application->status);
 
                 if ($language === 'en') {
                     return '- '.$application->application_number.' ('.$licenseLabel.'): '.$statusLabel;

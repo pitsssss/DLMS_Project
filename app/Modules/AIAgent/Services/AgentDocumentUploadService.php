@@ -9,7 +9,9 @@ use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Models\LicenseApplication;
 use App\Modules\AIAgent\Enums\AgentSessionStatus;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\Applications\Services\ApplicationDocumentService;
 use App\Modules\AIAgent\Services\AgentApplicationActionPolicy;
 use App\Modules\AIAgent\Services\AIAgentService;
@@ -99,7 +101,7 @@ class AgentDocumentUploadService
         $canSubmitForReview = $allRequiredUploaded && $blockReason === null;
 
         $agentReply = $canSubmitForReview
-            ? 'تم رفع الوثيقة. أصبحت جميع الوثائق المطلوبة مكتملة، ويمكنك الآن إرسالها للمراجعة عبر رسالة "أرسل الوثائق للمراجعة".'
+            ? AgentTranslator::message('ai_agent.document_upload.complete_can_submit')
             : $this->buildUploadAgentReply($requiredItems, $missing, $rejected);
 
         $this->updateSessionContext($session, $applicationId, (int) $uploaded->id, $requiredDocumentId);
@@ -111,13 +113,16 @@ class AgentDocumentUploadService
                 'status' => $application->status instanceof ApplicationStatus
                     ? $application->status->value
                     : (string) $application->status,
-                'status_label' => ApplicationStatusLabelMapper::labelAr($application->status),
+                'status_label' => ApplicationStatusLabelMapper::label($application->status),
             ],
             'document' => [
                 'id' => $uploaded->id,
                 'required_document_id' => $uploaded->required_document_id,
                 'type_code' => $uploaded->requiredDocument?->code,
-                'type_label' => $uploaded->requiredDocument?->name,
+                'type_label' => AgentCatalogLocalizer::document(
+                    (string) ($uploaded->requiredDocument?->code ?? ''),
+                    $uploaded->requiredDocument?->name
+                ),
                 'status' => $uploaded->status->value,
                 'status_label' => $this->documentStatusLabel($uploaded->status),
                 'rejection' => $uploaded->status === DocumentStatus::Rejected ? [
@@ -162,32 +167,46 @@ class AgentDocumentUploadService
     private function buildUploadAgentReply(array $requiredItems, array $missing, array $rejected): string
     {
         if ($missing !== []) {
-            $missingNames = implode('، ', array_values(array_map(
-                static fn (array $d): string => (string) ($d['name'] ?? ''),
-                $missing
-            )));
+            $missingNames = implode(
+                AgentTranslator::getLocale() === 'en' ? ', ' : '، ',
+                array_values(array_map(
+                    static fn (array $d): string => AgentCatalogLocalizer::documentFromItem($d),
+                    $missing
+                ))
+            );
 
-            return "تم رفع الوثيقة. ما زال هناك وثائق ناقصة لإرسال الطلب للمراجعة: {$missingNames}.";
+            return AgentTranslator::message('ai_agent.document_upload.missing_remaining', [
+                'names' => $missingNames,
+            ]);
         }
 
         if ($rejected !== []) {
-            $rejectedNames = implode('، ', array_values(array_map(
-                static fn (array $item): string => (string) (($item['required_document']['name'] ?? '') ?: ''),
-                $rejected
-            )));
+            $rejectedNames = implode(
+                AgentTranslator::getLocale() === 'en' ? ', ' : '، ',
+                array_values(array_map(
+                    static function (array $item): string {
+                        $rd = is_array($item['required_document'] ?? null) ? $item['required_document'] : [];
 
-            return "تم رفع الوثيقة. ما زالت هناك وثائق مرفوضة لإرسال الطلب للمراجعة: {$rejectedNames}. يرجى إعادة رفعها.";
+                        return AgentCatalogLocalizer::documentFromItem($rd);
+                    },
+                    $rejected
+                ))
+            );
+
+            return AgentTranslator::message('ai_agent.document_upload.rejected_remaining', [
+                'names' => $rejectedNames,
+            ]);
         }
 
-        return 'تم رفع الوثيقة بنجاح.';
+        return AgentTranslator::message('ai_agent.document_upload.success');
     }
 
     private function documentStatusLabel(DocumentStatus $status): string
     {
         return match ($status) {
-            DocumentStatus::PendingReview => 'بانتظار المراجعة',
-            DocumentStatus::Approved => 'مقبول',
-            DocumentStatus::Rejected => 'مرفوض',
+            DocumentStatus::PendingReview => AgentTranslator::message('ai_agent.document_status.pending_review'),
+            DocumentStatus::Approved => AgentTranslator::message('ai_agent.document_status.approved'),
+            DocumentStatus::Rejected => AgentTranslator::message('ai_agent.document_status.rejected'),
         };
     }
 }

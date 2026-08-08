@@ -5,6 +5,7 @@ namespace App\Modules\AIAgent\Services;
 use App\Models\LicenseApplication;
 use App\Modules\AIAgent\DTO\AgentWorkflowContext;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 
 class AgentAvailableTestsHandler
@@ -98,8 +99,8 @@ class AgentAvailableTestsHandler
         }
 
         $availableNames = collect($available)
-            ->pluck('name')
-            ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+            ->map(fn (array $test): string => AgentCatalogLocalizer::testTypeFromPayload($test))
+            ->filter(fn (string $name): bool => $name !== '')
             ->values()
             ->all();
 
@@ -116,7 +117,7 @@ class AgentAvailableTestsHandler
         if ($unavailable !== []) {
             $unavailableSummary = collect($unavailable)
                 ->map(function (array $test): string {
-                    $name = trim((string) ($test['name'] ?? (AgentTranslator::getLocale() === 'en' ? 'test' : 'اختبار')));
+                    $name = AgentCatalogLocalizer::testTypeFromPayload($test);
                     $reason = trim((string) ($test['reason'] ?? ''));
 
                     return $reason !== ''

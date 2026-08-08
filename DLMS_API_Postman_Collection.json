@@ -5136,6 +5136,46 @@
                                 },
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
                             }
+                        },
+                        {
+                            "name": "06. Catalog Localization — EN Documents",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const d=pm.response.json()?.data||{};",
+                                            "if(d.session_id) pm.collectionVariables.set('ai_agent_session_id', d.session_id);",
+                                            "pm.test('language en', () => pm.expect(d.language).to.eql('en'));",
+                                            "pm.test('english catalog label', () => pm.expect(String(d.reply||'')).to.match(/Medical report|national ID|Personal photo/i));",
+                                            "pm.test('no arabic letters', () => pm.expect(String(d.reply||'')).to.not.match(/[\\u0600-\\u06FF]/);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"What documents do I need?\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
                         }
                     ]
                 }

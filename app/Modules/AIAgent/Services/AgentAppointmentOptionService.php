@@ -9,6 +9,7 @@ use App\Models\TestAppointment;
 use App\Models\User;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentApplicationTextSelector;
+use App\Modules\AIAgent\Support\AgentCatalogLocalizer;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\Appointments\Services\AppointmentService;
 use App\Modules\Appointments\Services\TestProgressionService;
@@ -143,7 +144,10 @@ class AgentAppointmentOptionService
             $time = (string) ($appointment->appointmentSlot?->start_time
                 ?? $appointment->scheduled_at?->format('H:i')
                 ?? '');
-            $testName = (string) ($appointment->testType?->name ?? '');
+            $testName = AgentCatalogLocalizer::testType(
+                (string) ($appointment->testType?->code ?? ''),
+                $appointment->testType?->name
+            );
             $label = trim(($testName !== '' ? $testName.' — ' : '')."{$date} {$time}");
 
             return [
