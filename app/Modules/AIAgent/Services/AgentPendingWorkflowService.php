@@ -17,6 +17,7 @@ use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentActionArgumentValidator;
 use App\Modules\AIAgent\Support\AgentApplicationStatusMap;
 use App\Modules\AIAgent\Support\AgentApplicationTextSelector;
+use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\AgentWorkflowIntentCatalog;
 use App\Modules\AIAgent\Support\AgentWorkflowPhraseMatcher;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
@@ -34,6 +35,7 @@ class AgentPendingWorkflowService
         private readonly AgentRequiredDocumentsHandler $requiredDocumentsHandler,
         private readonly AgentWorkflowOrchestrator $orchestrator,
         private readonly AIAgentActionService $actionService,
+        private readonly AgentAppointmentOptionService $appointmentOptions,
     ) {}
 
     public function getWorkflow(AIAgentSession $session): ?array
@@ -62,6 +64,7 @@ class AgentPendingWorkflowService
         $state = (string) ($workflow['state'] ?? '');
         if (in_array($state, [
             PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::AwaitingAppointmentChoice->value,
             PendingWorkflowState::AwaitingAppointmentSlotChoice->value,
             PendingWorkflowState::Failed->value,
             PendingWorkflowState::Resuming->value,
@@ -186,6 +189,135 @@ class AgentPendingWorkflowService
     }
 
     /**
+     * Start/continue appointment or slot selection when payload asks for those slots.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function enrichAppointmentContinuationIfNeeded(
+        User $citizen,
+        AIAgentSession $session,
+        array $payload,
+        string $originalMessage = '',
+    ): array {
+        $missing = $payload['missing_slots'] ?? [];
+        if (! is_array($missing)) {
+            return $payload;
+        }
+
+        $intent = (string) ($payload['intent'] ?? '');
+        if ($intent === '') {
+            return $payload;
+        }
+
+        $collected = is_array($payload['collected_slots'] ?? null) ? $payload['collected_slots'] : [];
+        $applicationId = (int) ($collected['application_id'] ?? 0);
+
+        if ($applicationId < 1) {
+            $applicationId = (int) (($session->context['last_application_id'] ?? 0));
+        }
+
+        if ($applicationId < 1) {
+            $candidates = $this->resolveCandidates($citizen, $intent);
+            if ($candidates->count() === 1) {
+                $applicationId = (int) $candidates->first()->id;
+            }
+        }
+
+        $ttl = (int) config('ai.agent.pending_workflow_ttl_seconds', 900);
+        $workflow = $this->getWorkflow($session);
+        if ($workflow === null || $this->isExpired($workflow)) {
+            $workflow = [
+                'workflow_id' => (string) Str::uuid(),
+                'state' => PendingWorkflowState::AwaitingAppointmentSlotChoice->value,
+                'intent' => $intent,
+                'original_message' => mb_substr($originalMessage, 0, 500),
+                'required_slots' => array_values(array_unique(array_merge(
+                    $applicationId > 0 ? [] : ['application_choice'],
+                    in_array('appointment_choice', $missing, true) ? ['appointment_choice'] : [],
+                    in_array('appointment_slot_choice', $missing, true) ? ['appointment_slot_choice'] : [],
+                ))),
+                'current_required_slot' => in_array('appointment_choice', $missing, true)
+                    ? 'appointment_choice'
+                    : 'appointment_slot_choice',
+                'required_slot' => in_array('appointment_choice', $missing, true)
+                    ? 'appointment_choice'
+                    : 'appointment_slot_choice',
+                'candidate_application_ids' => $applicationId > 0 ? [$applicationId] : [],
+                'collected_slots' => $applicationId > 0 ? ['application_id' => $applicationId] : [],
+                'metadata' => [
+                    'action_name' => AgentWorkflowIntentCatalog::actionName($intent),
+                ],
+                'created_at' => now()->toIso8601String(),
+                'expires_at' => now()->addSeconds($ttl)->toIso8601String(),
+            ];
+            $this->writeWorkflow($session, $workflow);
+            $session->current_intent = $intent;
+            $session->save();
+        } else {
+            $workflow['intent'] = $intent;
+            $existingCollected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
+            if ($applicationId > 0) {
+                $existingCollected['application_id'] = $applicationId;
+            }
+            $workflow['collected_slots'] = $existingCollected;
+            $this->writeWorkflow($session, $workflow);
+        }
+
+        if (in_array('appointment_choice', $missing, true)) {
+            $appointments = $this->appointmentOptions->bookedAppointmentsForCitizen(
+                $citizen,
+                $applicationId > 0 ? $applicationId : null
+            );
+
+            if ($appointments->isEmpty()) {
+                $this->clear($session);
+
+                return [
+                    'session_id' => $session->id,
+                    'message_type' => 'no_eligible_appointment',
+                    'reply' => AgentTranslator::message('ai_agent.appointments.choose.none'),
+                    'intent' => $intent,
+                    'confidence' => 1.0,
+                    'missing_slots' => [],
+                    'requires_confirmation' => false,
+                    'pending_action' => null,
+                    'ui_payload' => ['appointments' => []],
+                ];
+            }
+
+            if ($appointments->count() === 1) {
+                return $this->resumeWithAppointment($citizen, $session, (int) $appointments->first()->id);
+            }
+
+            $result = $this->appointmentSelectionRequiredResponse($citizen, $session, $workflow, $appointments);
+            unset($result['keep_pending_workflow']);
+
+            return $result;
+        }
+
+        if (in_array('appointment_slot_choice', $missing, true)) {
+            if ($applicationId < 1) {
+                return $payload;
+            }
+
+            $appointmentId = isset($collected['appointment_id']) ? (int) $collected['appointment_id'] : null;
+            $result = $this->appointmentSlotSelectionRequiredResponse(
+                $citizen,
+                $session,
+                $workflow,
+                $applicationId,
+                $appointmentId
+            );
+            unset($result['keep_pending_workflow']);
+
+            return $result;
+        }
+
+        return $payload;
+    }
+
+    /**
      * Handle chat while a pending workflow is active or expired.
      * Returns null only for clear topic-change (caller continues with new intent).
      *
@@ -222,14 +354,13 @@ class AgentPendingWorkflowService
             return $this->cancel($session, $workflow);
         }
 
-        // Slot-choice stage: do not fall through to Gemini/general_help.
+        // Slot-choice / appointment-choice stages: resolve deterministically.
         if ($state === PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
-            return $this->appointmentSlotSelectionRequiredResponse(
-                $citizen,
-                $session,
-                $workflow,
-                (int) ($workflow['collected_slots']['application_id'] ?? 0)
-            );
+            return $this->handleAwaitingSlotChoice($citizen, $session, $workflow, $message);
+        }
+
+        if ($state === PendingWorkflowState::AwaitingAppointmentChoice->value) {
+            return $this->handleAwaitingAppointmentChoice($citizen, $session, $workflow, $message);
         }
 
         if (! in_array($state, [
@@ -351,6 +482,39 @@ class AgentPendingWorkflowService
         }
 
         $workflow = $this->assertActiveForInteraction($session);
+        $state = (string) ($workflow['state'] ?? '');
+
+        if ($state === PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
+            $applicationId = (int) ($workflow['collected_slots']['application_id'] ?? 0);
+            $appointmentId = isset($workflow['collected_slots']['appointment_id'])
+                ? (int) $workflow['collected_slots']['appointment_id']
+                : null;
+            $result = $this->appointmentSlotSelectionRequiredResponse(
+                $citizen,
+                $session,
+                $workflow,
+                $applicationId,
+                $appointmentId
+            );
+            unset($result['keep_pending_workflow']);
+
+            return $result;
+        }
+
+        if ($state === PendingWorkflowState::AwaitingAppointmentChoice->value) {
+            $applicationId = isset($workflow['collected_slots']['application_id'])
+                ? (int) $workflow['collected_slots']['application_id']
+                : null;
+            $appointments = $this->appointmentOptions->bookedAppointmentsForCitizen($citizen, $applicationId);
+            $candidateIds = array_map('intval', $workflow['candidate_appointment_ids'] ?? []);
+            if ($candidateIds !== []) {
+                $appointments = $appointments->whereIn('id', $candidateIds)->values();
+            }
+            $result = $this->appointmentSelectionRequiredResponse($citizen, $session, $workflow, $appointments);
+            unset($result['keep_pending_workflow']);
+
+            return $result;
+        }
 
         $candidates = $this->loadCandidatesByIds($citizen, $workflow['candidate_application_ids'] ?? []);
         if ($candidates->isEmpty()) {
@@ -706,9 +870,48 @@ class AgentPendingWorkflowService
         $session->current_intent = $intent;
         $session->save();
 
-        // book_appointment: never confirm without appointment_slot_id — keep workflow open.
+        // book_appointment: collect slot before confirmation.
         if ($intent === 'book_appointment' || $actionName === 'book_appointment') {
-            return $this->appointmentSlotSelectionRequiredResponse($citizen, $session, $this->getWorkflow($session) ?? [], (int) $application->id);
+            return $this->appointmentSlotSelectionRequiredResponse(
+                $citizen,
+                $session,
+                $this->getWorkflow($session) ?? [],
+                (int) $application->id
+            );
+        }
+
+        // reschedule/cancel: select appointment (or proceed if only one).
+        if (in_array($intent, ['reschedule_appointment', 'cancel_appointment'], true)) {
+            $appointments = $this->appointmentOptions->bookedAppointmentsForCitizen($citizen, (int) $application->id);
+            if ($appointments->isEmpty()) {
+                $this->clear($session);
+
+                return [
+                    'session_id' => $session->id,
+                    'message_type' => 'no_eligible_appointment',
+                    'reply' => AgentTranslator::message('ai_agent.appointments.choose.none'),
+                    'intent' => $intent,
+                    'confidence' => 1.0,
+                    'missing_slots' => [],
+                    'requires_confirmation' => false,
+                    'pending_action' => null,
+                    'ui_payload' => ['appointments' => []],
+                ];
+            }
+
+            $workflow = $this->getWorkflow($session) ?? [];
+            $workflow['intent'] = $intent;
+            $collected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
+            $collected['application_id'] = (int) $application->id;
+            $workflow['collected_slots'] = $collected;
+
+            if ($appointments->count() === 1) {
+                $this->writeWorkflow($session, $workflow);
+
+                return $this->resumeWithAppointment($citizen, $session, (int) $appointments->first()->id);
+            }
+
+            return $this->appointmentSelectionRequiredResponse($citizen, $session, $workflow, $appointments);
         }
 
         if ($actionName !== null && AgentWorkflowIntentCatalog::isReadOnly($intent)) {
@@ -841,7 +1044,7 @@ class AgentPendingWorkflowService
     }
 
     /**
-     * Safe multi-slot guard: keep pending workflow and request appointment slot.
+     * Safe multi-slot continuation: keep pending workflow and request appointment slot with real options.
      *
      * @param  array<string, mixed>  $workflow
      * @return array<string, mixed>
@@ -851,16 +1054,146 @@ class AgentPendingWorkflowService
         AIAgentSession $session,
         array $workflow,
         int $applicationId,
+        ?int $appointmentId = null,
     ): array {
-        if ($applicationId <= 0) {
+        if ($applicationId <= 0 && $appointmentId === null) {
             throw new ApiException(
-                'تعذر تحديد الطلب لإكمال الحجز.',
+                AgentTranslator::message('ai_agent.appointments.slots.error_application'),
                 422,
                 [],
                 [],
                 'PENDING_WORKFLOW_STATE_INVALID'
             );
         }
+
+        $intent = (string) ($workflow['intent'] ?? 'book_appointment');
+        $application = null;
+        $slots = collect();
+
+        if ($appointmentId !== null && $appointmentId > 0) {
+            $appointment = \App\Models\TestAppointment::query()
+                ->where('citizen_id', $citizen->id)
+                ->whereKey($appointmentId)
+                ->with(['application', 'testType', 'appointmentSlot'])
+                ->first();
+
+            if ($appointment === null) {
+                $this->clear($session);
+                throw new ApiException(
+                    AgentTranslator::message('ai_agent.appointments.choose.not_found'),
+                    404,
+                    [],
+                    [],
+                    'APPOINTMENT_NOT_OWNED'
+                );
+            }
+
+            $applicationId = (int) $appointment->application_id;
+            $application = LicenseApplication::query()
+                ->where('citizen_id', $citizen->id)
+                ->whereKey($applicationId)
+                ->with(['licenseType', 'serviceType'])
+                ->first();
+            $slots = $this->appointmentOptions->availableSlotsForAppointment($citizen, $appointment);
+        } else {
+            $application = LicenseApplication::query()
+                ->where('citizen_id', $citizen->id)
+                ->whereKey($applicationId)
+                ->with(['licenseType', 'serviceType'])
+                ->first();
+
+            if ($application === null) {
+                $this->clear($session);
+                throw new ApiException(
+                    'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                    404,
+                    [],
+                    [],
+                    'APPLICATION_NOT_OWNED'
+                );
+            }
+
+            $slots = $this->appointmentOptions->availableSlotsForApplication($citizen, $application);
+        }
+
+        if ($application === null) {
+            $this->clear($session);
+            throw new ApiException(
+                'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                404,
+                [],
+                [],
+                'APPLICATION_NOT_OWNED'
+            );
+        }
+
+        $workflow['state'] = PendingWorkflowState::AwaitingAppointmentSlotChoice->value;
+        $workflow['required_slots'] = array_values(array_unique(array_merge(
+            array_values($workflow['required_slots'] ?? ['application_choice']),
+            ['appointment_slot_choice']
+        )));
+        $workflow['current_required_slot'] = 'appointment_slot_choice';
+        $workflow['required_slot'] = 'appointment_slot_choice';
+        $collected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
+        $collected['application_id'] = $applicationId;
+        if ($appointmentId !== null && $appointmentId > 0) {
+            $collected['appointment_id'] = $appointmentId;
+        }
+        $workflow['collected_slots'] = $collected;
+        $workflow['candidate_slot_ids'] = $slots->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+        $this->writeWorkflow($session, $workflow);
+
+        $session->current_intent = $intent;
+        $session->save();
+
+        $buttons = $this->appointmentOptions->buildSlotButtons(
+            $citizen,
+            $session,
+            $slots,
+            $applicationId,
+            (string) ($workflow['workflow_id'] ?? ''),
+            $intent
+        );
+
+        $reply = $this->appointmentOptions->slotPrompt($buttons === []);
+        $this->storeAssistantMessage($session, $reply, [
+            'message_type' => 'appointment_slot_selection_required',
+            'intent' => $intent,
+        ]);
+
+        return [
+            'session_id' => $session->id,
+            'message_type' => 'appointment_slot_selection_required',
+            'reply' => $reply,
+            'intent' => $intent,
+            'confidence' => 1.0,
+            'missing_slots' => ['appointment_slot_choice'],
+            'requires_confirmation' => false,
+            'pending_action' => null,
+            'application' => $this->applicationCard($application),
+            'ui_payload' => [
+                'selection_type' => 'appointment_slot',
+                'application' => $this->applicationCard($application),
+                'slots' => $buttons,
+            ],
+            'keep_pending_workflow' => true,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    private function handleAwaitingSlotChoice(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        string $message,
+    ): array {
+        $applicationId = (int) ($workflow['collected_slots']['application_id'] ?? 0);
+        $appointmentId = isset($workflow['collected_slots']['appointment_id'])
+            ? (int) $workflow['collected_slots']['appointment_id']
+            : null;
 
         $application = LicenseApplication::query()
             ->where('citizen_id', $citizen->id)
@@ -879,42 +1212,392 @@ class AgentPendingWorkflowService
             );
         }
 
-        $workflow['state'] = PendingWorkflowState::AwaitingAppointmentSlotChoice->value;
-        $workflow['required_slots'] = ['application_choice', 'appointment_slot_choice'];
-        $workflow['current_required_slot'] = 'appointment_slot_choice';
-        $workflow['required_slot'] = 'appointment_slot_choice';
-        $collected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
-        $collected['application_id'] = $applicationId;
-        $workflow['collected_slots'] = $collected;
-        $workflow['intent'] = 'book_appointment';
+        $slots = $appointmentId
+            ? $this->appointmentOptions->availableSlotsForAppointment(
+                $citizen,
+                \App\Models\TestAppointment::query()->whereKey($appointmentId)->where('citizen_id', $citizen->id)->firstOrFail()
+            )
+            : $this->appointmentOptions->availableSlotsForApplication($citizen, $application);
+
+        $candidateIds = array_map('intval', $workflow['candidate_slot_ids'] ?? $slots->pluck('id')->all());
+        $slots = $slots->whereIn('id', $candidateIds)->values();
+        if ($slots->isEmpty() && $candidateIds !== []) {
+            $slots = \App\Models\AppointmentSlot::query()->whereIn('id', $candidateIds)->get()->values();
+        }
+
+        $resolution = $this->appointmentOptions->resolveSlotFromText($message, $slots);
+        if (($resolution['status'] ?? '') === 'matched' && isset($resolution['slot_id'])) {
+            return $this->completeSlotSelection($citizen, $session, $workflow, (int) $resolution['slot_id']);
+        }
+
+        return $this->appointmentSlotSelectionRequiredResponse(
+            $citizen,
+            $session,
+            $workflow,
+            $applicationId,
+            $appointmentId
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    private function handleAwaitingAppointmentChoice(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        string $message,
+    ): array {
+        $intent = (string) ($workflow['intent'] ?? '');
+        $applicationId = isset($workflow['collected_slots']['application_id'])
+            ? (int) $workflow['collected_slots']['application_id']
+            : null;
+        $appointments = $this->appointmentOptions->bookedAppointmentsForCitizen($citizen, $applicationId);
+        $candidateIds = array_map('intval', $workflow['candidate_appointment_ids'] ?? []);
+        if ($candidateIds !== []) {
+            $appointments = $appointments->whereIn('id', $candidateIds)->values();
+        }
+
+        $resolution = $this->appointmentOptions->resolveAppointmentFromText($message, $appointments);
+        if (($resolution['status'] ?? '') === 'matched' && isset($resolution['appointment_id'])) {
+            return $this->resumeWithAppointment($citizen, $session, (int) $resolution['appointment_id']);
+        }
+
+        return $this->appointmentSelectionRequiredResponse($citizen, $session, $workflow, $appointments);
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @param  \Illuminate\Support\Collection<int, \App\Models\TestAppointment>  $appointments
+     * @return array<string, mixed>
+     */
+    private function appointmentSelectionRequiredResponse(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        $appointments,
+    ): array {
+        $intent = (string) ($workflow['intent'] ?? 'cancel_appointment');
+        $workflow['state'] = PendingWorkflowState::AwaitingAppointmentChoice->value;
+        $workflow['required_slots'] = array_values(array_unique(array_merge(
+            array_values($workflow['required_slots'] ?? []),
+            ['appointment_choice']
+        )));
+        $workflow['current_required_slot'] = 'appointment_choice';
+        $workflow['required_slot'] = 'appointment_choice';
+        $workflow['candidate_appointment_ids'] = $appointments->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
         $this->writeWorkflow($session, $workflow);
 
-        $session->current_intent = 'book_appointment';
-        $session->save();
+        $buttons = $this->appointmentOptions->buildAppointmentButtons(
+            $citizen,
+            $session,
+            $appointments,
+            (string) ($workflow['workflow_id'] ?? ''),
+            $intent
+        );
 
-        $reply = 'يرجى اختيار الموعد المناسب لإكمال الحجز.';
+        $reply = $this->appointmentOptions->appointmentPrompt($buttons === []);
         $this->storeAssistantMessage($session, $reply, [
-            'message_type' => 'appointment_slot_selection_required',
-            'intent' => 'book_appointment',
+            'message_type' => 'appointment_selection_required',
+            'intent' => $intent,
         ]);
 
         return [
             'session_id' => $session->id,
-            'message_type' => 'appointment_slot_selection_required',
+            'message_type' => 'appointment_selection_required',
             'reply' => $reply,
-            'intent' => 'book_appointment',
+            'intent' => $intent,
             'confidence' => 1.0,
-            'missing_slots' => ['appointment_slot_choice'],
+            'missing_slots' => ['appointment_choice'],
             'requires_confirmation' => false,
             'pending_action' => null,
-            'application' => $this->applicationCard($application),
             'ui_payload' => [
-                'selection_type' => 'appointment_slot',
-                'application' => $this->applicationCard($application),
-                'slots' => [],
+                'selection_type' => 'appointment',
+                'appointments' => $buttons,
             ],
             'keep_pending_workflow' => true,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function selectAppointmentSlotByToken(User $citizen, AIAgentSession $session, string $selectionToken): array
+    {
+        $workflow = $this->assertActiveForInteraction($session);
+        if (($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
+            throw new ApiException(
+                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_STATE_INVALID'
+            );
+        }
+
+        $verified = $this->selectionTokens->verify(
+            $selectionToken,
+            $citizen,
+            $session,
+            AgentSelectionTokenService::PURPOSE_APPOINTMENT_SLOT,
+            (string) ($workflow['workflow_id'] ?? ''),
+            (string) ($workflow['intent'] ?? '')
+        );
+
+        $slotId = (int) ($verified['slot_id'] ?? 0);
+        if ($slotId < 1) {
+            throw new ApiException(
+                'رمز اختيار الموعد غير صالح.',
+                422,
+                [],
+                [],
+                'APPLICATION_SELECTION_TOKEN_INVALID'
+            );
+        }
+
+        return $this->completeSlotSelection($citizen, $session, $workflow, $slotId);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function selectAppointmentByToken(User $citizen, AIAgentSession $session, string $selectionToken): array
+    {
+        $workflow = $this->assertActiveForInteraction($session);
+        if (($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingAppointmentChoice->value) {
+            throw new ApiException(
+                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_STATE_INVALID'
+            );
+        }
+
+        $verified = $this->selectionTokens->verify(
+            $selectionToken,
+            $citizen,
+            $session,
+            AgentSelectionTokenService::PURPOSE_APPOINTMENT,
+            (string) ($workflow['workflow_id'] ?? ''),
+            (string) ($workflow['intent'] ?? '')
+        );
+
+        $appointmentId = (int) ($verified['appointment_id'] ?? 0);
+        if ($appointmentId < 1) {
+            throw new ApiException(
+                'رمز اختيار الموعد غير صالح.',
+                422,
+                [],
+                [],
+                'APPLICATION_SELECTION_TOKEN_INVALID'
+            );
+        }
+
+        return $this->resumeWithAppointment($citizen, $session, $appointmentId);
+    }
+
+    /**
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    private function completeSlotSelection(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        int $slotId,
+    ): array {
+        $intent = (string) ($workflow['intent'] ?? 'book_appointment');
+        $applicationId = (int) ($workflow['collected_slots']['application_id'] ?? 0);
+        $appointmentId = isset($workflow['collected_slots']['appointment_id'])
+            ? (int) $workflow['collected_slots']['appointment_id']
+            : null;
+
+        $candidateSlotIds = array_map('intval', $workflow['candidate_slot_ids'] ?? []);
+        if ($candidateSlotIds !== [] && ! in_array($slotId, $candidateSlotIds, true)) {
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.appointments.slots.invalid_choice'),
+                422,
+                [],
+                [],
+                'APPOINTMENT_SLOT_SELECTION_INVALID'
+            );
+        }
+
+        $slot = \App\Models\AppointmentSlot::query()->whereKey($slotId)->first();
+        if ($slot === null || ! $slot->is_active || $slot->booked_count >= $slot->capacity) {
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.appointments.slots.stale'),
+                422,
+                [],
+                [],
+                'APPOINTMENT_SLOT_NO_LONGER_AVAILABLE'
+            );
+        }
+
+        if ($intent === 'reschedule_appointment') {
+            $arguments = [
+                'appointment_id' => $appointmentId,
+                'appointment_slot_id' => $slotId,
+                'application_id' => $applicationId,
+            ];
+            $actionName = 'reschedule_appointment';
+        } else {
+            $arguments = [
+                'application_id' => $applicationId,
+                'appointment_slot_id' => $slotId,
+            ];
+            $actionName = 'book_appointment';
+        }
+
+        AgentActionArgumentValidator::assertComplete($actionName, $arguments);
+
+        $reply = AgentTranslator::message('ai_agent.appointments.confirm.prompt');
+        $action = AIAgentAction::query()->create([
+            'session_id' => $session->id,
+            'user_id' => $citizen->id,
+            'action_name' => $actionName,
+            'arguments' => $arguments,
+            'status' => AgentActionStatus::AwaitingConfirmation,
+            'requires_confirmation' => true,
+            'confirmation_message' => $reply,
+        ]);
+
+        $this->clear($session);
+        $this->storeAssistantMessage($session, $reply, [
+            'message_type' => 'appointment_confirmation_required',
+            'action_id' => $action->id,
+        ]);
+
+        return [
+            'session_id' => $session->id,
+            'message_type' => 'appointment_confirmation_required',
+            'reply' => $reply,
+            'intent' => $intent,
+            'confidence' => 1.0,
+            'missing_slots' => [],
+            'requires_confirmation' => true,
+            'pending_action' => [
+                'id' => $action->id,
+                'name' => $action->action_name,
+                'arguments' => $action->arguments,
+                'requires_confirmation' => true,
+                'status' => $action->status->value,
+            ],
+            'ui_payload' => [
+                'requires_confirmation' => true,
+                'action_name' => $actionName,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function resumeWithAppointment(User $citizen, AIAgentSession $session, int $appointmentId): array
+    {
+        $workflow = $this->getWorkflow($session);
+        if ($workflow === null) {
+            throw new ApiException(
+                'لا توجد عملية اختيار موعد قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_NOT_FOUND'
+            );
+        }
+
+        $intent = (string) ($workflow['intent'] ?? '');
+        $appointment = \App\Models\TestAppointment::query()
+            ->where('citizen_id', $citizen->id)
+            ->whereKey($appointmentId)
+            ->with(['application', 'testType', 'appointmentSlot'])
+            ->first();
+
+        if ($appointment === null) {
+            $this->clear($session);
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.appointments.choose.not_found'),
+                404,
+                [],
+                [],
+                'APPOINTMENT_NOT_OWNED'
+            );
+        }
+
+        $candidateIds = array_map('intval', $workflow['candidate_appointment_ids'] ?? []);
+        if ($candidateIds !== [] && ! in_array($appointmentId, $candidateIds, true)) {
+            throw new ApiException(
+                AgentTranslator::message('ai_agent.appointments.choose.invalid'),
+                422,
+                [],
+                [],
+                'APPOINTMENT_SELECTION_INVALID'
+            );
+        }
+
+        $collected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
+        $collected['appointment_id'] = $appointmentId;
+        $collected['application_id'] = (int) $appointment->application_id;
+        $workflow['collected_slots'] = $collected;
+
+        if ($intent === 'cancel_appointment') {
+            $arguments = [
+                'appointment_id' => $appointmentId,
+                'application_id' => (int) $appointment->application_id,
+            ];
+            AgentActionArgumentValidator::assertComplete('cancel_appointment', $arguments);
+
+            $reply = AgentTranslator::message('ai_agent.appointments.cancel.confirm_prompt');
+            $action = AIAgentAction::query()->create([
+                'session_id' => $session->id,
+                'user_id' => $citizen->id,
+                'action_name' => 'cancel_appointment',
+                'arguments' => $arguments,
+                'status' => AgentActionStatus::AwaitingConfirmation,
+                'requires_confirmation' => true,
+                'confirmation_message' => $reply,
+            ]);
+
+            $this->clear($session);
+            $this->storeAssistantMessage($session, $reply, [
+                'message_type' => 'appointment_confirmation_required',
+                'action_id' => $action->id,
+            ]);
+
+            return [
+                'session_id' => $session->id,
+                'message_type' => 'appointment_confirmation_required',
+                'reply' => $reply,
+                'intent' => $intent,
+                'confidence' => 1.0,
+                'missing_slots' => [],
+                'requires_confirmation' => true,
+                'pending_action' => [
+                    'id' => $action->id,
+                    'name' => $action->action_name,
+                    'arguments' => $action->arguments,
+                    'requires_confirmation' => true,
+                    'status' => $action->status->value,
+                ],
+                'ui_payload' => [
+                    'requires_confirmation' => true,
+                    'action_name' => 'cancel_appointment',
+                ],
+            ];
+        }
+
+        // reschedule → ask for replacement slot
+        $this->writeWorkflow($session, $workflow);
+
+        return $this->appointmentSlotSelectionRequiredResponse(
+            $citizen,
+            $session,
+            $workflow,
+            (int) $appointment->application_id,
+            $appointmentId
+        );
     }
 
     /**

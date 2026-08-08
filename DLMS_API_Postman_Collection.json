@@ -3803,9 +3803,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -3831,8 +3840,14 @@
                             "request": {
                                 "method": "GET",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}",
                                 "description": "Optional inspect session; token already stored from step 01."
@@ -3858,9 +3873,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -3874,8 +3898,14 @@
                             "request": {
                                 "method": "GET",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}",
                                 "description": "Confirm pending_workflow cleared after successful selection."
@@ -3901,9 +3931,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -3918,9 +3957,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -3934,8 +3982,14 @@
                             "request": {
                                 "method": "GET",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}"
                             }
@@ -3960,9 +4014,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -3976,9 +4039,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4004,9 +4076,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4021,9 +4102,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4037,9 +4127,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4054,9 +4153,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4070,9 +4178,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4087,9 +4204,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4104,9 +4230,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4120,9 +4255,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4150,9 +4294,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4166,9 +4319,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4183,9 +4345,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4200,9 +4371,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4231,9 +4411,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4248,9 +4437,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4265,9 +4463,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4282,9 +4489,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4298,9 +4514,18 @@
                             "request": {
                                 "method": "POST",
                                 "header": [
-                                    { "key": "Accept", "value": "application/json" },
-                                    { "key": "Content-Type", "value": "application/json" },
-                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
                                 ],
                                 "body": {
                                     "mode": "raw",
@@ -4308,6 +4533,241 @@
                                 },
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
                                 "description": "After PENDING_WORKFLOW_RETRY_REQUIRED, retry same token; pending_workflow must still exist until success."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "14d. AI Agent — Appointment Multi-Slot Workflow (Phase 2.4)",
+                    "description": "Book / reschedule / cancel via /message + /interactions only. Prefer selection_token; never send trusted raw slot/appointment IDs.",
+                    "item": [
+                        {
+                            "name": "01. Book — Ask For Slots",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const data = pm.response.json()?.data ?? {};",
+                                            "if (data.session_id) pm.collectionVariables.set('ai_agent_session_id', data.session_id);",
+                                            "const slots = data?.ui_payload?.slots ?? [];",
+                                            "if (slots.length > 0) pm.collectionVariables.set('appointment_slot_selection_token', slots[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"احجزلي موعد\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message",
+                                "description": "Expect appointment_slot_selection_required (or application_selection_required first)."
+                            }
+                        },
+                        {
+                            "name": "02. Book — Select Slot Token",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const data = pm.response.json()?.data ?? {};",
+                                            "const action = data?.pending_action;",
+                                            "if (action?.id) pm.collectionVariables.set('ai_agent_action_id', action.id);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_appointment_slot\",\n  \"selection_token\": \"{{appointment_slot_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "Expect appointment_confirmation_required."
+                            }
+                        },
+                        {
+                            "name": "03. Book — Confirm",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/actions/{{ai_agent_action_id}}/confirm",
+                                "description": "Execute book once. Replay should fail without double-book."
+                            }
+                        },
+                        {
+                            "name": "04. Reschedule — Start",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const data = pm.response.json()?.data ?? {};",
+                                            "if (data.session_id) pm.collectionVariables.set('ai_agent_session_id', data.session_id);",
+                                            "const slots = data?.ui_payload?.slots ?? [];",
+                                            "const appointments = data?.ui_payload?.appointments ?? [];",
+                                            "if (slots.length > 0) pm.collectionVariables.set('appointment_slot_selection_token', slots[0].selection_token);",
+                                            "if (appointments.length > 0) pm.collectionVariables.set('appointment_selection_token', appointments[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"تغيير الموعد\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "05. Cancel — Start",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const data = pm.response.json()?.data ?? {};",
+                                            "const action = data?.pending_action;",
+                                            "if (action?.id) pm.collectionVariables.set('ai_agent_action_id', action.id);",
+                                            "const appointments = data?.ui_payload?.appointments ?? [];",
+                                            "if (appointments.length > 0) pm.collectionVariables.set('appointment_selection_token', appointments[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"الغي الموعد\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "06. Select Appointment (If Multiple)",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_appointment\",\n  \"selection_token\": \"{{appointment_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions"
+                            }
+                        },
+                        {
+                            "name": "07. Stale/Expired Slot — Expect 422 Code",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{citizen_token}}"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_appointment_slot\",\n  \"selection_token\": \"{{appointment_slot_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "After manually exhausting slot capacity or expiring pending_workflow.expires_at, expect APPOINTMENT_SLOT_NO_LONGER_AVAILABLE or PENDING_WORKFLOW_EXPIRED."
                             }
                         }
                     ]

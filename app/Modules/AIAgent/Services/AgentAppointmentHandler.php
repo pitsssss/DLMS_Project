@@ -57,26 +57,70 @@ class AgentAppointmentHandler
                 return $this->buildBookFirstSlotPayload($context, $application);
             }
 
-            if (AgentWorkflowPhraseMatcher::isVagueBookAppointmentQuery($context->message)) {
-                return $this->buildSlotsPayload($context, $application, AgentIntent::GetAppointmentSlots, [
-                    'reply' => 'يمكنني عرض المواعيد المتاحة لاختبارك الحالي. اختر الموعد المناسب من القائمة ثم أكّد الحجز.',
-                ]);
+            $blockReason = $this->policy->blockReason($application, 'book_appointment');
+            if ($blockReason !== null) {
+                return $this->responseBuilder->blockedPayload($intent, $context->language, $blockReason);
             }
+
+            // Book flow: real slot buttons via pending_workflow (text or token selection).
+            return $this->responseBuilder->basePayload($intent, $context->language, [
+                'reply' => AgentTranslator::message('ai_agent.appointments.slots.choose'),
+                'proposed_action' => null,
+                'missing_slots' => ['appointment_slot_choice'],
+                'requires_confirmation' => false,
+                'execute_immediately' => false,
+                'collected_slots' => ['application_id' => $application->id],
+            ]);
         }
 
-        $actionName = $intent === AgentIntent::BookAppointment ? 'book_appointment' : 'get_appointment_slots';
+        $actionName = 'get_appointment_slots';
         $blockReason = $this->policy->blockReason($application, $actionName);
         if ($blockReason !== null) {
             return $this->responseBuilder->blockedPayload($intent, $context->language, $blockReason);
         }
 
-        if ($intent === AgentIntent::BookAppointment) {
-            return $this->buildSlotsPayload($context, $application, AgentIntent::BookAppointment, [
-                'reply' => 'يمكنني مساعدتك في حجز موعد الاختبار. يرجى اختيار الموعد المناسب من المواعيد المتاحة.',
+        return $this->buildSlotsPayload($context, $application, AgentIntent::GetAppointmentSlots);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function buildRescheduleOrCancelPayload(AgentWorkflowContext $context, AgentIntent $intent): array
+    {
+        if ($context->hasNoApplications()) {
+            return $this->responseBuilder->basePayload($intent, $context->language, [
+                'reply' => $this->policy->noApplicationReply('appointment'),
+                'proposed_action' => null,
+                'execute_immediately' => false,
             ]);
         }
 
-        return $this->buildSlotsPayload($context, $application, AgentIntent::GetAppointmentSlots);
+        if ($context->hasMultipleApplications()) {
+            return $this->responseBuilder->basePayload($intent, $context->language, [
+                'reply' => $this->policy->multipleApplicationsReply('appointment', $context->applicationChoices, $context->language),
+                'proposed_action' => null,
+                'missing_slots' => ['application_choice'],
+                'execute_immediately' => false,
+            ]);
+        }
+
+        $application = $context->targetApplication;
+        if ($application === null) {
+            return $this->responseBuilder->basePayload($intent, $context->language, [
+                'reply' => $this->policy->noApplicationReply('appointment'),
+                'proposed_action' => null,
+                'execute_immediately' => false,
+            ]);
+        }
+
+        return $this->responseBuilder->basePayload($intent, $context->language, [
+            'reply' => AgentTranslator::message('ai_agent.appointments.choose.select'),
+            'proposed_action' => null,
+            'missing_slots' => ['appointment_choice'],
+            'requires_confirmation' => false,
+            'execute_immediately' => false,
+            'collected_slots' => ['application_id' => $application->id],
+        ]);
     }
 
     /**

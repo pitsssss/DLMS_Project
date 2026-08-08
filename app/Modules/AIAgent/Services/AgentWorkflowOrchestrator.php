@@ -69,6 +69,7 @@ class AgentWorkflowOrchestrator
             AgentIntent::GetAvailableTests => $this->availableTestsHandler->buildPayload($context),
             AgentIntent::GetCurrentAppointments => $this->appointmentHandler->buildCurrentAppointmentsPayload($context),
             AgentIntent::GetAppointmentSlots, AgentIntent::BookAppointment => $this->appointmentHandler->buildPayload($context, $intent),
+            AgentIntent::RescheduleAppointment, AgentIntent::CancelAppointment => $this->appointmentHandler->buildRescheduleOrCancelPayload($context, $intent),
             AgentIntent::GetTestResults => $this->testResultsPayload($context),
             AgentIntent::GetFines => $this->finesHandler->buildPayload($context),
             AgentIntent::GetLicenses => $this->licensesHandler->buildPayload($context),

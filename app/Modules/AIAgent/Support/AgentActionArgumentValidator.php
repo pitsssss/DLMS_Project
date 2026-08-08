@@ -13,6 +13,8 @@ class AgentActionArgumentValidator
     {
         return match ($actionName) {
             'book_appointment' => ['application_id', 'appointment_slot_id'],
+            'reschedule_appointment' => ['appointment_id', 'appointment_slot_id'],
+            'cancel_appointment' => ['appointment_id'],
             'start_payment' => ['application_id'],
             'submit_documents_for_review' => ['application_id'],
             'get_application_status' => ['application_id'],

@@ -100,7 +100,21 @@ class AgentWorkflowIntentCatalog
                 'requires_application' => true,
                 'read_only' => false,
                 'action_name' => 'book_appointment',
-                'suggested_followups' => ['get_appointment_slots'],
+                'suggested_followups' => ['get_appointment_slots', 'get_current_appointments'],
+            ],
+            AgentIntent::RescheduleAppointment->value => [
+                'intent' => AgentIntent::RescheduleAppointment->value,
+                'requires_application' => true,
+                'read_only' => false,
+                'action_name' => 'reschedule_appointment',
+                'suggested_followups' => ['get_current_appointments'],
+            ],
+            AgentIntent::CancelAppointment->value => [
+                'intent' => AgentIntent::CancelAppointment->value,
+                'requires_application' => true,
+                'read_only' => false,
+                'action_name' => 'cancel_appointment',
+                'suggested_followups' => ['get_current_appointments'],
             ],
             AgentIntent::GetTestResults->value => [
                 'intent' => AgentIntent::GetTestResults->value,

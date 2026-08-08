@@ -14,6 +14,10 @@ class AgentSelectionTokenService
 
     public const PURPOSE_PENDING_APPLICATION = 'pending_application_selection';
 
+    public const PURPOSE_APPOINTMENT_SLOT = 'select_appointment_slot';
+
+    public const PURPOSE_APPOINTMENT = 'select_appointment';
+
     public function issue(
         User $user,
         AIAgentSession $session,
@@ -23,6 +27,8 @@ class AgentSelectionTokenService
         int $ttlSeconds = 1800,
         ?string $workflowId = null,
         ?string $intent = null,
+        ?int $slotId = null,
+        ?int $appointmentId = null,
     ): string {
         $payload = [
             'uid' => $user->id,
@@ -34,6 +40,8 @@ class AgentSelectionTokenService
             'n' => bin2hex(random_bytes(8)),
             'wid' => $workflowId,
             'intent' => $intent,
+            'slot_id' => $slotId,
+            'apid' => $appointmentId,
         ];
 
         $encoded = $this->base64UrlEncode(json_encode($payload, JSON_THROW_ON_ERROR));
@@ -50,7 +58,9 @@ class AgentSelectionTokenService
      *   purpose: string,
      *   exp: int,
      *   wid: string|null,
-     *   intent: string|null
+     *   intent: string|null,
+     *   slot_id: int|null,
+     *   appointment_id: int|null
      * }
      */
     public function verify(
@@ -61,12 +71,15 @@ class AgentSelectionTokenService
         ?string $expectedWorkflowId = null,
         ?string $expectedIntent = null,
     ): array {
-        $pendingCodes = $expectedPurpose === self::PURPOSE_PENDING_APPLICATION
-            || $expectedWorkflowId !== null;
+        $structuredCodes = in_array($expectedPurpose, [
+            self::PURPOSE_PENDING_APPLICATION,
+            self::PURPOSE_APPOINTMENT_SLOT,
+            self::PURPOSE_APPOINTMENT,
+        ], true) || $expectedWorkflowId !== null;
 
-        $invalidCode = $pendingCodes ? 'APPLICATION_SELECTION_TOKEN_INVALID' : 'INVALID_SELECTION_TOKEN';
-        $expiredCode = $pendingCodes ? 'APPLICATION_SELECTION_TOKEN_EXPIRED' : 'SELECTION_TOKEN_EXPIRED';
-        $mismatchCode = $pendingCodes ? 'APPLICATION_SELECTION_TOKEN_MISMATCH' : 'INVALID_SELECTION_TOKEN';
+        $invalidCode = $structuredCodes ? 'APPLICATION_SELECTION_TOKEN_INVALID' : 'INVALID_SELECTION_TOKEN';
+        $expiredCode = $structuredCodes ? 'APPLICATION_SELECTION_TOKEN_EXPIRED' : 'SELECTION_TOKEN_EXPIRED';
+        $mismatchCode = $structuredCodes ? 'APPLICATION_SELECTION_TOKEN_MISMATCH' : 'INVALID_SELECTION_TOKEN';
 
         $parts = explode('.', $token, 2);
         if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
@@ -132,7 +145,10 @@ class AgentSelectionTokenService
         }
 
         $applicationId = (int) ($payload['aid'] ?? 0);
-        if ($applicationId <= 0) {
+        if ($applicationId <= 0 && ! in_array($expectedPurpose, [
+            self::PURPOSE_APPOINTMENT,
+            self::PURPOSE_APPOINTMENT_SLOT,
+        ], true)) {
             throw new ApiException('رمز الاختيار غير صالح.', 422, [], [], $invalidCode);
         }
 
@@ -145,6 +161,8 @@ class AgentSelectionTokenService
             'exp' => (int) $payload['exp'],
             'wid' => isset($payload['wid']) && is_string($payload['wid']) ? $payload['wid'] : null,
             'intent' => isset($payload['intent']) && is_string($payload['intent']) ? $payload['intent'] : null,
+            'slot_id' => isset($payload['slot_id']) && $payload['slot_id'] !== null ? (int) $payload['slot_id'] : null,
+            'appointment_id' => isset($payload['apid']) && $payload['apid'] !== null ? (int) $payload['apid'] : null,
         ];
     }
 

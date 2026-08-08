@@ -231,6 +231,39 @@ class AgentTranslator
             'ai_agent.appointments.current.no_application' => 'لا يوجد لديك طلب حالي لعرض موعده.',
             'ai_agent.appointments.current.choose_application' => 'لديك أكثر من طلب قيد المتابعة. من فضلك حدد رقم الطلب الذي تريد عرض موعده.'
                 .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
+            'ai_agent.appointments.slots.choose' => 'هذه المواعيد المتاحة. يرجى اختيار الموعد المناسب.',
+            'ai_agent.appointments.slots.none' => 'لا توجد مواعيد متاحة حالياً. يرجى المحاولة لاحقاً.',
+            'ai_agent.appointments.slots.stale' => 'الموعد المحدد لم يعد متاحاً. يرجى اختيار موعد آخر.',
+            'ai_agent.appointments.slots.invalid_choice' => 'الخيار المحدد غير ضمن المواعيد المعروضة.',
+            'ai_agent.appointments.slots.error_application' => 'تعذر تحديد الطلب لحجز الموعد.',
+            'ai_agent.appointments.choose.select' => 'يرجى اختيار الموعد المطلوب.',
+            'ai_agent.appointments.choose.none' => 'لا يوجد لديك موعد محجوز حالياً لهذه العملية.',
+            'ai_agent.appointments.choose.not_found' => 'الموعد غير موجود أو لا تملك صلاحية الوصول إليه.',
+            'ai_agent.appointments.choose.invalid' => 'الخيار المحدد غير ضمن المواعيد المعروضة.',
+            'ai_agent.appointments.confirm.prompt' => 'هل تؤكد المتابعة على الموعد المحدد؟',
+            'ai_agent.appointments.cancel.confirm_prompt' => 'هل تؤكد إلغاء هذا الموعد؟',
+            'ai_agent.appointments.book.vague' => 'يمكنني عرض المواعيد المتاحة. اختر الموعد المناسب ثم أكّد الحجز.',
+            'ai_agent.appointments.book.success' => 'تم حجز موعد لاختبار '
+                .($replace['test'] ?? 'الاختبار')
+                .' بتاريخ '
+                .($replace['date'] ?? '')
+                .' الساعة '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.book.success_short' => 'تم حجز موعد '
+                .($replace['test'] ?? 'الاختبار')
+                .' بنجاح.',
+            'ai_agent.appointments.reschedule.success' => 'تم تغيير موعد اختبار '
+                .($replace['test'] ?? 'الاختبار')
+                .' إلى '
+                .($replace['date'] ?? '')
+                .' الساعة '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.cancel.success' => 'تم إلغاء موعد '
+                .($replace['test'] ?? 'الاختبار')
+                .' بنجاح.',
+            'ai_agent.appointments.test_fallback' => 'الاختبار',
             default => 'عذراً، تعذر عرض الرسالة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.',
         };
     }
@@ -274,6 +307,39 @@ class AgentTranslator
             'ai_agent.appointments.current.no_application' => 'You have no current application to view its appointment.',
             'ai_agent.appointments.current.choose_application' => 'You have more than one application in progress. Please specify the application number for which you want to view the appointment.'
                 .(isset($replace['summary']) && $replace['summary'] !== '' ? "\n".$replace['summary'] : ''),
+            'ai_agent.appointments.slots.choose' => 'Here are the available slots. Please choose a suitable appointment.',
+            'ai_agent.appointments.slots.none' => 'There are no available slots right now. Please try again later.',
+            'ai_agent.appointments.slots.stale' => 'The selected slot is no longer available. Please choose another slot.',
+            'ai_agent.appointments.slots.invalid_choice' => 'The selected option is not among the offered slots.',
+            'ai_agent.appointments.slots.error_application' => 'Could not resolve the application for booking.',
+            'ai_agent.appointments.choose.select' => 'Please choose the appointment you want.',
+            'ai_agent.appointments.choose.none' => 'You have no booked appointment for this operation right now.',
+            'ai_agent.appointments.choose.not_found' => 'The appointment was not found or you do not have access to it.',
+            'ai_agent.appointments.choose.invalid' => 'The selected option is not among the offered appointments.',
+            'ai_agent.appointments.confirm.prompt' => 'Do you confirm proceeding with the selected appointment?',
+            'ai_agent.appointments.cancel.confirm_prompt' => 'Do you confirm cancelling this appointment?',
+            'ai_agent.appointments.book.vague' => 'I can show the available slots. Choose a suitable slot then confirm the booking.',
+            'ai_agent.appointments.book.success' => 'An appointment has been booked for '
+                .($replace['test'] ?? 'the test')
+                .' on '
+                .($replace['date'] ?? '')
+                .' at '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.book.success_short' => 'The appointment for '
+                .($replace['test'] ?? 'the test')
+                .' was booked successfully.',
+            'ai_agent.appointments.reschedule.success' => 'The appointment for '
+                .($replace['test'] ?? 'the test')
+                .' was rescheduled to '
+                .($replace['date'] ?? '')
+                .' at '
+                .($replace['time'] ?? '')
+                .'.',
+            'ai_agent.appointments.cancel.success' => 'The appointment for '
+                .($replace['test'] ?? 'the test')
+                .' was cancelled successfully.',
+            'ai_agent.appointments.test_fallback' => 'the test',
             default => 'Sorry, unable to display the message at the moment. Please try again later or contact support.',
         };
     }

@@ -173,6 +173,17 @@ class AIAgentService
                 return $this->pendingWorkflow->enrichPayloadIfNeeded($user, $session, $payload, $userMessage);
             }
 
+            // Appointment / slot selection continuation (single-app book/reschedule/cancel).
+            if (in_array('appointment_slot_choice', $payload['missing_slots'] ?? [], true)
+                || in_array('appointment_choice', $payload['missing_slots'] ?? [], true)) {
+                return $this->pendingWorkflow->enrichAppointmentContinuationIfNeeded(
+                    $user,
+                    $session,
+                    $payload,
+                    $userMessage
+                );
+            }
+
             $state = $this->sessionContext->finalizeState($state, $payload, $userMessage);
 
             $session->current_intent = $payload['intent'];

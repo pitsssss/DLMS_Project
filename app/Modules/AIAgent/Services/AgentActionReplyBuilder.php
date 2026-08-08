@@ -42,6 +42,8 @@ class AgentActionReplyBuilder
             'get_appointment_slots' => $this->appointmentHandler->replyFromSlotsResult($result),
             'get_current_appointments' => $this->appointmentHandler->replyFromCurrentAppointmentsResult($result),
             'book_appointment' => $this->bookAppointmentReply($result),
+            'reschedule_appointment' => $this->rescheduleAppointmentReply($result),
+            'cancel_appointment' => $this->cancelAppointmentReply($result),
             'get_test_results' => $this->testResultsReply($result),
             'submit_documents_for_review' => $this->submitDocumentsReply($result),
             default => AgentTranslator::getLocale() === 'en' 
@@ -188,19 +190,49 @@ class AgentActionReplyBuilder
      */
     private function bookAppointmentReply(array $result): string
     {
-        $testName = trim((string) ($result['test_type']['name'] ?? 'الاختبار'));
+        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
         $date = trim((string) ($result['date'] ?? ''));
         $time = trim((string) ($result['start_time'] ?? ''));
 
         if ($date !== '' && $time !== '') {
-            return AgentTranslator::message('ai_agent.appointments.current.single', [
+            return AgentTranslator::message('ai_agent.appointments.book.success', [
                 'test' => $testName,
                 'date' => $date,
                 'time' => $time,
             ]);
         }
 
-        return 'تم حجز موعد '.$testName.' بنجاح.';
+        return AgentTranslator::message('ai_agent.appointments.book.success_short', [
+            'test' => $testName,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function rescheduleAppointmentReply(array $result): string
+    {
+        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+        $date = trim((string) ($result['date'] ?? ''));
+        $time = trim((string) ($result['start_time'] ?? ''));
+
+        return AgentTranslator::message('ai_agent.appointments.reschedule.success', [
+            'test' => $testName,
+            'date' => $date,
+            'time' => $time,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function cancelAppointmentReply(array $result): string
+    {
+        $testName = trim((string) ($result['test_type']['name'] ?? AgentTranslator::message('ai_agent.appointments.test_fallback')));
+
+        return AgentTranslator::message('ai_agent.appointments.cancel.success', [
+            'test' => $testName,
+        ]);
     }
 
     /**

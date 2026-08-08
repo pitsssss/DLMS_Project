@@ -20,7 +20,13 @@ class AgentApplicationActionPolicy
         $actionName = AgentApplicationStatusMap::normalizeAction($actionName);
 
         if (! ServiceWorkflow::requiresTests($application->serviceType?->code)
-            && in_array($actionName, ['get_available_tests', 'get_appointment_slots', 'book_appointment'], true)) {
+            && in_array($actionName, [
+                'get_available_tests',
+                'get_appointment_slots',
+                'book_appointment',
+                'reschedule_appointment',
+                'cancel_appointment',
+            ], true)) {
             return 'هذه الخدمة لا تتطلب حجز اختبارات. الخطوة الحالية هي متابعة الوثائق والدفع حتى إصدار الرخصة.';
         }
 

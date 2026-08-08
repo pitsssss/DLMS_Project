@@ -48,6 +48,14 @@ class AgentWorkflowPhraseMatcher
             return AgentIntent::GetCurrentAppointments;
         }
 
+        if (self::isCancelAppointmentQuery($message)) {
+            return AgentIntent::CancelAppointment;
+        }
+
+        if (self::isRescheduleAppointmentQuery($message)) {
+            return AgentIntent::RescheduleAppointment;
+        }
+
         if (self::isAvailableTestsQuery($message)) {
             return AgentIntent::GetAvailableTests;
         }
@@ -630,12 +638,49 @@ class AgentWorkflowPhraseMatcher
             || self::isAppointmentSlotsQuery($message)
             || self::isBookAppointmentQuery($message)
             || self::isVagueBookAppointmentQuery($message)
-            || self::isBookFirstAvailableSlotQuery($message);
+            || self::isBookFirstAvailableSlotQuery($message)
+            || self::isCancelAppointmentQuery($message)
+            || self::isRescheduleAppointmentQuery($message);
+    }
+
+    public static function isCancelAppointmentQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'الغاء الموعد', 'إلغاء الموعد', 'الغي الموعد', 'ألغي الموعد',
+            'بدي الغي الموعد', 'cancel appointment', 'cancel my appointment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isRescheduleAppointmentQuery(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            'تأجيل الموعد', 'تغيير الموعد', 'اعادة جدولة', 'إعادة جدولة',
+            'بدي اغير الموعد', 'بدي أغير الموعد', 'reschedule', 'reschedule appointment',
+            'change appointment',
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function isBookAppointmentQuery(string $message): bool
     {
-        if (self::isCurrentAppointmentsQuery($message)) {
+        if (self::isCurrentAppointmentsQuery($message)
+            || self::isCancelAppointmentQuery($message)
+            || self::isRescheduleAppointmentQuery($message)) {
             return false;
         }
 

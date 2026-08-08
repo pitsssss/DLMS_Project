@@ -146,9 +146,10 @@ class AIAgentWorkflowIntelligenceTest extends TestCase
             'message' => 'احجزلي موعد',
         ])->assertOk();
 
-        $this->assertEquals('get_appointment_slots', $response->json('data.intent'));
+        $this->assertEquals('book_appointment', $response->json('data.intent'));
         $this->assertStringContainsString('لا يمكنك', (string) $response->json('data.reply'));
         $this->assertNull($response->json('data.executed_action'));
+        $this->assertNull($response->json('data.pending_action'));
     }
 
     public function test_admin_action_denied_for_document_approval_phrase(): void
@@ -277,10 +278,14 @@ class AIAgentWorkflowIntelligenceTest extends TestCase
             'message' => 'احجزلي موعد',
         ])->assertOk();
 
-        $this->assertEquals('get_appointment_slots', $response->json('data.intent'));
+        $this->assertEquals('book_appointment', $response->json('data.intent'));
+        $this->assertSame('appointment_slot_selection_required', $response->json('data.message_type'));
+        $this->assertContains('appointment_slot_choice', $response->json('data.missing_slots'));
         $this->assertNull($response->json('data.pending_action'));
-        $this->assertEquals('get_appointment_slots', $response->json('data.executed_action.name'));
-        $this->assertNotEquals('book_appointment', $response->json('data.executed_action.name'));
+        $this->assertNull($response->json('data.executed_action'));
+        $this->assertIsArray($response->json('data.ui_payload.slots'));
+        $this->assertNotEmpty($response->json('data.ui_payload.slots'));
+        $this->assertNotEmpty($response->json('data.ui_payload.slots.0.selection_token'));
     }
 
     public function test_book_first_available_slot_creates_pending_confirmation_action(): void

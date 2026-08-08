@@ -113,6 +113,26 @@ class AIAgentController extends Controller
             return $this->successResponse($data, 'messages.ai_agent.response_generated');
         }
 
+        if ($action === 'select_appointment_slot') {
+            $data = $pendingWorkflow->selectAppointmentSlotByToken(
+                $request->user(),
+                $sessionModel,
+                (string) $token
+            );
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
+        if ($action === 'select_appointment') {
+            $data = $pendingWorkflow->selectAppointmentByToken(
+                $request->user(),
+                $sessionModel,
+                (string) $token
+            );
+
+            return $this->successResponse($data, 'messages.ai_agent.response_generated');
+        }
+
         $data = $documentFlow->handleInteraction(
             $request->user(),
             $sessionModel,

@@ -26,6 +26,8 @@ class HandleAgentInteractionRequest extends FormRequest
                     'choose_manual_document_upload',
                     'select_application',
                     'select_required_document',
+                    'select_appointment_slot',
+                    'select_appointment',
                     'cancel_document_upload',
                     'show_required_documents',
                     'cancel_pending_workflow',
@@ -38,7 +40,12 @@ class HandleAgentInteractionRequest extends FormRequest
                 'max:2048',
                 Rule::requiredIf(fn (): bool => in_array(
                     $this->input('action'),
-                    ['select_application', 'select_required_document'],
+                    [
+                        'select_application',
+                        'select_required_document',
+                        'select_appointment_slot',
+                        'select_appointment',
+                    ],
                     true
                 )),
             ],

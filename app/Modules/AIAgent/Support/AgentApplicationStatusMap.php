@@ -50,28 +50,28 @@ class AgentApplicationStatusMap
                 'label_ar' => 'تم الدفع',
                 'next_step_ar' => 'حجز موعد الاختبار الأول المتاح',
                 'allowed_read_actions' => ['get_application_status', 'get_application_next_step', 'get_available_tests', 'get_appointment_slots'],
-                'allowed_mutating_actions' => ['book_appointment'],
+                'allowed_mutating_actions' => ['book_appointment', 'reschedule_appointment', 'cancel_appointment'],
                 'blocked_actions' => ['start_payment'],
             ],
             ApplicationStatus::AppointmentPending => [
                 'label_ar' => 'بانتظار حجز موعد',
                 'next_step_ar' => 'حجز موعد الاختبار المتاح',
                 'allowed_read_actions' => ['get_application_status', 'get_application_next_step', 'get_available_tests', 'get_appointment_slots'],
-                'allowed_mutating_actions' => ['book_appointment'],
+                'allowed_mutating_actions' => ['book_appointment', 'reschedule_appointment', 'cancel_appointment'],
                 'blocked_actions' => ['start_payment'],
             ],
             ApplicationStatus::InTesting => [
                 'label_ar' => 'قيد الاختبارات',
                 'next_step_ar' => 'متابعة الاختبار الحالي أو انتظار تسجيل النتيجة',
                 'allowed_read_actions' => ['get_application_status', 'get_application_next_step', 'get_available_tests', 'get_appointment_slots', 'get_test_results'],
-                'allowed_mutating_actions' => ['book_appointment'],
+                'allowed_mutating_actions' => ['book_appointment', 'reschedule_appointment', 'cancel_appointment'],
                 'blocked_actions' => ['start_payment'],
             ],
             ApplicationStatus::WaitingRetest => [
                 'label_ar' => 'بانتظار إعادة الاختبار',
                 'next_step_ar' => 'حجز موعد إعادة الاختبار لنفس الاختبار غير المجتاز',
                 'allowed_read_actions' => ['get_application_status', 'get_application_next_step', 'get_available_tests', 'get_appointment_slots'],
-                'allowed_mutating_actions' => ['book_appointment'],
+                'allowed_mutating_actions' => ['book_appointment', 'reschedule_appointment', 'cancel_appointment'],
                 'blocked_actions' => ['start_payment'],
             ],
             ApplicationStatus::Approved => [
@@ -117,7 +117,8 @@ class AgentApplicationStatusMap
         $definition = self::definition($status);
         $actionName = self::normalizeAction($actionName);
 
-        if ($actionName === 'get_current_appointments') {
+        if ($actionName === 'get_current_appointments'
+            || in_array($actionName, ['reschedule_appointment', 'cancel_appointment'], true)) {
             return ! in_array($actionName, $definition['blocked_actions'], true);
         }
 

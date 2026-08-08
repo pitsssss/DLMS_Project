@@ -48,6 +48,8 @@ class AgentActionExecutor
         'get_appointment_slots',
         'get_current_appointments',
         'book_appointment',
+        'reschedule_appointment',
+        'cancel_appointment',
         'get_test_results',
         'start_payment',
         'submit_documents_for_review',
@@ -99,6 +101,8 @@ class AgentActionExecutor
             'get_appointment_slots' => $this->executeGetAppointmentSlots($user, $arguments),
             'get_current_appointments' => $this->executeGetCurrentAppointments($user, $arguments),
             'book_appointment' => $this->executeBookAppointment($user, $arguments),
+            'reschedule_appointment' => $this->executeRescheduleAppointment($user, $arguments),
+            'cancel_appointment' => $this->executeCancelAppointment($user, $arguments),
             'get_test_results' => $this->executeGetTestResults($user, $arguments),
             'submit_documents_for_review' => $this->executeSubmitDocumentsForReview($user, $arguments),
             default => throw new ApiException('Unsupported AI agent action.', 422),
@@ -359,6 +363,55 @@ class AgentActionExecutor
      * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
+    private function executeRescheduleAppointment(User $user, array $arguments): array
+    {
+        $appointmentId = $arguments['appointment_id'] ?? null;
+        $slotId = $arguments['appointment_slot_id'] ?? null;
+
+        if (! is_numeric($appointmentId) || (int) $appointmentId < 1) {
+            throw new ApiException('Appointment ID is required for this action.', 422, [
+                'appointment_id' => ['The appointment_id argument is required.'],
+            ]);
+        }
+
+        if (! is_numeric($slotId) || (int) $slotId < 1) {
+            throw new ApiException('Appointment slot ID is required for this action.', 422, [
+                'appointment_slot_id' => ['The appointment_slot_id argument is required.'],
+            ]);
+        }
+
+        $appointment = $this->appointments->reschedule($user, (int) $appointmentId, (int) $slotId)
+            ->loadMissing(['application', 'testType', 'appointmentSlot.appointmentCenter']);
+
+        return $this->formatAppointmentForAgent($appointment, includeApplicationMeta: true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function executeCancelAppointment(User $user, array $arguments): array
+    {
+        $appointmentId = $arguments['appointment_id'] ?? null;
+        if (! is_numeric($appointmentId) || (int) $appointmentId < 1) {
+            throw new ApiException('Appointment ID is required for this action.', 422, [
+                'appointment_id' => ['The appointment_id argument is required.'],
+            ]);
+        }
+
+        $appointment = $this->appointments->cancel(
+            $user,
+            (int) $appointmentId,
+            isset($arguments['reason']) ? (string) $arguments['reason'] : null
+        )->loadMissing(['application', 'testType', 'appointmentSlot.appointmentCenter']);
+
+        return $this->formatAppointmentForAgent($appointment, includeApplicationMeta: true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
     private function executeGetTestResults(User $user, array $arguments): array
     {
         $applicationId = $this->requireApplicationId($arguments);
@@ -416,6 +469,7 @@ class AgentActionExecutor
             'center' => $slot !== null
                 ? AppointmentSlotResource::resolveCenterPayload($slot)
                 : null,
+            'appointment_slot_id' => $appointment->appointment_slot_id,
         ];
 
         if ($includeApplicationMeta) {

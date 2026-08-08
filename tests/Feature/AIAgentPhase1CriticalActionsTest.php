@@ -504,10 +504,12 @@ class AIAgentPhase1CriticalActionsTest extends TestCase
         }
     }
 
-    public function test_reschedule_and_cancel_are_not_allowed_proposed_actions_in_phase1(): void
+    public function test_reschedule_and_cancel_are_allowed_proposed_actions(): void
     {
-        $this->assertFalse(AgentSafetyRules::isAllowedProposedAction('reschedule_appointment'));
-        $this->assertFalse(AgentSafetyRules::isAllowedProposedAction('cancel_appointment'));
+        $this->assertTrue(AgentSafetyRules::isAllowedProposedAction('reschedule_appointment'));
+        $this->assertTrue(AgentSafetyRules::isAllowedProposedAction('cancel_appointment'));
+        $this->assertTrue(AgentSafetyRules::isPhase9bExecutable('reschedule_appointment'));
+        $this->assertTrue(AgentSafetyRules::isPhase9bExecutable('cancel_appointment'));
     }
 }
 
