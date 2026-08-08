@@ -2,6 +2,7 @@
 
 namespace App\Modules\Content\Resources;
 
+use App\Support\CitizenContentLocalizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,11 +14,13 @@ class FaqResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $localized = CitizenContentLocalizer::faq($this->resource);
+
         return [
             'id' => $this->id,
-            'category' => $this->category,
-            'question' => $this->question,
-            'answer' => $this->answer,
+            'category' => $localized['category'],
+            'question' => $localized['question'],
+            'answer' => $localized['answer'],
         ];
     }
 }

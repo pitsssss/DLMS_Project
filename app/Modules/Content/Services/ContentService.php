@@ -3,6 +3,7 @@
 namespace App\Modules\Content\Services;
 
 use App\Models\Faq;
+use App\Support\CitizenContentLocalizer;
 use Illuminate\Database\Eloquent\Collection;
 
 class ContentService
@@ -24,7 +25,9 @@ class ContentService
      */
     public function privacyPolicy(): array
     {
-        return config('content.privacy_policy', []);
+        return CitizenContentLocalizer::privacyPolicy(
+            config('content.privacy_policy', [])
+        );
     }
 
     /**
@@ -32,6 +35,8 @@ class ContentService
      */
     public function contactInfo(): array
     {
-        return config('content.contact_info', []);
+        return CitizenContentLocalizer::contactInfo(
+            config('content.contact_info', [])
+        );
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Modules\Settings\Resources;
 
 use App\Enums\ProfileStatus;
+use App\Support\CitizenContentLocalizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,11 @@ class SettingsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $themes = config('content.themes', []);
+        if (! is_array($themes)) {
+            $themes = [];
+        }
+
         return [
             'account' => [
                 'id' => $this->id,
@@ -31,7 +37,7 @@ class SettingsResource extends JsonResource
                 'theme' => $this->theme ?? config('content.defaults.theme', 'system'),
             ],
             'available_languages' => config('content.languages', []),
-            'available_themes' => config('content.themes', []),
+            'available_themes' => CitizenContentLocalizer::themes($themes),
         ];
     }
 }

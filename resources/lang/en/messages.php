@@ -508,6 +508,11 @@ return [
         'preferences_updated' => 'Preferences updated successfully.',
         'password_changed' => 'Password changed successfully.',
         'current_password_invalid' => 'Current password is incorrect.',
+        'themes' => [
+            'light' => 'Light',
+            'dark' => 'Dark',
+            'system' => 'System',
+        ],
     ],
 
     'notifications' => [
@@ -563,6 +568,131 @@ return [
         'faqs_fetched' => 'FAQs retrieved successfully.',
         'privacy_policy_fetched' => 'Privacy policy retrieved successfully.',
         'contact_info_fetched' => 'Contact information retrieved successfully.',
+        'faq' => [
+            'categories' => [
+                'account_profile' => 'Account and profile',
+                'applications_services' => 'Applications and services',
+                'documents_payment' => 'Documents and payment',
+                'appointments_tests' => 'Appointments and tests',
+                'licenses_fines' => 'Licenses and fines',
+            ],
+            'items' => [
+                'profile_why_complete' => [
+                    'question' => 'Why must I complete my profile?',
+                    'answer' => 'You must complete and verify your profile to confirm citizen details before using driving license services.',
+                ],
+                'profile_pending_meaning' => [
+                    'question' => 'What does it mean that my profile is under review?',
+                    'answer' => 'It means the details you submitted were sent to the responsible officer for review and approval before you can use services.',
+                ],
+                'profile_rejected_what_to_do' => [
+                    'question' => 'What should I do if my profile details were rejected?',
+                    'answer' => 'You can update the required details and resubmit your profile for review, paying attention to the rejection reason shown in the app.',
+                ],
+                'how_new_license' => [
+                    'question' => 'How do I apply for a new license?',
+                    'answer' => 'After signing in and getting your profile approved, choose the new license service, select the license type, upload the required documents, and follow the application stages through issuance.',
+                ],
+                'how_renew' => [
+                    'question' => 'How do I renew my license?',
+                    'answer' => 'Choose the license renewal service, select the license you want to renew, upload the required documents, and after approval pay the fees to complete renewal.',
+                ],
+                'how_lost_or_damaged' => [
+                    'question' => 'How do I request a lost or damaged replacement?',
+                    'answer' => 'Choose the lost or damaged replacement service, select the related license, upload the required documents, and follow the application until the replacement license is issued.',
+                ],
+                'how_know_required_docs' => [
+                    'question' => 'How do I know which documents are required?',
+                    'answer' => 'You can view required documents from the application page, where each document shows whether it is not uploaded, under review, approved, or rejected.',
+                ],
+                'what_if_document_rejected' => [
+                    'question' => 'What happens if a document is rejected?',
+                    'answer' => 'The rejection reason will be shown, and you can upload a correct or clearer copy and resubmit it for review.',
+                ],
+                'how_pay_fees' => [
+                    'question' => 'How are fees paid?',
+                    'answer' => 'After documents are approved, the application moves to the payment stage, and you can pay the fees in the app through the available payment method.',
+                ],
+                'when_book_test' => [
+                    'question' => 'When can I book a test appointment?',
+                    'answer' => 'You can book a test appointment after documents are approved and payment is completed, for new license services only.',
+                ],
+                'theory_before_vision' => [
+                    'question' => 'Can I book the theory test before the vision test?',
+                    'answer' => 'No. You must pass the vision test first, then the theory test, then the practical test according to the approved test sequence.',
+                ],
+                'what_if_test_failed' => [
+                    'question' => 'What happens if I fail one of the tests?',
+                    'answer' => 'You can book another appointment for the same failed test according to the allowed number of attempts and system rules.',
+                ],
+                'where_view_licenses' => [
+                    'question' => 'Where can I view my licenses?',
+                    'answer' => 'You can view all your driving licenses from the My Licenses section in the app, including status and issue/expiry dates.',
+                ],
+                'where_view_fines' => [
+                    'question' => 'Where can I view violations or fines?',
+                    'answer' => 'You can view violations and fines from the Fines section in the app, including their status and amount.',
+                ],
+                'can_use_ai_agent' => [
+                    'question' => 'Can I use the AI assistant to follow up on an application?',
+                    'answer' => 'Yes. You can ask the AI assistant about application status, next step, required documents, appointments, results, licenses, and fines.',
+                ],
+            ],
+        ],
+        'privacy' => [
+            'title' => 'Privacy Policy',
+            'sections' => [
+                'intro' => [
+                    'heading' => 'Introduction',
+                    'content' => 'At SYRTAK, we are committed to protecting users’ privacy and personal data while using digital driving license management services.',
+                ],
+                'data_collected' => [
+                    'heading' => 'Data we collect',
+                    'content' => 'We may collect data such as name, email, phone number, national ID, profile details, uploaded documents, license information, applications, appointments, test results, payments, and fines.',
+                ],
+                'data_usage' => [
+                    'heading' => 'Why we use the data',
+                    'content' => 'Data is used to verify citizen identity, process license applications, review documents, manage payments, book appointments, issue licenses, send notifications, and improve service quality.',
+                ],
+                'data_sharing' => [
+                    'heading' => 'Data sharing',
+                    'content' => 'User data is not shared with unauthorized parties. Some data may be shared with competent authorities or service providers linked to the system, such as payment gateways or notification services, when needed to deliver the service.',
+                ],
+                'data_protection' => [
+                    'heading' => 'Data protection',
+                    'content' => 'We use appropriate technical and organizational measures to protect data from unauthorized access, alteration, or loss, and to restrict access according to permissions and roles.',
+                ],
+                'uploaded_documents' => [
+                    'heading' => 'Uploaded documents',
+                    'content' => 'Uploaded documents are used only to review applications and verify their validity, and are not used for any purpose outside driving license services.',
+                ],
+                'payments' => [
+                    'heading' => 'Payments',
+                    'content' => 'The system does not store sensitive bank card details. Payments are processed through a secure payment provider, and only essential payment information needed to track transaction status is retained.',
+                ],
+                'user_rights' => [
+                    'heading' => 'User rights',
+                    'content' => 'Users can view their data and update some information in the app, follow application status, and receive clarification when a document or application is rejected.',
+                ],
+                'policy_updates' => [
+                    'heading' => 'Privacy policy updates',
+                    'content' => 'The privacy policy may be updated from time to time as services develop or regulatory requirements change, and the latest update date will be shown on this page.',
+                ],
+                'contact' => [
+                    'heading' => 'Contact',
+                    'content' => 'If you have any question about privacy or data use, you can contact us through the Contact Us section in the app.',
+                ],
+            ],
+        ],
+        'contact' => [
+            'title' => 'Contact us',
+            'description' => 'We welcome your questions and feedback about digital driving license services.',
+            'working_hours' => 'Sunday – Thursday, 9:00 AM to 3:00 PM',
+            'channels' => [
+                'phone' => 'Phone',
+                'email' => 'Email',
+            ],
+        ],
     ],
 
     'contact' => [
