@@ -287,7 +287,7 @@ class LicenseService
             'license_id' => $license->id,
             'license_number' => $license->license_number,
             'status' => $license->status->value,
-            'message' => Msg::get('licenses.unblock_registered'),
+            'message' => \App\Support\CitizenMessageTranslator::get('messages.licenses.unblock_registered'),
         ];
     }
 

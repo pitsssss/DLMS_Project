@@ -196,13 +196,22 @@ class RequestLocaleTest extends TestCase
         $this->assertFalse($response->headers->has('Content-Language'));
     }
 
-    public function test_arabic_validation_remains_compatible_for_guest_login(): void
+    public function test_english_validation_uses_en_pack_for_guest_login(): void
     {
         $this->withHeader('Accept-Language', 'en')
             ->postJson('/api/auth/login', [])
             ->assertStatus(422)
-            ->assertJsonPath('message', __('validation.failed'))
-            ->assertHeader('Content-Language', 'en');
+            ->assertHeader('Content-Language', 'en')
+            ->assertJsonPath('message', 'The submitted data failed validation.');
+    }
+
+    public function test_arabic_validation_remains_compatible_for_guest_login(): void
+    {
+        $this->withHeader('Accept-Language', 'ar')
+            ->postJson('/api/auth/login', [])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'فشل التحقق من البيانات المدخلة.')
+            ->assertHeader('Content-Language', 'ar');
     }
 
     /**

@@ -59,7 +59,8 @@ Route::middleware('locale')->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated citizen routes (auth → locale so users.language is available)
+| Authenticated citizen routes (auth → locale → citizen)
+| Locale runs before citizen so middleware access messages honor Accept-Language.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:sanctum', 'locale'])->group(function (): void {
@@ -71,11 +72,11 @@ Route::middleware(['auth:sanctum', 'locale'])->group(function (): void {
     Route::put('/profile/change-password', [ProfileController::class, 'changePassword']);
 });
 
-Route::middleware(['auth:sanctum', 'citizen', 'locale'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): void {
     Route::get('/profile/status', [ProfileController::class, 'status']);
 });
 
-Route::middleware(['auth:sanctum', 'citizen', 'locale'])->prefix('applications')->group(function (): void {
+Route::middleware(['auth:sanctum', 'locale', 'citizen'])->prefix('applications')->group(function (): void {
     Route::get('/', [ApplicationController::class, 'index']);
     Route::get('/{application}/required-documents', [ApplicationDocumentController::class, 'requiredDocuments'])
         ->whereNumber('application');
@@ -117,7 +118,7 @@ Route::middleware(['auth:sanctum', 'citizen', 'locale'])->prefix('applications')
     });
 });
 
-Route::middleware(['auth:sanctum', 'citizen', 'locale'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): void {
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index']);
 
     Route::middleware('profile.approved')->group(function (): void {

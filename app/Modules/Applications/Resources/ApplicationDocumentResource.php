@@ -5,6 +5,7 @@ namespace App\Modules\Applications\Resources;
 use App\Enums\DocumentRejectionReason;
 use App\Enums\DocumentStatus;
 use App\Support\ArabicMessageTranslator;
+use App\Support\CitizenMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -57,7 +58,9 @@ class ApplicationDocumentResource extends JsonResource
 
         return [
             'code' => $code?->value ?? $this->rejection_reason_code,
-            'label' => $code?->label() ?? ArabicMessageTranslator::resolveStoredLabel($this->rejection_reason),
+            'label' => $code !== null
+                ? CitizenMessageTranslator::get('messages.documents.rejection_reasons.'.$code->value)
+                : ArabicMessageTranslator::resolveStoredLabel($this->rejection_reason),
             'details' => $this->rejection_details,
         ];
     }

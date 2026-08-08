@@ -4,7 +4,7 @@ use App\Modules\Settings\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('settings')
-    ->middleware(['auth:sanctum', 'citizen', 'locale'])
+    ->middleware(['auth:sanctum', 'locale', 'citizen'])
     ->group(function () {
         Route::get('/', [SettingsController::class, 'index']);
         Route::put('/preferences', [SettingsController::class, 'updatePreferences']);

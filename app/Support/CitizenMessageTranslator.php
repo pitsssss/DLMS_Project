@@ -6,21 +6,84 @@ use Illuminate\Support\Facades\Lang;
 
 class CitizenMessageTranslator
 {
-    private const LOCALE = 'ar';
-
     public static function get(string $key, array $replace = []): string
     {
         $fullKey = str_starts_with($key, 'messages.') ? $key : 'messages.'.$key;
+        $locale = self::resolveLocale();
+        $defaultLocale = self::defaultLocale();
 
-        if (Lang::has($fullKey, self::LOCALE)) {
-            $translated = Lang::get($fullKey, $replace, self::LOCALE);
+        $translated = self::translate($fullKey, $replace, $locale);
 
-            if (is_string($translated) && ! self::looksLikeUnresolvedKey($translated, $fullKey)) {
+        if ($translated !== null) {
+            return $translated;
+        }
+
+        if ($locale !== $defaultLocale) {
+            $translated = self::translate($fullKey, $replace, $defaultLocale);
+
+            if ($translated !== null) {
                 return $translated;
             }
         }
 
         return self::fallback($fullKey, $replace);
+    }
+
+    /**
+     * Resolve a supported application locale from the current request locale.
+     */
+    private static function resolveLocale(): string
+    {
+        $locale = strtolower(trim((string) app()->getLocale()));
+        $supported = self::supportedLocales();
+
+        if (in_array($locale, $supported, true)) {
+            return $locale;
+        }
+
+        return self::defaultLocale();
+    }
+
+    private static function defaultLocale(): string
+    {
+        $default = strtolower(trim((string) config('localization.default', 'ar')));
+
+        return in_array($default, self::supportedLocales(), true) ? $default : 'ar';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function supportedLocales(): array
+    {
+        $supported = config('localization.supported', ['ar', 'en']);
+
+        if (! is_array($supported) || $supported === []) {
+            return ['ar', 'en'];
+        }
+
+        return array_values(array_filter(
+            array_map(static fn ($locale) => is_string($locale) ? strtolower(trim($locale)) : '', $supported),
+            static fn (string $locale) => $locale !== ''
+        ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $replace
+     */
+    private static function translate(string $fullKey, array $replace, string $locale): ?string
+    {
+        if (! Lang::has($fullKey, $locale)) {
+            return null;
+        }
+
+        $translated = Lang::get($fullKey, $replace, $locale);
+
+        if (! is_string($translated) || self::looksLikeUnresolvedKey($translated, $fullKey)) {
+            return null;
+        }
+
+        return $translated;
     }
 
     private static function looksLikeUnresolvedKey(string $translated, string $fullKey): bool

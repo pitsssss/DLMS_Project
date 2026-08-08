@@ -41,7 +41,7 @@ class AppointmentService
         if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
             return [
                 'blocked' => true,
-                'message' => 'هذه الخدمة لا تتطلب حجز اختبارات.',
+                'message' => \App\Support\CitizenMessageTranslator::get('messages.appointments.tests_not_required'),
                 'tests' => [],
             ];
         }
@@ -85,7 +85,7 @@ class AppointmentService
             $application->loadMissing('serviceType');
 
             if (! \App\Modules\Applications\Support\ServiceWorkflow::requiresTests($application->serviceType?->code)) {
-                throw new ApiException('هذه الخدمة لا تتطلب حجز اختبارات.', 422);
+                throw new ApiException('messages.appointments.tests_not_required', 422);
             }
 
             $bookable = $this->progression->resolveBookableTestType($application);

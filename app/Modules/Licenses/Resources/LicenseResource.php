@@ -3,7 +3,8 @@
 namespace App\Modules\Licenses\Resources;
 
 use App\Modules\Licenses\Support\LicenseEffectiveStatus;
-use App\Support\Msg;
+use App\Support\CitizenCatalogLabel;
+use App\Support\CitizenMessageTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +22,7 @@ class LicenseResource extends JsonResource
             'id' => $this->id,
             'license_number' => $this->license_number,
             'status' => $effective->value,
-            'status_label' => Msg::get('licenses.statuses.'.$effective->value),
+            'status_label' => CitizenMessageTranslator::get('messages.licenses.statuses.'.$effective->value),
             'stored_status' => $this->status->value,
             'effective_status' => $effective->value,
             'issue_date' => $this->issue_date?->format('Y-m-d'),
@@ -30,7 +31,10 @@ class LicenseResource extends JsonResource
             'is_expiring_soon' => LicenseEffectiveStatus::isExpiringSoon($this->resource),
             'license_type' => $this->whenLoaded('licenseType', fn () => [
                 'id' => $this->licenseType->id,
-                'name' => $this->licenseType->name,
+                'name' => CitizenCatalogLabel::licenseType(
+                    (string) $this->licenseType->code,
+                    $this->licenseType->name
+                ),
                 'code' => $this->licenseType->code,
             ]),
             'application' => $this->whenLoaded('application', fn () => [
