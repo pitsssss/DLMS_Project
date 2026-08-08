@@ -114,8 +114,8 @@ class AIAgentService
                 return $this->documentFlow->handleTextDecision($user, $session, $userMessage);
             }
 
-            // Pending application selection must be resolved before Gemini / general_help.
-            if ($this->pendingWorkflow->isAwaitingApplicationChoice($session)) {
+            // Pending application selection / expiry must be resolved before Gemini / general_help.
+            if ($this->pendingWorkflow->shouldHandlePendingMessage($session)) {
                 $pendingResult = $this->pendingWorkflow->handleAwaitingMessage($user, $session, $userMessage);
                 if ($pendingResult !== null) {
                     return $pendingResult;

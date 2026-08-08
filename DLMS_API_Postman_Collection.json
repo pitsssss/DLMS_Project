@@ -1,4 +1,4 @@
-﻿{
+{
     "info": {
         "_postman_id": "",
         "name": "DLMS / SYRTAK  -  Complete API Collection",
@@ -4130,6 +4130,184 @@
                                 },
                                 "url": "{{base_url}}{{api_prefix}}/ai-agent/message",
                                 "description": "Clear pending workflow and run get_fines (or equivalent) instead of selection."
+                            }
+                        },
+                        {
+                            "name": "18. Show Application Choices Again",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const json = pm.response.json();",
+                                            "const apps = json?.data?.ui_payload?.applications ?? [];",
+                                            "if (apps[0]?.selection_token) pm.collectionVariables.set(\"application_selection_token\", apps[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"show_application_choices_again\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions"
+                            }
+                        },
+                        {
+                            "name": "19. Expired Workflow — Chat",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"الأول\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message",
+                                "description": "After manually expiring pending_workflow.expires_at in DB/session, expect application_selection_expired — never general_help."
+                            }
+                        },
+                        {
+                            "name": "20. Expired Workflow — Interaction",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_application\",\n  \"selection_token\": \"{{application_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "Expect 422 code PENDING_WORKFLOW_EXPIRED when workflow TTL elapsed."
+                            }
+                        },
+                        {
+                            "name": "21. Show Choices After Expiry",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"show_application_choices_again\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "Expect application_selection_expired soft response when workflow expired."
+                            }
+                        },
+                        {
+                            "name": "22. Book Appointment — Select Application",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "const json = pm.response.json();",
+                                            "if (json?.data?.session_id) pm.collectionVariables.set(\"ai_agent_session_id\", json.data.session_id);",
+                                            "const apps = json?.data?.ui_payload?.applications ?? [];",
+                                            "if (apps[0]?.selection_token) pm.collectionVariables.set(\"application_selection_token\", apps[0].selection_token);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"احجز أول موعد متاح\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message",
+                                "description": "Citizen with multiple appointment-eligible apps → application_selection_required."
+                            }
+                        },
+                        {
+                            "name": "23. Book Appointment — Verify No Incomplete Pending Action",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_application\",\n  \"selection_token\": \"{{application_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "Expect appointment_slot_selection_required; requires_confirmation=false; pending_action=null."
+                            }
+                        },
+                        {
+                            "name": "24. Topic Change — ما بدي أعرف المخالفات",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"ما بدي أعرف المخالفات\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message",
+                                "description": "Must switch to get_fines, not application_selection_cancelled."
+                            }
+                        },
+                        {
+                            "name": "25. Arabic Digits — الطلب رقم ٢٥",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"session_id\": {{ai_agent_session_id}},\n  \"message\": \"الطلب رقم ٢٥\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/message"
+                            }
+                        },
+                        {
+                            "name": "26. Retry Selection After Recoverable Failure",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    { "key": "Accept", "value": "application/json" },
+                                    { "key": "Content-Type", "value": "application/json" },
+                                    { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"select_application\",\n  \"selection_token\": \"{{application_selection_token}}\"\n}"
+                                },
+                                "url": "{{base_url}}{{api_prefix}}/ai-agent/sessions/{{ai_agent_session_id}}/interactions",
+                                "description": "After PENDING_WORKFLOW_RETRY_REQUIRED, retry same token; pending_workflow must still exist until success."
                             }
                         }
                     ]

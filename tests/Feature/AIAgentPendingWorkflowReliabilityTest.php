@@ -129,11 +129,12 @@ class AIAgentPendingWorkflowReliabilityTest extends TestCase
     {
         $citizen = $this->citizen();
         Sanctum::actingAs($citizen);
-        $this->mockGeminiNeverCalled();
+        $this->mockGemini();
 
         ['session_id' => $sessionId] = $this->startStatusSelection($citizen);
         $this->expireSessionWorkflow($sessionId);
 
+        $this->mockGeminiNeverCalled();
         $response = $this->postJson('/api/ai-agent/message', [
             'session_id' => $sessionId,
             'message' => 'الأول',
@@ -161,7 +162,7 @@ class AIAgentPendingWorkflowReliabilityTest extends TestCase
             'selection_token' => $token,
         ])->assertStatus(422);
 
-        $this->assertSame('PENDING_WORKFLOW_EXPIRED', $response->json('error_code'));
+        $this->assertSame('PENDING_WORKFLOW_EXPIRED', $response->json('code'));
     }
 
     public function test_show_choices_after_expiry_returns_expired_response(): void
@@ -220,7 +221,7 @@ class AIAgentPendingWorkflowReliabilityTest extends TestCase
             'selection_token' => $token,
         ])->assertStatus(422);
 
-        $this->assertSame('PENDING_WORKFLOW_RETRY_REQUIRED', $failed->json('error_code'));
+        $this->assertSame('PENDING_WORKFLOW_RETRY_REQUIRED', $failed->json('code'));
 
         $session = AIAgentSession::query()->findOrFail($sessionId);
         $this->assertSame(

@@ -49,6 +49,9 @@ class AgentApplicationTextSelector
         return ['status' => 'ambiguous'];
     }
 
+    /**
+     * Exact cancel only — never treat longer topic-change sentences as cancel.
+     */
     public static function isCancelPhrase(string $message): bool
     {
         $normalized = self::normalize($message);
@@ -61,18 +64,19 @@ class AgentApplicationTextSelector
             'إلغاء',
             'الغي',
             'ألغي',
+            'خلاص',
             'خلاص ما بدي',
             'ما بدي',
             'اترك الموضوع',
+            'وقف العملية',
             'ارجع',
-            'خلينا بموضوع تاني',
             'cancel',
             'never mind',
             'nevermind',
         ];
 
         foreach ($phrases as $phrase) {
-            if ($normalized === self::normalize($phrase) || str_starts_with($normalized, self::normalize($phrase))) {
+            if ($normalized === self::normalize($phrase)) {
                 return true;
             }
         }
@@ -121,8 +125,8 @@ class AgentApplicationTextSelector
             }
         }
 
-        if (preg_match('/^(?:ال)?(?:طلب|خيار|رقم)?\s*([1-9]|[١٢٣])$/u', $normalized, $m)) {
-            $digit = str_replace(['١', '٢', '٣'], ['1', '2', '3'], $m[1]);
+        if (preg_match('/^(?:ال)?(?:طلب|خيار|رقم)?\s*([1-9]|[١٢۳۱۲۳])$/u', $normalized, $m)) {
+            $digit = self::normalizeDigits($m[1]);
             $index = ((int) $digit) - 1;
             if ($index >= 0 && $index < $count) {
                 return $index;
@@ -137,6 +141,7 @@ class AgentApplicationTextSelector
      */
     private static function matchApplicationId(string $normalized, Collection $ordered): ?int
     {
+        $normalized = self::normalizeDigits($normalized);
         $ids = $ordered->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         if (preg_match('/(?:رقم|طلب(?:\s+رقم)?|#)\s*(\d{1,10})/u', $normalized, $m)
@@ -146,12 +151,18 @@ class AgentApplicationTextSelector
                 return $id;
             }
 
-            // Application numbers like APP-25 are not numeric ids; try matching number field.
             foreach ($ordered as $application) {
                 if ((string) $application->id === (string) $id) {
                     return (int) $application->id;
                 }
-                if (preg_match('/(?:^|[^0-9])'.$id.'(?:[^0-9]|$)/', (string) $application->application_number)) {
+
+                $number = (string) $application->application_number;
+                if ($number === (string) $id) {
+                    return (int) $application->id;
+                }
+
+                // Allow APP-2026-000025 to match "25" / "٢٥" (zero-padded suffix / segment).
+                if (preg_match('/(?:^|[^0-9])0*'.$id.'(?:[^0-9]|$)/', $number) === 1) {
                     return (int) $application->id;
                 }
             }
@@ -240,10 +251,23 @@ class AgentApplicationTextSelector
         return ['status' => 'none'];
     }
 
+    public static function normalizeDigits(string $text): string
+    {
+        $map = [
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ];
+
+        return strtr($text, $map);
+    }
+
     private static function normalize(string $message): string
     {
         $text = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $message) ?? $message));
+        $text = str_replace(['َ', 'ً', 'ُ', 'ٌ', 'ِ', 'ٍ', 'ْ', 'ّ', 'ـ'], '', $text);
 
-        return str_replace(['َ', 'ً', 'ُ', 'ٌ', 'ِ', 'ٍ', 'ْ', 'ّ', 'ـ'], '', $text);
+        return self::normalizeDigits($text);
     }
 }

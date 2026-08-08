@@ -23,7 +23,7 @@ class AgentActionArgumentValidator
             'get_appointment_slots' => ['application_id'],
             'get_current_appointments' => ['application_id'],
             'get_available_tests' => ['application_id'],
-            default => ['application_id'],
+            default => [],
         };
     }
 

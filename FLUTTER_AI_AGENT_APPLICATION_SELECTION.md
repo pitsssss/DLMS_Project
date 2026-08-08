@@ -154,6 +154,56 @@ Display `reply` and optional `application` / `ui_payload` as returned. Do not fo
 | `application_selected_confirmation_required` | App chosen; mutating action awaits confirm |
 | `no_eligible_application` | No matching apps for the intent |
 | `application_status` (and other intent results) | Final read-only answers |
+| `appointment_slot_selection_required` | Application chosen for booking; slot still required — **no confirm yet** |
+
+---
+
+## Expiry
+
+When `message_type = application_selection_expired`:
+
+- Dismiss / disable old application buttons
+- Do **not** reuse old `selection_token` values
+- Show the expiry reply
+- Ask the citizen to request the service again (new message)
+
+Interaction with an expired workflow returns HTTP 422 with `code = PENDING_WORKFLOW_EXPIRED`.
+
+---
+
+## Show choices again
+
+```json
+{
+  "action": "show_application_choices_again"
+}
+```
+
+Re-issues buttons and fresh tokens while pending is still active. If expired → same as expiry handling above.
+
+---
+
+## Appointment slot continuation (`book_appointment`)
+
+Typical path:
+
+```text
+application_selection_required
+→ select_application
+→ appointment_slot_selection_required
+→ (slot selection — may be extended later)
+→ confirmation only when appointment_slot_id is present
+```
+
+Flutter must **not** show a confirm button until `pending_action` exists with a complete confirmable action. Application selection alone never books.
+
+---
+
+## Topic change
+
+If the citizen sends a clear new intent while selection is pending (e.g. `ما بدي أعرف المخالفات`), Backend cancels the old workflow and returns the **new** intent response directly. Discard old tokens.
+
+Exact cancel phrases (e.g. `ما بدي`, `إلغاء`) return `application_selection_cancelled` only.
 
 ---
 
@@ -164,11 +214,14 @@ Display `reply` and optional `application` / `ui_payload` as returned. Do not fo
 | `PENDING_WORKFLOW_NOT_FOUND` | 422 |
 | `PENDING_WORKFLOW_EXPIRED` | 422 |
 | `PENDING_WORKFLOW_STATE_INVALID` | 422 |
+| `PENDING_WORKFLOW_RETRY_REQUIRED` | 422 |
+| `PENDING_WORKFLOW_RESUME_FAILED` | (metadata) |
+| `ACTION_ARGUMENTS_INCOMPLETE` | 422 |
 | `APPLICATION_SELECTION_TOKEN_INVALID` | 422 |
 | `APPLICATION_SELECTION_TOKEN_EXPIRED` | 422 |
 | `APPLICATION_SELECTION_TOKEN_MISMATCH` | 422 |
 | `APPLICATION_NO_LONGER_ELIGIBLE` | 422 |
-| `APPLICATION_NOT_OWNED` | 422 / 403 |
+| `APPLICATION_NOT_OWNED` | 422 / 404 |
 
 Never log or display token payloads, signatures, or full session context to the user.
 
@@ -194,4 +247,7 @@ Do not reuse a document-flow `selection_token` for generic selection (and vice v
 - [ ] Keep `session_id` for follow-up messages / interactions
 - [ ] Show resumed response without re-asking the original question
 - [ ] Treat ambiguous text replies as re-selection UI, not as chat failure / general help
+- [ ] On `application_selection_expired`, drop old tokens/buttons
+- [ ] On `appointment_slot_selection_required`, do not show booking confirm yet
+- [ ] Support `show_application_choices_again`
 - [ ] For mutating intents after selection, wait for explicit confirmation UX already used elsewhere

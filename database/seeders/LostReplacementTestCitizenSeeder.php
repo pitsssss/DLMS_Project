@@ -8,6 +8,7 @@ use App\Enums\ServiceCode;
 use App\Models\License;
 use App\Models\LicenseApplication;
 use App\Models\LicenseType;
+use App\Models\Role;
 use App\Models\ServiceType;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -21,6 +22,12 @@ class LostReplacementTestCitizenSeeder extends Seeder
         DB::transaction(function () {
             $email = 'lost.replacement.citizen@syrtak.test';
             $password = 'password123';
+
+            $role = Role::query()->where('name', 'citizen')->first();
+            if ($role === null) {
+                $this->command->warn('Role "citizen" not found; skipping LostReplacementTestCitizenSeeder.');
+                return;
+            }
 
             $licenseType = LicenseType::query()->where('code', 'private')->first();
             if ($licenseType === null) {
@@ -42,7 +49,7 @@ class LostReplacementTestCitizenSeeder extends Seeder
                 'national_id' => 'LRTEST0000001',
                 'password' => Hash::make($password),
                 'user_type' => 'citizen',
-                'role_id' => null,
+                'role_id' => $role->id,
                 'birth_date' => now()->subYears(30)->toDateString(),
                 'governorate' => 'دمشق',
                 'address' => 'عنوان تجريبي',

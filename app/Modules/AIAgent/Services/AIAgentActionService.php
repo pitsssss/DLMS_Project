@@ -11,6 +11,7 @@ use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\Applications\Services\ApplicationDocumentService;
+use App\Modules\AIAgent\Support\AgentActionArgumentValidator;
 use App\Modules\AIAgent\Support\AgentSafetyRules;
 use Illuminate\Support\Facades\DB;
 
@@ -44,6 +45,10 @@ class AIAgentActionService
         }
 
         try {
+            AgentActionArgumentValidator::assertComplete(
+                $action->action_name,
+                is_array($action->arguments) ? $action->arguments : []
+            );
             $this->assertMutatingActionStillAllowed($user, $action);
 
             $action->status = AgentActionStatus::Confirmed;

@@ -8,12 +8,13 @@ use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentActionStatus;
 use App\Modules\AIAgent\Enums\AgentMessageRole;
-use App\Modules\AIAgent\Enums\AgentSessionStatus;
 use App\Modules\AIAgent\Enums\DocumentFlowState;
+use App\Modules\AIAgent\Enums\PendingWorkflowInspectionStatus;
 use App\Modules\AIAgent\Enums\PendingWorkflowState;
 use App\Modules\AIAgent\Models\AIAgentAction;
 use App\Modules\AIAgent\Models\AIAgentMessage;
 use App\Modules\AIAgent\Models\AIAgentSession;
+use App\Modules\AIAgent\Support\AgentActionArgumentValidator;
 use App\Modules\AIAgent\Support\AgentApplicationStatusMap;
 use App\Modules\AIAgent\Support\AgentApplicationTextSelector;
 use App\Modules\AIAgent\Support\AgentWorkflowIntentCatalog;
@@ -42,20 +43,113 @@ class AgentPendingWorkflowService
         return is_array($workflow) ? $workflow : null;
     }
 
-    public function isAwaitingApplicationChoice(AIAgentSession $session): bool
+    /**
+     * Inspect pending workflow without clearing it.
+     *
+     * @return array{status: PendingWorkflowInspectionStatus, workflow: ?array}
+     */
+    public function inspect(AIAgentSession $session): array
     {
         $workflow = $this->getWorkflow($session);
         if ($workflow === null) {
-            return false;
+            return ['status' => PendingWorkflowInspectionStatus::None, 'workflow' => null];
         }
 
         if ($this->isExpired($workflow)) {
-            $this->clear($session);
+            return ['status' => PendingWorkflowInspectionStatus::Expired, 'workflow' => $workflow];
+        }
 
+        $state = (string) ($workflow['state'] ?? '');
+        if (in_array($state, [
+            PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::AwaitingAppointmentSlotChoice->value,
+            PendingWorkflowState::Failed->value,
+            PendingWorkflowState::Resuming->value,
+        ], true)) {
+            return ['status' => PendingWorkflowInspectionStatus::Active, 'workflow' => $workflow];
+        }
+
+        return ['status' => PendingWorkflowInspectionStatus::InvalidState, 'workflow' => $workflow];
+    }
+
+    public function isAwaitingApplicationChoice(AIAgentSession $session): bool
+    {
+        $inspection = $this->inspect($session);
+        if ($inspection['status'] !== PendingWorkflowInspectionStatus::Active) {
             return false;
         }
 
-        return ($workflow['state'] ?? null) === PendingWorkflowState::AwaitingApplicationChoice->value;
+        $state = (string) (($inspection['workflow']['state'] ?? ''));
+
+        return in_array($state, [
+            PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::Failed->value,
+        ], true);
+    }
+
+    public function shouldHandlePendingMessage(AIAgentSession $session): bool
+    {
+        $inspection = $this->inspect($session);
+
+        return in_array($inspection['status'], [
+            PendingWorkflowInspectionStatus::Active,
+            PendingWorkflowInspectionStatus::Expired,
+        ], true);
+    }
+
+    /**
+     * Soft expired response for chat / show-again. Clears workflow after capturing intent.
+     *
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    public function respondExpired(AIAgentSession $session, array $workflow): array
+    {
+        $intent = (string) ($workflow['intent'] ?? 'unknown');
+        $this->clear($session);
+
+        return [
+            'session_id' => $session->id,
+            'message_type' => 'application_selection_expired',
+            'reply' => 'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+            'intent' => $intent,
+            'confidence' => 1.0,
+            'missing_slots' => [],
+            'requires_confirmation' => false,
+            'pending_action' => null,
+            'ui_payload' => null,
+        ];
+    }
+
+    /**
+     * @throws ApiException
+     */
+    public function assertActiveForInteraction(AIAgentSession $session): array
+    {
+        $inspection = $this->inspect($session);
+
+        if ($inspection['status'] === PendingWorkflowInspectionStatus::Expired) {
+            $this->clear($session);
+            throw new ApiException(
+                'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_EXPIRED'
+            );
+        }
+
+        if ($inspection['status'] !== PendingWorkflowInspectionStatus::Active || $inspection['workflow'] === null) {
+            throw new ApiException(
+                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_NOT_FOUND'
+            );
+        }
+
+        return $inspection['workflow'];
     }
 
     /**
@@ -92,42 +186,27 @@ class AgentPendingWorkflowService
     }
 
     /**
-     * Handle chat while awaiting application choice. Never returns null when awaiting.
+     * Handle chat while a pending workflow is active or expired.
+     * Returns null only for clear topic-change (caller continues with new intent).
      *
      * @return array<string, mixed>|null
      */
     public function handleAwaitingMessage(User $citizen, AIAgentSession $session, string $message): ?array
     {
-        if (! $this->isAwaitingApplicationChoice($session)) {
+        $inspection = $this->inspect($session);
+
+        if ($inspection['status'] === PendingWorkflowInspectionStatus::Expired) {
+            return $this->respondExpired($session, $inspection['workflow'] ?? []);
+        }
+
+        if ($inspection['status'] !== PendingWorkflowInspectionStatus::Active || $inspection['workflow'] === null) {
             return null;
         }
 
-        $workflow = $this->getWorkflow($session);
-        if ($workflow === null) {
-            return null;
-        }
+        $workflow = $inspection['workflow'];
+        $state = (string) ($workflow['state'] ?? '');
 
-        if ($this->isExpired($workflow)) {
-            $this->clear($session);
-
-            return [
-                'session_id' => $session->id,
-                'message_type' => 'application_selection_expired',
-                'reply' => 'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
-                'intent' => (string) ($workflow['intent'] ?? 'unknown'),
-                'confidence' => 1.0,
-                'missing_slots' => [],
-                'requires_confirmation' => false,
-                'pending_action' => null,
-                'ui_payload' => ['applications' => []],
-            ];
-        }
-
-        if (AgentApplicationTextSelector::isCancelPhrase($message)) {
-            return $this->cancel($session, $workflow);
-        }
-
-        // Clear pending and let outer loop handle a clearly new workflow intent.
+        // 1) Explicit new intent / topic change first.
         if (AgentWorkflowPhraseMatcher::isWorkflowQuery(
             $message,
             (string) ($workflow['intent'] ?? null),
@@ -136,6 +215,34 @@ class AgentPendingWorkflowService
             $this->clear($session);
 
             return null;
+        }
+
+        // 2) Exact cancellation only.
+        if (AgentApplicationTextSelector::isCancelPhrase($message)) {
+            return $this->cancel($session, $workflow);
+        }
+
+        // Slot-choice stage: do not fall through to Gemini/general_help.
+        if ($state === PendingWorkflowState::AwaitingAppointmentSlotChoice->value) {
+            return $this->appointmentSlotSelectionRequiredResponse(
+                $citizen,
+                $session,
+                $workflow,
+                (int) ($workflow['collected_slots']['application_id'] ?? 0)
+            );
+        }
+
+        if (! in_array($state, [
+            PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::Failed->value,
+        ], true)) {
+            return null;
+        }
+
+        // Restore failed → awaiting for retry attempts.
+        if ($state === PendingWorkflowState::Failed->value) {
+            $workflow['state'] = PendingWorkflowState::AwaitingApplicationChoice->value;
+            $this->writeWorkflow($session, $workflow);
         }
 
         $candidates = $this->loadCandidatesByIds($citizen, $workflow['candidate_application_ids'] ?? []);
@@ -197,37 +304,25 @@ class AgentPendingWorkflowService
             );
         }
 
-        if (! $this->isAwaitingApplicationChoice($session)) {
-            $workflow = $this->getWorkflow($session);
-            if ($workflow !== null && $this->isExpired($workflow)) {
-                $this->clear($session);
-                throw new ApiException(
-                    'انتهت صلاحية عملية اختيار الطلب. يرجى إعادة طلب الخدمة.',
-                    422,
-                    [],
-                    [],
-                    'PENDING_WORKFLOW_EXPIRED'
-                );
-            }
+        $workflow = $this->assertActiveForInteraction($session);
 
+        $state = (string) ($workflow['state'] ?? '');
+        if (! in_array($state, [
+            PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::Failed->value,
+        ], true)) {
             throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                'حالة عملية اختيار الطلب غير صالحة لهذا الإجراء.',
                 422,
                 [],
                 [],
-                'PENDING_WORKFLOW_NOT_FOUND'
+                'PENDING_WORKFLOW_STATE_INVALID'
             );
         }
 
-        $workflow = $this->getWorkflow($session);
-        if ($workflow === null) {
-            throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
-                422,
-                [],
-                [],
-                'PENDING_WORKFLOW_NOT_FOUND'
-            );
+        if ($state === PendingWorkflowState::Failed->value) {
+            $workflow['state'] = PendingWorkflowState::AwaitingApplicationChoice->value;
+            $this->writeWorkflow($session, $workflow);
         }
 
         $verified = $this->selectionTokens->verify(
@@ -243,35 +338,19 @@ class AgentPendingWorkflowService
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    /**
      * Re-issue application selection buttons for the current pending workflow.
      *
      * @return array<string, mixed>
      */
     public function showChoicesAgain(User $citizen, AIAgentSession $session): array
     {
-        if (! $this->isAwaitingApplicationChoice($session)) {
-            throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
-                422,
-                [],
-                [],
-                'PENDING_WORKFLOW_NOT_FOUND'
-            );
+        $inspection = $this->inspect($session);
+
+        if ($inspection['status'] === PendingWorkflowInspectionStatus::Expired) {
+            return $this->respondExpired($session, $inspection['workflow'] ?? []);
         }
 
-        $workflow = $this->getWorkflow($session);
-        if ($workflow === null) {
-            throw new ApiException(
-                'لا توجد عملية اختيار طلب قيد الانتظار.',
-                422,
-                [],
-                [],
-                'PENDING_WORKFLOW_NOT_FOUND'
-            );
-        }
+        $workflow = $this->assertActiveForInteraction($session);
 
         $candidates = $this->loadCandidatesByIds($citizen, $workflow['candidate_application_ids'] ?? []);
         if ($candidates->isEmpty()) {
@@ -284,6 +363,9 @@ class AgentPendingWorkflowService
                 'APPLICATION_NO_LONGER_ELIGIBLE'
             );
         }
+
+        $workflow['state'] = PendingWorkflowState::AwaitingApplicationChoice->value;
+        $this->writeWorkflow($session, $workflow);
 
         return $this->selectionRequiredResponse(
             $citizen,
@@ -314,6 +396,10 @@ class AgentPendingWorkflowService
             );
         }
 
+        if ($this->isExpired($workflow)) {
+            return $this->respondExpired($session, $workflow);
+        }
+
         return $this->cancel($session, $workflow);
     }
 
@@ -323,7 +409,7 @@ class AgentPendingWorkflowService
     public function resumeWithApplication(User $citizen, AIAgentSession $session, int $applicationId): array
     {
         $workflow = $this->getWorkflow($session);
-        if ($workflow === null || ($workflow['state'] ?? null) !== PendingWorkflowState::AwaitingApplicationChoice->value) {
+        if ($workflow === null) {
             throw new ApiException(
                 'لا توجد عملية اختيار طلب قيد الانتظار.',
                 422,
@@ -341,6 +427,21 @@ class AgentPendingWorkflowService
                 [],
                 [],
                 'PENDING_WORKFLOW_EXPIRED'
+            );
+        }
+
+        $state = (string) ($workflow['state'] ?? '');
+        if (! in_array($state, [
+            PendingWorkflowState::AwaitingApplicationChoice->value,
+            PendingWorkflowState::Failed->value,
+            PendingWorkflowState::Resuming->value,
+        ], true)) {
+            throw new ApiException(
+                'لا توجد عملية اختيار طلب قيد الانتظار.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_NOT_FOUND'
             );
         }
 
@@ -363,6 +464,7 @@ class AgentPendingWorkflowService
             ->first();
 
         if ($application === null) {
+            $this->clear($session);
             throw new ApiException(
                 'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
                 404,
@@ -373,6 +475,7 @@ class AgentPendingWorkflowService
         }
 
         if (! $this->isEligibleForIntent($application, $intent)) {
+            $this->clear($session);
             throw new ApiException(
                 'الطلب المحدد لم يعد مؤهلاً لهذه العملية.',
                 422,
@@ -396,11 +499,38 @@ class AgentPendingWorkflowService
         try {
             $result = $this->continueIntent($citizen, $session, $intent, $application);
         } catch (\Throwable $e) {
-            $this->clear($session);
-            if ($e instanceof ApiException) {
+            if ($e instanceof ApiException && $this->isTerminalApiException($e)) {
+                $this->clear($session);
                 throw $e;
             }
-            throw new ApiException('تعذر استكمال العملية بعد اختيار الطلب.', 422, [], [], 'PENDING_WORKFLOW_STATE_INVALID');
+
+            $workflow = $this->getWorkflow($session) ?? $workflow;
+            $workflow['state'] = PendingWorkflowState::AwaitingApplicationChoice->value;
+            $metadata = is_array($workflow['metadata'] ?? null) ? $workflow['metadata'] : [];
+            $metadata['last_error_code'] = 'PENDING_WORKFLOW_RESUME_FAILED';
+            $metadata['retryable'] = true;
+            $metadata['failed_at'] = now()->toIso8601String();
+            $workflow['metadata'] = $metadata;
+            $this->writeWorkflow($session, $workflow);
+
+            if ($e instanceof ApiException && $e->getErrorCode() === 'PENDING_WORKFLOW_RETRY_REQUIRED') {
+                throw $e;
+            }
+
+            throw new ApiException(
+                'تعذر استكمال العملية مؤقتًا. يرجى إعادة اختيار الطلب.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_RETRY_REQUIRED'
+            );
+        }
+
+        // Incomplete multi-slot flows keep pending_workflow (e.g. appointment slot).
+        if (($result['keep_pending_workflow'] ?? false) === true) {
+            unset($result['keep_pending_workflow']);
+
+            return $result;
         }
 
         $this->clear($session);
@@ -411,6 +541,21 @@ class AgentPendingWorkflowService
         $session->save();
 
         return $result;
+    }
+
+    private function isTerminalApiException(ApiException $e): bool
+    {
+        return in_array($e->getErrorCode(), [
+            'APPLICATION_NOT_OWNED',
+            'APPLICATION_NO_LONGER_ELIGIBLE',
+            'APPLICATION_SELECTION_INVALID',
+            'PENDING_WORKFLOW_EXPIRED',
+            'APPLICATION_SELECTION_TOKEN_INVALID',
+            'APPLICATION_SELECTION_TOKEN_EXPIRED',
+            'APPLICATION_SELECTION_TOKEN_MISMATCH',
+            'ACTION_ARGUMENTS_INCOMPLETE',
+            'PENDING_WORKFLOW_ALREADY_COMPLETED',
+        ], true);
     }
 
     /**
@@ -473,9 +618,10 @@ class AgentPendingWorkflowService
             $serviceLabel = (string) ($application->serviceType?->name ?? $serviceCode);
             $licenseLabel = LicenseTypeSlotExtractor::labelAr($licenseCode);
             $statusLabel = ApplicationStatusLabelMapper::labelAr($application->status);
+            $reference = (string) ($application->application_number ?: $application->id);
 
             return [
-                'label' => "{$serviceLabel} — رقم {$application->id}",
+                'label' => "{$serviceLabel} — {$reference}",
                 'subtitle' => "رخصة {$licenseLabel} — {$statusLabel}",
                 'service_type' => $serviceCode,
                 'service_type_label' => $serviceLabel,
@@ -560,12 +706,20 @@ class AgentPendingWorkflowService
         $session->current_intent = $intent;
         $session->save();
 
+        // book_appointment: never confirm without appointment_slot_id — keep workflow open.
+        if ($intent === 'book_appointment' || $actionName === 'book_appointment') {
+            return $this->appointmentSlotSelectionRequiredResponse($citizen, $session, $this->getWorkflow($session) ?? [], (int) $application->id);
+        }
+
         if ($actionName !== null && AgentWorkflowIntentCatalog::isReadOnly($intent)) {
+            $arguments = ['application_id' => $application->id];
+            AgentActionArgumentValidator::assertComplete($actionName, $arguments);
+
             $action = AIAgentAction::query()->create([
                 'session_id' => $session->id,
                 'user_id' => $citizen->id,
                 'action_name' => $actionName,
-                'arguments' => ['application_id' => $application->id],
+                'arguments' => $arguments,
                 'status' => AgentActionStatus::Pending,
                 'requires_confirmation' => false,
                 'confirmation_message' => null,
@@ -586,7 +740,7 @@ class AgentPendingWorkflowService
                 'executed_action' => $executed['action'] ?? [
                     'id' => $action->id,
                     'name' => $actionName,
-                    'arguments' => ['application_id' => $application->id],
+                    'arguments' => $arguments,
                     'requires_confirmation' => false,
                     'status' => AgentActionStatus::Executed->value,
                 ],
@@ -599,7 +753,7 @@ class AgentPendingWorkflowService
             ];
         }
 
-        // Mutating: propose confirmation action only — never execute on selection alone.
+        // Mutating: propose confirmation action only when arguments are complete.
         $proposed = $payload['proposed_action'] ?? [
             'name' => $actionName,
             'arguments' => ['application_id' => $application->id],
@@ -616,6 +770,31 @@ class AgentPendingWorkflowService
             is_array($proposed['arguments'] ?? null) ? $proposed['arguments'] : [],
             ['application_id' => $application->id]
         );
+
+        $missingArgs = AgentActionArgumentValidator::missingArguments(
+            (string) $proposed['name'],
+            is_array($proposed['arguments'] ?? null) ? $proposed['arguments'] : []
+        );
+
+        if ($missingArgs !== []) {
+            if (in_array('appointment_slot_id', $missingArgs, true)) {
+                return $this->appointmentSlotSelectionRequiredResponse(
+                    $citizen,
+                    $session,
+                    $this->getWorkflow($session) ?? [],
+                    (int) $application->id
+                );
+            }
+
+            throw new ApiException(
+                'لا يمكن المتابعة قبل اكتمال البيانات المطلوبة.',
+                422,
+                ['missing_arguments' => $missingArgs],
+                [],
+                'ACTION_ARGUMENTS_INCOMPLETE',
+                ['missing_arguments' => $missingArgs]
+            );
+        }
 
         $payload['proposed_action'] = $proposed;
         $payload['requires_confirmation'] = true;
@@ -658,6 +837,83 @@ class AgentPendingWorkflowService
                 'requires_confirmation' => true,
                 'action_name' => $action->action_name,
             ],
+        ];
+    }
+
+    /**
+     * Safe multi-slot guard: keep pending workflow and request appointment slot.
+     *
+     * @param  array<string, mixed>  $workflow
+     * @return array<string, mixed>
+     */
+    private function appointmentSlotSelectionRequiredResponse(
+        User $citizen,
+        AIAgentSession $session,
+        array $workflow,
+        int $applicationId,
+    ): array {
+        if ($applicationId <= 0) {
+            throw new ApiException(
+                'تعذر تحديد الطلب لإكمال الحجز.',
+                422,
+                [],
+                [],
+                'PENDING_WORKFLOW_STATE_INVALID'
+            );
+        }
+
+        $application = LicenseApplication::query()
+            ->where('citizen_id', $citizen->id)
+            ->whereKey($applicationId)
+            ->with(['licenseType', 'serviceType'])
+            ->first();
+
+        if ($application === null) {
+            $this->clear($session);
+            throw new ApiException(
+                'الطلب غير موجود أو لا تملك صلاحية الوصول إليه.',
+                404,
+                [],
+                [],
+                'APPLICATION_NOT_OWNED'
+            );
+        }
+
+        $workflow['state'] = PendingWorkflowState::AwaitingAppointmentSlotChoice->value;
+        $workflow['required_slots'] = ['application_choice', 'appointment_slot_choice'];
+        $workflow['current_required_slot'] = 'appointment_slot_choice';
+        $workflow['required_slot'] = 'appointment_slot_choice';
+        $collected = is_array($workflow['collected_slots'] ?? null) ? $workflow['collected_slots'] : [];
+        $collected['application_id'] = $applicationId;
+        $workflow['collected_slots'] = $collected;
+        $workflow['intent'] = 'book_appointment';
+        $this->writeWorkflow($session, $workflow);
+
+        $session->current_intent = 'book_appointment';
+        $session->save();
+
+        $reply = 'يرجى اختيار الموعد المناسب لإكمال الحجز.';
+        $this->storeAssistantMessage($session, $reply, [
+            'message_type' => 'appointment_slot_selection_required',
+            'intent' => 'book_appointment',
+        ]);
+
+        return [
+            'session_id' => $session->id,
+            'message_type' => 'appointment_slot_selection_required',
+            'reply' => $reply,
+            'intent' => 'book_appointment',
+            'confidence' => 1.0,
+            'missing_slots' => ['appointment_slot_choice'],
+            'requires_confirmation' => false,
+            'pending_action' => null,
+            'application' => $this->applicationCard($application),
+            'ui_payload' => [
+                'selection_type' => 'appointment_slot',
+                'application' => $this->applicationCard($application),
+                'slots' => [],
+            ],
+            'keep_pending_workflow' => true,
         ];
     }
 
