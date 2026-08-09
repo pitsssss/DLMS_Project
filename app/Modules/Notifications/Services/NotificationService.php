@@ -172,6 +172,24 @@ class NotificationService
         return $this->notifications->markAsRead($user->id, $notificationId);
     }
 
+    public function unreadCountForUser(User $user): int
+    {
+        return $this->notifications->countUnreadForUser($user->id);
+    }
+
+    /**
+     * @return array{marked_read_count: int, unread_count: int}
+     */
+    public function markAllAsRead(User $user): array
+    {
+        $marked = $this->notifications->markAllReadForUser($user->id);
+
+        return [
+            'marked_read_count' => $marked,
+            'unread_count' => $this->notifications->countUnreadForUser($user->id),
+        ];
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $replace

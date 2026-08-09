@@ -97,7 +97,7 @@ The system aims to:
 * Request license renewal.
 * Request lost/damaged license replacement.
 * Request license unblock.
-* View notifications.
+* View notifications (list, unread count, mark one / mark all read).
 * Use the controlled AI service agent (Phase 9A) to navigate license services step by step.
 
 ---

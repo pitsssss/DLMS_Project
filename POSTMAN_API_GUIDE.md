@@ -39,6 +39,23 @@ Request names describe **who** + **what** (example: `Citizen - Register New Acco
 10. Book appointment (and optionally reschedule/cancel).
 11. Read test results.
 12. Read licenses and fines.
+13. Open Notification Center (list / unread-count / mark-one / read-all).
+
+## 3.1) Citizen Notification Center (Flutter)
+Final 4-operation contract (`auth:sanctum` + `locale` + `citizen`):
+
+| Action | Method | Path |
+|--------|--------|------|
+| List inbox | `GET` | `/api/notifications?page=1&per_page=20` |
+| Bell badge | `GET` | `/api/notifications/unread-count` |
+| Mark one | `PUT` | `/api/notifications/{id}/read` |
+| Mark all | `PUT` | `/api/notifications/read-all` |
+
+Notes:
+- Query: `per_page` (default 20, max 100), `unread_only` (optional boolean). Do not derive badge count from the list.
+- Resource fields: `id`, `title`, `body`, `type`, `read_at`, `is_read`, `data`, `created_at`. Navigate with `type` + `data` (never parse localized title/body for routing).
+- `event_key` / `user_id` are never exposed. Historical `title`/`body` stay as stored text; `Accept-Language` localizes envelope messages only.
+- Source Flutter collection: `postman/SYRTAK_Flutter_API.postman_collection.json` (folder `10 - Notifications`).
 
 ## 4) Dashboard Demo Flow
 1. Login dashboard employee.

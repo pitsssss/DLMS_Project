@@ -518,6 +518,8 @@ return [
     'notifications' => [
         'list' => 'Notifications retrieved successfully.',
         'read' => 'Notification marked as read successfully.',
+        'read_all' => 'All notifications marked as read successfully.',
+        'unread_count' => 'Unread notification count retrieved successfully.',
         'not_found' => 'Notification not found.',
         'profile_approved_title' => 'Profile approved',
         'profile_approved_body' => 'Your profile details have been approved. You can now use SYRTAK services.',

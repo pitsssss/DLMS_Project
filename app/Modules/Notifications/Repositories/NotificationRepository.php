@@ -75,4 +75,26 @@ class NotificationRepository
 
         return $notification;
     }
+
+    public function countUnreadForUser(int $userId): int
+    {
+        return (int) Notification::query()
+            ->where('user_id', $userId)
+            ->whereNull('read_at')
+            ->count();
+    }
+
+    /**
+     * Bulk-mark all currently unread notifications for the citizen.
+     * Returns how many rows were updated.
+     */
+    public function markAllReadForUser(int $userId): int
+    {
+        $now = now();
+
+        return Notification::query()
+            ->where('user_id', $userId)
+            ->whereNull('read_at')
+            ->update(['read_at' => $now]);
+    }
 }

@@ -33,6 +33,13 @@ class NotificationController extends Controller
         ], 'messages.notifications.list');
     }
 
+    public function unreadCount(Request $request, NotificationService $notifications)
+    {
+        return $this->successResponse([
+            'unread_count' => $notifications->unreadCountForUser($request->user()),
+        ], 'messages.notifications.unread_count');
+    }
+
     public function markRead(Request $request, int $notification, NotificationService $notifications)
     {
         $model = $notifications->markAsRead($request->user(), $notification);
@@ -41,5 +48,12 @@ class NotificationController extends Controller
             new NotificationResource($model),
             'messages.notifications.read'
         );
+    }
+
+    public function markAllRead(Request $request, NotificationService $notifications)
+    {
+        $result = $notifications->markAllAsRead($request->user());
+
+        return $this->successResponse($result, 'messages.notifications.read_all');
     }
 }
