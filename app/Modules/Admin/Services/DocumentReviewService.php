@@ -5,6 +5,7 @@ namespace App\Modules\Admin\Services;
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentRejectionReason;
 use App\Enums\DocumentStatus;
+use App\Enums\NotificationType;
 use App\Exceptions\ApiException;
 use App\Models\ApplicationDocument;
 use App\Models\LicenseApplication;
@@ -12,6 +13,7 @@ use App\Models\RequiredDocument;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use App\Support\Msg;
 use App\Support\RecipientNotificationTranslator;
@@ -44,7 +46,7 @@ class DocumentReviewService
 
     public function approve(User $reviewer, int $documentId): ApplicationDocument
     {
-        $result = DB::transaction(function () use ($documentId, $reviewer): array {
+        return DB::transaction(function () use ($documentId, $reviewer): ApplicationDocument {
             [$document, $application] = $this->lockReviewableDocument($documentId);
 
             $oldStatus = $document->status->value;
@@ -77,27 +79,23 @@ class DocumentReviewService
                 ['status' => DocumentStatus::Approved->value]
             );
 
-            $fresh = $document->fresh(['requiredDocument', 'application']);
-
-            return [
-                'document' => $fresh,
-                'notification' => [
-                    'user_id' => $application->citizen_id,
-                    'title_key' => 'messages.notifications.document_approved_title',
-                    'body_key' => 'messages.notifications.document_approved_body',
-                    'replace' => [],
-                    'type' => 'document.approved',
-                    'data' => [
-                        'document_id' => $document->id,
-                        'application_id' => $application->id,
-                    ],
+            $this->notifications->notify(
+                (int) $application->citizen_id,
+                NotificationType::DocumentApproved,
+                [
+                    'document_id' => $document->id,
+                    'application_id' => $application->id,
                 ],
-            ];
+                [],
+                NotificationEventKey::forDocumentReview(
+                    NotificationType::DocumentApproved,
+                    $document->id,
+                    $document->reviewed_at
+                )
+            );
+
+            return $document->fresh(['requiredDocument', 'application']);
         });
-
-        $this->dispatchNotification($result['notification']);
-
-        return $result['document'];
     }
 
     public function reject(
@@ -117,7 +115,7 @@ class DocumentReviewService
 
         $displayReason = $reason->displayReason($details);
 
-        $result = DB::transaction(function () use ($documentId, $reviewer, $reason, $details, $displayReason): array {
+        return DB::transaction(function () use ($documentId, $reviewer, $reason, $details, $displayReason): ApplicationDocument {
             [$document, $application] = $this->lockReviewableDocument($documentId);
 
             $oldStatus = $document->status->value;
@@ -170,33 +168,31 @@ class DocumentReviewService
                 )
                 : '';
 
-            return [
-                'document' => $fresh,
-                'notification' => [
-                    'user_id' => $application->citizen_id,
-                    'title_key' => 'messages.notifications.document_rejected_title',
-                    'body_key' => 'messages.notifications.document_rejected_body',
-                    'replace' => [
-                        'document_name' => $documentName,
-                        'application_number' => $applicationNumber,
-                        'reason' => $reasonLabel,
-                        'details_suffix' => $detailsSuffix,
-                    ],
-                    'type' => 'document.rejected',
-                    'data' => [
-                        'document_id' => $document->id,
-                        'application_id' => $application->id,
-                        'rejection_reason_code' => $reason->value,
-                        'rejection_reason_label' => $reason->label(),
-                        'rejection_details' => $details,
-                    ],
+            $this->notifications->notify(
+                (int) $application->citizen_id,
+                NotificationType::DocumentRejected,
+                [
+                    'document_id' => $document->id,
+                    'application_id' => $application->id,
+                    'rejection_reason_code' => $reason->value,
+                    'rejection_reason_label' => $reason->label(),
+                    'rejection_details' => $details,
                 ],
-            ];
+                [
+                    'document_name' => $documentName,
+                    'application_number' => $applicationNumber,
+                    'reason' => $reasonLabel,
+                    'details_suffix' => $detailsSuffix,
+                ],
+                NotificationEventKey::forDocumentReview(
+                    NotificationType::DocumentRejected,
+                    $document->id,
+                    $document->reviewed_at
+                )
+            );
+
+            return $fresh;
         });
-
-        $this->dispatchNotification($result['notification']);
-
-        return $result['document'];
     }
 
     /**
@@ -304,28 +300,5 @@ class DocumentReviewService
             })
             ->orderBy('name')
             ->get();
-    }
-
-    /**
-     * @param  array{user_id: int, title_key: string, body_key: string, replace?: array<string, mixed>, type: string, data: array<string, mixed>}|null  $notification
-     */
-    private function dispatchNotification(?array $notification): void
-    {
-        if ($notification === null) {
-            return;
-        }
-
-        try {
-            $this->notifications->sendLocalizedToUser(
-                $notification['user_id'],
-                $notification['title_key'],
-                $notification['body_key'],
-                $notification['replace'] ?? [],
-                $notification['type'],
-                $notification['data']
-            );
-        } catch (\Throwable) {
-            // Review is already committed; notification failure must not roll it back.
-        }
     }
 }

@@ -11,11 +11,12 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Support\ServiceWorkflow;
+use App\Enums\NotificationType;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Modules\Payments\Support\Money;
 use App\Services\AuditLogService;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 class PaymentLifecycleService
 {
@@ -277,29 +278,25 @@ class PaymentLifecycleService
 
     private function notifyCompleted(Payment $payment): void
     {
-        try {
-            $payment->loadMissing('application');
-            $this->notifications->sendLocalizedToUser(
-                (int) $payment->user_id,
-                'messages.notifications.payment_completed_title',
-                'messages.notifications.payment_completed_body',
-                [
-                    'payment_number' => $payment->payment_number,
-                    'application_number' => $payment->application?->application_number ?? '',
-                    'amount' => Money::format((string) $payment->amount),
-                    'currency' => $payment->currency,
-                ],
-                'payment.completed',
-                [
-                    'payment_id' => $payment->id,
-                    'payment_number' => $payment->payment_number,
-                    'application_id' => $payment->application_id,
-                    'amount' => Money::format((string) $payment->amount),
-                    'currency' => $payment->currency,
-                ]
-            );
-        } catch (Throwable $e) {
-            report($e);
-        }
+        $payment->loadMissing('application');
+
+        $this->notifications->notify(
+            (int) $payment->user_id,
+            NotificationType::PaymentCompleted,
+            [
+                'payment_id' => $payment->id,
+                'payment_number' => $payment->payment_number,
+                'application_id' => $payment->application_id,
+                'amount' => Money::format((string) $payment->amount),
+                'currency' => $payment->currency,
+            ],
+            [
+                'payment_number' => $payment->payment_number,
+                'application_number' => $payment->application?->application_number ?? '',
+                'amount' => Money::format((string) $payment->amount),
+                'currency' => $payment->currency,
+            ],
+            NotificationEventKey::forPayment(NotificationType::PaymentCompleted, $payment->id)
+        );
     }
 }

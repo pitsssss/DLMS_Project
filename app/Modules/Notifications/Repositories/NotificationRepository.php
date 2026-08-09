@@ -36,6 +36,27 @@ class NotificationRepository
             ->get();
     }
 
+    public function findByEventKey(string $eventKey): ?Notification
+    {
+        return Notification::query()->where('event_key', $eventKey)->first();
+    }
+
+    /**
+     * @param  array{
+     *     user_id: int,
+     *     title: string,
+     *     body: string,
+     *     type: ?string,
+     *     read_at: mixed,
+     *     data: mixed,
+     *     event_key: ?string
+     * }  $attributes
+     */
+    public function create(array $attributes): Notification
+    {
+        return Notification::query()->create($attributes);
+    }
+
     public function markAsRead(int $userId, int $notificationId): Notification
     {
         $notification = Notification::query()

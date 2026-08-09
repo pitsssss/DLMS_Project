@@ -3,12 +3,14 @@
 namespace App\Modules\Fines\Services;
 
 use App\Enums\FineStatus;
+use App\Enums\NotificationType;
 use App\Exceptions\ApiException;
 use App\Models\Fine;
 use App\Models\License;
 use App\Models\User;
 use App\Modules\Fines\Repositories\FineRepository;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -74,13 +76,12 @@ class FineService
             ['amount' => $amount, 'citizen_id' => $citizenId, 'status' => FineStatus::Unpaid->value]
         );
 
-        $this->notifications->sendLocalizedToUser(
+        $this->notifications->notify(
             $citizenId,
-            'messages.notifications.fine_issued_title',
-            'messages.notifications.fine_issued_body',
+            NotificationType::FineCreated,
+            ['fine_id' => $fine->id],
             ['amount' => $amount, 'reason' => $reason],
-            'fine.created',
-            ['fine_id' => $fine->id]
+            NotificationEventKey::forFine(NotificationType::FineCreated, $fine->id)
         );
 
         return $fine;
@@ -126,13 +127,12 @@ class FineService
             $fine->save();
 
             if (isset($data['status']) && FineStatus::from($data['status']) === FineStatus::Paid) {
-                $this->notifications->sendLocalizedToUser(
-                    $fine->citizen_id,
-                    'messages.notifications.fine_paid_title',
-                    'messages.notifications.fine_paid_body',
+                $this->notifications->notify(
+                    (int) $fine->citizen_id,
+                    NotificationType::FinePaid,
+                    ['fine_id' => $fine->id],
                     [],
-                    'fine.paid',
-                    ['fine_id' => $fine->id]
+                    NotificationEventKey::forFine(NotificationType::FinePaid, $fine->id)
                 );
             }
 

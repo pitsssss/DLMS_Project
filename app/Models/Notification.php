@@ -14,6 +14,7 @@ class Notification extends Model
         'type',
         'read_at',
         'data',
+        'event_key',
     ];
 
     protected function casts(): array

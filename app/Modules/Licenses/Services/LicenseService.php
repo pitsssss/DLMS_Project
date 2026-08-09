@@ -5,6 +5,7 @@ namespace App\Modules\Licenses\Services;
 use App\Enums\ApplicationStatus;
 use App\Enums\FineStatus;
 use App\Enums\LicenseStatus;
+use App\Enums\NotificationType;
 use App\Enums\ServiceCode;
 use App\Exceptions\ApiException;
 use App\Models\License;
@@ -14,6 +15,7 @@ use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Licenses\Repositories\LicenseRepository;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Support\Msg;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -104,13 +106,12 @@ class LicenseService
                 ]
             );
 
-            $this->notifications->sendLocalizedToUser(
-                $application->citizen_id,
-                'messages.notifications.license_issued_title',
-                'messages.notifications.license_issued_body',
+            $this->notifications->notify(
+                (int) $application->citizen_id,
+                NotificationType::LicenseIssued,
+                ['license_id' => $license->id, 'application_id' => $application->id],
                 [],
-                'license.issued',
-                ['license_id' => $license->id, 'application_id' => $application->id]
+                NotificationEventKey::forLicense(NotificationType::LicenseIssued, $license->id)
             );
 
             return $license->fresh(['licenseType', 'application', 'issuedBy', 'previousLicense']);
@@ -349,13 +350,16 @@ class LicenseService
                 ]
             );
 
-            $this->notifications->sendLocalizedToUser(
-                $license->citizen_id,
-                'messages.notifications.license_blocked_title',
-                'messages.notifications.license_blocked_body',
+            $this->notifications->notify(
+                (int) $license->citizen_id,
+                NotificationType::LicenseBlocked,
+                ['license_id' => $license->id, 'license_number' => $license->license_number],
                 [],
-                'license.blocked',
-                ['license_id' => $license->id, 'license_number' => $license->license_number]
+                NotificationEventKey::forLicenseAt(
+                    NotificationType::LicenseBlocked,
+                    $license->id,
+                    $license->blocked_at ?? now()
+                )
             );
 
             return $license->fresh(['licenseType', 'application', 'citizen', 'blockedBy']);
@@ -405,13 +409,18 @@ class LicenseService
                 ['status' => $newStatus->value]
             );
 
-            $this->notifications->sendLocalizedToUser(
-                $license->citizen_id,
-                'messages.notifications.license_unblocked_title',
-                'messages.notifications.license_unblocked_body',
+            $unblockedAt = now();
+
+            $this->notifications->notify(
+                (int) $license->citizen_id,
+                NotificationType::LicenseUnblocked,
+                ['license_id' => $license->id],
                 [],
-                'license.unblocked',
-                ['license_id' => $license->id]
+                NotificationEventKey::forLicenseAt(
+                    NotificationType::LicenseUnblocked,
+                    $license->id,
+                    $unblockedAt
+                )
             );
 
             return $license->fresh(['licenseType', 'application', 'citizen']);

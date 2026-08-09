@@ -4,6 +4,7 @@ namespace App\Modules\Tests\Services;
 
 use App\Enums\AppointmentStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\NotificationType;
 use App\Enums\TestResultStatus;
 use App\Exceptions\ApiException;
 use App\Models\LicenseApplication;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use App\Support\RecipientNotificationTranslator;
 use Illuminate\Database\Eloquent\Collection;
@@ -115,11 +117,12 @@ class TestResultService
             );
 
             $locale = RecipientNotificationTranslator::localeForUserId((int) $application->citizen_id);
+            $type = NotificationType::fromTestResultStatus($result);
 
-            $this->notifications->sendLocalizedToUser(
-                $application->citizen_id,
-                'messages.notifications.test_result_title',
-                'messages.notifications.test_result_body',
+            $this->notifications->notify(
+                (int) $application->citizen_id,
+                $type,
+                ['application_id' => $application->id, 'test_result_id' => $testResult->id],
                 [
                     'test_name' => $testType->name,
                     'result' => RecipientNotificationTranslator::get(
@@ -128,8 +131,7 @@ class TestResultService
                         $locale
                     ),
                 ],
-                'test_result.'.$result->value,
-                ['application_id' => $application->id, 'test_result_id' => $testResult->id]
+                NotificationEventKey::forTestResult($type, $testResult->id)
             );
 
             return $testResult->fresh(['testType', 'testAppointment', 'recordedBy']);

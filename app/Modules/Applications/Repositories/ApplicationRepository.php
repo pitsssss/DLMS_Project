@@ -135,7 +135,7 @@ class ApplicationRepository
 
             $application->save();
 
-            ApplicationStatusHistory::query()->create([
+            $history = ApplicationStatusHistory::query()->create([
                 'application_id' => $application->id,
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
@@ -153,7 +153,12 @@ class ApplicationRepository
                 ['status' => $newStatus->value]
             );
 
-            $this->notifications->notifyApplicationStatusChange($application, $newStatus);
+            // afterCommit inside NotificationService: nested TXs cannot orphan or roll back domain work.
+            $this->notifications->notifyApplicationStatusChange(
+                $application,
+                $newStatus,
+                (int) $history->id
+            );
 
             return $application->fresh(['licenseType', 'serviceType', 'relatedLicense', 'currentTestType']);
         });

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Applications\Services;
 
+use App\Enums\NotificationType;
 use App\Enums\ServiceCode;
 use App\Exceptions\ApiException;
 use App\Models\License;
@@ -13,6 +14,7 @@ use App\Modules\Applications\Repositories\ApplicationRepository;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Auth\Services\ProfileService;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -323,13 +325,12 @@ class ApplicationService
             ]
         );
 
-        $this->notifications->sendLocalizedToUser(
+        $this->notifications->notify(
             $citizen->id,
-            'messages.notifications.application_created_title',
-            'messages.notifications.application_created_body',
+            NotificationType::ApplicationCreated,
+            ['application_id' => $application->id],
             [],
-            'application.created',
-            ['application_id' => $application->id]
+            NotificationEventKey::forApplication(NotificationType::ApplicationCreated, $application->id)
         );
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Modules\Admin\Services;
 
+use App\Enums\NotificationType;
 use App\Enums\ProfileStatus;
 use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -88,13 +90,16 @@ class ProfileReviewService
                 ['profile_status' => ProfileStatus::Approved->value]
             );
 
-            $this->notifications->sendLocalizedToUser(
+            $this->notifications->notify(
                 $citizen->id,
-                'messages.notifications.profile_approved_title',
-                'messages.notifications.profile_approved_body',
+                NotificationType::ProfileApproved,
+                ['profile_status' => ProfileStatus::Approved->value],
                 [],
-                'profile.approved',
-                ['profile_status' => ProfileStatus::Approved->value]
+                NotificationEventKey::forUserAt(
+                    NotificationType::ProfileApproved,
+                    $citizen->id,
+                    $citizen->profile_reviewed_at
+                )
             );
 
             return $citizen->fresh();
@@ -130,16 +135,19 @@ class ProfileReviewService
                 ]
             );
 
-            $this->notifications->sendLocalizedToUser(
+            $this->notifications->notify(
                 $citizen->id,
-                'messages.notifications.profile_rejected_title',
-                'messages.notifications.profile_rejected_body',
-                [],
-                'profile.rejected',
+                NotificationType::ProfileRejected,
                 [
                     'profile_status' => ProfileStatus::Rejected->value,
                     'rejection_reason' => $rejectionReason,
-                ]
+                ],
+                [],
+                NotificationEventKey::forUserAt(
+                    NotificationType::ProfileRejected,
+                    $citizen->id,
+                    $citizen->profile_reviewed_at
+                )
             );
 
             return $citizen->fresh();

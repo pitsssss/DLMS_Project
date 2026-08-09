@@ -2,6 +2,7 @@
 
 namespace App\Modules\Dashboard\Services;
 
+use App\Enums\NotificationType;
 use App\Enums\ProfileStatus;
 use App\Enums\UserType;
 use App\Exceptions\ApiException;
@@ -12,6 +13,7 @@ use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\Auth\Repositories\AuthRepository;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use App\Support\EmployeeMessageTranslator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -160,16 +162,13 @@ class DashboardCitizenService
             return $citizen;
         }
 
-        try {
-            $this->notifications->sendLocalizedToUser(
-                $citizen->id,
-                'messages.notifications.account_activated_title',
-                'messages.notifications.account_activated_body',
-                [],
-                'account.activated',
-            );
-        } catch (\Throwable) {
-        }
+        $this->notifications->notify(
+            $citizen->id,
+            NotificationType::AccountActivated,
+            [],
+            [],
+            NotificationEventKey::forUserAt(NotificationType::AccountActivated, $citizen->id, now())
+        );
 
         return $citizen;
     }
@@ -213,16 +212,17 @@ class DashboardCitizenService
             return $citizen;
         }
 
-        try {
-            $this->notifications->sendLocalizedToUser(
+        $this->notifications->notify(
+            $citizen->id,
+            NotificationType::AccountDeactivated,
+            [],
+            ['reason' => $reason],
+            NotificationEventKey::forUserAt(
+                NotificationType::AccountDeactivated,
                 $citizen->id,
-                'messages.notifications.account_deactivated_title',
-                'messages.notifications.account_deactivated_body',
-                ['reason' => $reason],
-                'account.deactivated',
-            );
-        } catch (\Throwable) {
-        }
+                $citizen->deactivated_at ?? now()
+            )
+        );
 
         return $citizen;
     }
