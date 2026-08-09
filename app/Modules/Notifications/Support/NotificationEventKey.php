@@ -40,6 +40,11 @@ final class NotificationEventKey
         return self::make($type, 'payment:'.$paymentId);
     }
 
+    public static function forPaymentCode(NotificationType $type, int $paymentId, string $code): string
+    {
+        return self::make($type, 'payment:'.$paymentId.':code:'.$code);
+    }
+
     public static function forTestResult(NotificationType $type, int $testResultId): string
     {
         return self::make($type, 'test_result:'.$testResultId);
@@ -58,6 +63,22 @@ final class NotificationEventKey
     public static function forFine(NotificationType $type, int $fineId): string
     {
         return self::make($type, 'fine:'.$fineId);
+    }
+
+    public static function forAppointment(NotificationType $type, int $appointmentId): string
+    {
+        return self::make($type, 'appointment:'.$appointmentId);
+    }
+
+    public static function forAppointmentReschedule(
+        int $appointmentId,
+        int $slotId,
+        CarbonInterface|string $scheduledAt
+    ): string {
+        return self::make(
+            NotificationType::AppointmentRescheduled,
+            'appointment:'.$appointmentId.':slot:'.$slotId.':at:'.self::timestamp($scheduledAt)
+        );
     }
 
     private static function timestamp(CarbonInterface|string $at): string

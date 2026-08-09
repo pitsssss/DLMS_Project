@@ -136,6 +136,16 @@ class FineService
                 );
             }
 
+            if (isset($data['status']) && FineStatus::from($data['status']) === FineStatus::Cancelled) {
+                $this->notifications->notify(
+                    (int) $fine->citizen_id,
+                    NotificationType::FineCancelled,
+                    ['fine_id' => $fine->id],
+                    [],
+                    NotificationEventKey::forFine(NotificationType::FineCancelled, $fine->id)
+                );
+            }
+
             $this->auditLogs->log(
                 $actor,
                 'fine.updated',

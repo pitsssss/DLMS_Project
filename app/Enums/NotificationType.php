@@ -22,6 +22,8 @@ enum NotificationType: string
     case ApplicationApproved = 'application.approved';
     case ApplicationWaitingRetest = 'application.waiting_retest';
     case ApplicationAdministrativeReview = 'application.administrative_review';
+    case ApplicationRejected = 'application.rejected';
+    case ApplicationCancelled = 'application.cancelled';
 
     /**
      * Legacy type retained for historical rows only.
@@ -33,6 +35,12 @@ enum NotificationType: string
     case DocumentRejected = 'document.rejected';
 
     case PaymentCompleted = 'payment.completed';
+    case PaymentFailed = 'payment.failed';
+    case PaymentUnderVerification = 'payment.under_verification';
+
+    case AppointmentBooked = 'appointment.booked';
+    case AppointmentRescheduled = 'appointment.rescheduled';
+    case AppointmentCancelled = 'appointment.cancelled';
 
     case TestResultPassed = 'test_result.passed';
     case TestResultFailed = 'test_result.failed';
@@ -41,9 +49,11 @@ enum NotificationType: string
     case LicenseIssued = 'license.issued';
     case LicenseBlocked = 'license.blocked';
     case LicenseUnblocked = 'license.unblocked';
+    case LicenseExpired = 'license.expired';
 
     case FineCreated = 'fine.created';
     case FinePaid = 'fine.paid';
+    case FineCancelled = 'fine.cancelled';
 
     public function domain(): string
     {
@@ -65,15 +75,24 @@ enum NotificationType: string
             self::ApplicationApproved => 'messages.notifications.approved_title',
             self::ApplicationWaitingRetest => 'messages.notifications.retest_title',
             self::ApplicationAdministrativeReview => 'messages.notifications.admin_review_title',
+            self::ApplicationRejected => 'messages.notifications.application_rejected_title',
+            self::ApplicationCancelled => 'messages.notifications.application_cancelled_title',
             self::ApplicationLicenseIssued, self::LicenseIssued => 'messages.notifications.license_issued_title',
             self::DocumentApproved => 'messages.notifications.document_approved_title',
             self::DocumentRejected => 'messages.notifications.document_rejected_title',
             self::PaymentCompleted => 'messages.notifications.payment_completed_title',
+            self::PaymentFailed => 'messages.notifications.payment_failed_title',
+            self::PaymentUnderVerification => 'messages.notifications.payment_under_verification_title',
+            self::AppointmentBooked => 'messages.notifications.appointment_booked_title',
+            self::AppointmentRescheduled => 'messages.notifications.appointment_rescheduled_title',
+            self::AppointmentCancelled => 'messages.notifications.appointment_cancelled_title',
             self::TestResultPassed, self::TestResultFailed, self::TestResultNoShow => 'messages.notifications.test_result_title',
             self::LicenseBlocked => 'messages.notifications.license_blocked_title',
             self::LicenseUnblocked => 'messages.notifications.license_unblocked_title',
+            self::LicenseExpired => 'messages.notifications.license_expired_title',
             self::FineCreated => 'messages.notifications.fine_issued_title',
             self::FinePaid => 'messages.notifications.fine_paid_title',
+            self::FineCancelled => 'messages.notifications.fine_cancelled_title',
         };
     }
 
@@ -92,21 +111,28 @@ enum NotificationType: string
             self::ApplicationApproved => 'messages.notifications.approved_body',
             self::ApplicationWaitingRetest => 'messages.notifications.retest_body',
             self::ApplicationAdministrativeReview => 'messages.notifications.admin_review_body',
+            self::ApplicationRejected => 'messages.notifications.application_rejected_body',
+            self::ApplicationCancelled => 'messages.notifications.application_cancelled_body',
             self::ApplicationLicenseIssued, self::LicenseIssued => 'messages.notifications.license_issued_body',
             self::DocumentApproved => 'messages.notifications.document_approved_body',
             self::DocumentRejected => 'messages.notifications.document_rejected_body',
             self::PaymentCompleted => 'messages.notifications.payment_completed_body',
+            self::PaymentFailed => 'messages.notifications.payment_failed_body',
+            self::PaymentUnderVerification => 'messages.notifications.payment_under_verification_body',
+            self::AppointmentBooked => 'messages.notifications.appointment_booked_body',
+            self::AppointmentRescheduled => 'messages.notifications.appointment_rescheduled_body',
+            self::AppointmentCancelled => 'messages.notifications.appointment_cancelled_body',
             self::TestResultPassed, self::TestResultFailed, self::TestResultNoShow => 'messages.notifications.test_result_body',
             self::LicenseBlocked => 'messages.notifications.license_blocked_body',
             self::LicenseUnblocked => 'messages.notifications.license_unblocked_body',
+            self::LicenseExpired => 'messages.notifications.license_expired_body',
             self::FineCreated => 'messages.notifications.fine_issued_body',
             self::FinePaid => 'messages.notifications.fine_paid_body',
+            self::FineCancelled => 'messages.notifications.fine_cancelled_body',
         };
     }
 
     /**
-     * Machine-readable `data` keys allowed for this type.
-     *
      * @return list<string>
      */
     public function allowedDataKeys(): array
@@ -123,6 +149,8 @@ enum NotificationType: string
             self::ApplicationApproved,
             self::ApplicationWaitingRetest,
             self::ApplicationAdministrativeReview,
+            self::ApplicationRejected,
+            self::ApplicationCancelled,
             self::ApplicationLicenseIssued => ['application_id', 'application_number', 'status'],
             self::DocumentApproved => ['application_id', 'document_id'],
             self::DocumentRejected => [
@@ -139,20 +167,27 @@ enum NotificationType: string
                 'amount',
                 'currency',
             ],
+            self::PaymentFailed, self::PaymentUnderVerification => [
+                'application_id',
+                'payment_id',
+                'payment_number',
+            ],
+            self::AppointmentBooked, self::AppointmentRescheduled, self::AppointmentCancelled => [
+                'application_id',
+                'appointment_id',
+                'test_type_id',
+            ],
             self::TestResultPassed, self::TestResultFailed, self::TestResultNoShow => [
                 'application_id',
                 'test_result_id',
             ],
             self::LicenseIssued => ['application_id', 'license_id'],
             self::LicenseBlocked => ['license_id', 'license_number'],
-            self::LicenseUnblocked => ['license_id'],
-            self::FineCreated, self::FinePaid => ['fine_id'],
+            self::LicenseUnblocked, self::LicenseExpired => ['license_id', 'license_number'],
+            self::FineCreated, self::FinePaid, self::FineCancelled => ['fine_id'],
         };
     }
 
-    /**
-     * Whether new emissions of this type are suppressed (legacy-only).
-     */
     public function isLegacyEmissionSuppressed(): bool
     {
         return $this === self::ApplicationLicenseIssued;
@@ -168,7 +203,9 @@ enum NotificationType: string
             ApplicationStatus::Approved => self::ApplicationApproved,
             ApplicationStatus::WaitingRetest => self::ApplicationWaitingRetest,
             ApplicationStatus::AdministrativeReview => self::ApplicationAdministrativeReview,
-            // LicenseIssued: emit license.issued only (via LicenseService), not application.license_issued.
+            ApplicationStatus::Rejected => self::ApplicationRejected,
+            ApplicationStatus::Cancelled => self::ApplicationCancelled,
+            // LicenseIssued: emit license.issued only (via LicenseService).
             ApplicationStatus::LicenseIssued => null,
             default => null,
         };

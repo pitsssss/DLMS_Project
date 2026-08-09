@@ -4,6 +4,7 @@ namespace App\Modules\Appointments\Services;
 
 use App\Enums\AppointmentStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\NotificationType;
 use App\Exceptions\ApiException;
 use App\Models\AppointmentSlot;
 use App\Models\LicenseApplication;
@@ -13,6 +14,9 @@ use App\Models\User;
 use App\Modules\Appointments\Repositories\AppointmentRepository;
 use App\Modules\Appointments\Repositories\AppointmentSlotRepository;
 use App\Modules\Applications\Repositories\ApplicationRepository;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\AppointmentNotificationCopy;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use App\Support\BusinessClock;
 use App\Support\CitizenCatalogLabel;
@@ -29,6 +33,7 @@ class AppointmentService
         private readonly TestProgressionService $progression,
         private readonly AuditLogService $auditLogs,
         private readonly BusinessClock $clock,
+        private readonly NotificationService $notifications,
     ) {}
 
     /**
@@ -149,7 +154,10 @@ class AppointmentService
                 $application->save();
             }
 
-            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $fresh = $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $this->notifyAppointment($fresh, NotificationType::AppointmentBooked, $citizen->id);
+
+            return $fresh;
         });
     }
 
@@ -225,7 +233,10 @@ class AppointmentService
                 request(),
             );
 
-            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $fresh = $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $this->notifyAppointment($fresh, NotificationType::AppointmentRescheduled, $citizen->id);
+
+            return $fresh;
         });
     }
 
@@ -275,8 +286,35 @@ class AppointmentService
                 request(),
             );
 
-            return $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $fresh = $appointment->fresh(['appointmentSlot.appointmentCenter', 'testType']);
+            $this->notifyAppointment($fresh, NotificationType::AppointmentCancelled, $citizen->id);
+
+            return $fresh;
         });
+    }
+
+    private function notifyAppointment(TestAppointment $appointment, NotificationType $type, int $citizenId): void
+    {
+        $eventKey = match ($type) {
+            NotificationType::AppointmentRescheduled => NotificationEventKey::forAppointmentReschedule(
+                $appointment->id,
+                (int) $appointment->appointment_slot_id,
+                $appointment->scheduled_at
+            ),
+            default => NotificationEventKey::forAppointment($type, $appointment->id),
+        };
+
+        $this->notifications->notify(
+            $citizenId,
+            $type,
+            [
+                'application_id' => $appointment->application_id,
+                'appointment_id' => $appointment->id,
+                'test_type_id' => $appointment->test_type_id,
+            ],
+            AppointmentNotificationCopy::placeholders($appointment),
+            $eventKey
+        );
     }
 
     /**

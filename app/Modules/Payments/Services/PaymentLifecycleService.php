@@ -60,7 +60,7 @@ class PaymentLifecycleService
                 ->exists();
 
             if ($alreadySettled) {
-                $this->markUnderVerificationLocked(
+                $changed = $this->markUnderVerificationLocked(
                     $payment,
                     PaymentFailureCode::ObligationAlreadySettled,
                     $mergeMetadata,
@@ -68,7 +68,12 @@ class PaymentLifecycleService
                     $source
                 );
 
-                return ['payment' => $payment->fresh(['fee', 'application']), 'transitioned' => false, 'notified' => false];
+                return [
+                    'payment' => $payment->fresh(['fee', 'application']),
+                    'transitioned' => false,
+                    'notified' => false,
+                    'notify_under_verification' => $changed,
+                ];
             }
 
             $application = LicenseApplication::query()
@@ -157,6 +162,10 @@ class PaymentLifecycleService
             $this->notifyCompleted($result['payment']);
         }
 
+        if ($result['notify_under_verification'] ?? false) {
+            $this->notifyUnderVerification($result['payment']);
+        }
+
         return $result['payment'];
     }
 
@@ -170,16 +179,16 @@ class PaymentLifecycleService
         ?User $actor = null,
         string $source = 'system'
     ): Payment {
-        return DB::transaction(function () use ($paymentId, $code, $mergeMetadata, $actor, $source) {
+        $result = DB::transaction(function () use ($paymentId, $code, $mergeMetadata, $actor, $source) {
             $payment = Payment::query()->whereKey($paymentId)->lockForUpdate()->firstOrFail();
 
             if ($payment->status === PaymentStatus::Completed) {
-                return $payment->fresh(['fee', 'application']);
+                return ['payment' => $payment->fresh(['fee', 'application']), 'notify_failed' => false];
             }
 
             if ($payment->status === PaymentStatus::Failed
                 && $payment->failure_code === $code->value) {
-                return $payment->fresh(['fee', 'application']);
+                return ['payment' => $payment->fresh(['fee', 'application']), 'notify_failed' => false];
             }
 
             $oldStatus = $payment->status->value;
@@ -206,8 +215,14 @@ class PaymentLifecycleService
                 ]
             );
 
-            return $payment->fresh(['fee', 'application']);
+            return ['payment' => $payment->fresh(['fee', 'application']), 'notify_failed' => true];
         });
+
+        if ($result['notify_failed']) {
+            $this->notifyFailed($result['payment']);
+        }
+
+        return $result['payment'];
     }
 
     /**
@@ -220,17 +235,23 @@ class PaymentLifecycleService
         ?User $actor = null,
         string $source = 'system'
     ): Payment {
-        return DB::transaction(function () use ($paymentId, $code, $mergeMetadata, $actor, $source) {
+        $result = DB::transaction(function () use ($paymentId, $code, $mergeMetadata, $actor, $source) {
             $payment = Payment::query()->whereKey($paymentId)->lockForUpdate()->firstOrFail();
 
             if ($payment->status === PaymentStatus::Completed) {
-                return $payment->fresh(['fee', 'application']);
+                return ['payment' => $payment->fresh(['fee', 'application']), 'notify' => false];
             }
 
-            $this->markUnderVerificationLocked($payment, $code, $mergeMetadata, $actor, $source);
+            $changed = $this->markUnderVerificationLocked($payment, $code, $mergeMetadata, $actor, $source);
 
-            return $payment->fresh(['fee', 'application']);
+            return ['payment' => $payment->fresh(['fee', 'application']), 'notify' => $changed];
         });
+
+        if ($result['notify']) {
+            $this->notifyUnderVerification($result['payment']);
+        }
+
+        return $result['payment'];
     }
 
     /**
@@ -242,10 +263,10 @@ class PaymentLifecycleService
         array $mergeMetadata,
         ?User $actor,
         string $source
-    ): void {
+    ): bool {
         if ($payment->status === PaymentStatus::UnderVerification
             && $payment->failure_code === $code->value) {
-            return;
+            return false;
         }
 
         $oldStatus = $payment->status->value;
@@ -274,6 +295,8 @@ class PaymentLifecycleService
                 'application_id' => $payment->application_id,
             ]
         );
+
+        return true;
     }
 
     private function notifyCompleted(Payment $payment): void
@@ -297,6 +320,52 @@ class PaymentLifecycleService
                 'currency' => $payment->currency,
             ],
             NotificationEventKey::forPayment(NotificationType::PaymentCompleted, $payment->id)
+        );
+    }
+
+    private function notifyFailed(Payment $payment): void
+    {
+        $payment->loadMissing('application');
+
+        $this->notifications->notify(
+            (int) $payment->user_id,
+            NotificationType::PaymentFailed,
+            [
+                'payment_id' => $payment->id,
+                'payment_number' => $payment->payment_number,
+                'application_id' => $payment->application_id,
+            ],
+            [
+                'application_number' => $payment->application?->application_number ?? '',
+            ],
+            NotificationEventKey::forPaymentCode(
+                NotificationType::PaymentFailed,
+                $payment->id,
+                (string) $payment->failure_code
+            )
+        );
+    }
+
+    private function notifyUnderVerification(Payment $payment): void
+    {
+        $payment->loadMissing('application');
+
+        $this->notifications->notify(
+            (int) $payment->user_id,
+            NotificationType::PaymentUnderVerification,
+            [
+                'payment_id' => $payment->id,
+                'payment_number' => $payment->payment_number,
+                'application_id' => $payment->application_id,
+            ],
+            [
+                'application_number' => $payment->application?->application_number ?? '',
+            ],
+            NotificationEventKey::forPaymentCode(
+                NotificationType::PaymentUnderVerification,
+                $payment->id,
+                (string) $payment->failure_code
+            )
         );
     }
 }

@@ -3,9 +3,12 @@
 namespace App\Modules\Licenses\Services;
 
 use App\Enums\LicenseStatus;
+use App\Enums\NotificationType;
 use App\Models\License;
 use App\Models\LicenseStatusHistory;
 use App\Models\User;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -14,6 +17,7 @@ class LicenseLifecycleService
 {
     public function __construct(
         private readonly AuditLogService $auditLogs,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function generateVerificationToken(): string
@@ -122,6 +126,17 @@ class LicenseLifecycleService
             $license,
             ['status' => $from->value],
             ['status' => LicenseStatus::Expired->value],
+        );
+
+        $this->notifications->notify(
+            (int) $license->citizen_id,
+            NotificationType::LicenseExpired,
+            [
+                'license_id' => $license->id,
+                'license_number' => $license->license_number,
+            ],
+            ['license_number' => $license->license_number],
+            NotificationEventKey::forLicense(NotificationType::LicenseExpired, $license->id)
         );
 
         return true;
