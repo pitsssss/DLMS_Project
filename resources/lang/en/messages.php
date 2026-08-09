@@ -584,6 +584,19 @@ return [
         'account_activated_body' => 'Your account has been activated. You can now sign in and use platform services.',
     ],
 
+    'devices' => [
+        'registered' => 'Push device registered successfully.',
+        'unregistered' => 'Push device unregistered successfully.',
+        'validation' => [
+            'device_id_required' => 'Device ID is required.',
+            'device_id_max' => 'Device ID may not be greater than 128 characters.',
+            'platform_required' => 'Platform is required.',
+            'platform_invalid' => 'Platform must be android or ios.',
+            'token_required' => 'Push token is required.',
+            'token_max' => 'Push token is too long.',
+        ],
+    ],
+
     'content' => [
         'faqs_fetched' => 'FAQs retrieved successfully.',
         'privacy_policy_fetched' => 'Privacy policy retrieved successfully.',

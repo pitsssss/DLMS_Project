@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Notifications\Repositories\NotificationRepository;
 use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Modules\Notifications\Support\NotificationPayload;
+use App\Modules\Push\Services\PushDeliveryService;
 use App\Support\RecipientNotificationTranslator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,11 +29,14 @@ use Throwable;
  *   rolled-back domain transaction never schedules a notification.
  * - Persistence failures are logged and never rethrown to domain callers.
  * - Deduplicate by optional unique event_key (business-event instance).
+ * - After a genuinely NEW notification row, plan push deliveries (F3).
+ *   Push failures never affect the DB notification or domain callers.
  */
 class NotificationService
 {
     public function __construct(
-        private readonly NotificationRepository $notifications
+        private readonly NotificationRepository $notifications,
+        private readonly PushDeliveryService $pushDeliveries,
     ) {}
 
     /**
@@ -247,7 +251,7 @@ class NotificationService
         }
 
         try {
-            return $this->notifications->create([
+            $notification = $this->notifications->create([
                 'user_id' => $userId,
                 'title' => $title,
                 'body' => $body,
@@ -256,6 +260,10 @@ class NotificationService
                 'data' => $data,
                 'event_key' => $eventKey,
             ]);
+
+            $this->planPushSafely($notification);
+
+            return $notification;
         } catch (QueryException $e) {
             if ($eventKey !== null && $this->isUniqueEventKeyViolation($e)) {
                 $existing = $this->notifications->findByEventKey($eventKey);
@@ -265,6 +273,20 @@ class NotificationService
             }
 
             throw $e;
+        }
+    }
+
+    private function planPushSafely(Notification $notification): void
+    {
+        try {
+            $this->pushDeliveries->planForNotification($notification);
+        } catch (Throwable $e) {
+            Log::error('push.plan_failed', [
+                'notification_id' => $notification->id,
+                'user_id' => $notification->user_id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

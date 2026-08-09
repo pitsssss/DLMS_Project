@@ -634,6 +634,19 @@ return [
         'account_activated_body' => 'تم تفعيل حسابك. يمكنك الآن تسجيل الدخول واستخدام خدمات المنصة.',
     ],
 
+    'devices' => [
+        'registered' => 'تم تسجيل جهاز الإشعارات بنجاح.',
+        'unregistered' => 'تم إلغاء تسجيل جهاز الإشعارات بنجاح.',
+        'validation' => [
+            'device_id_required' => 'معرّف الجهاز مطلوب.',
+            'device_id_max' => 'يجب ألا يتجاوز معرّف الجهاز 128 حرفاً.',
+            'platform_required' => 'المنصة مطلوبة.',
+            'platform_invalid' => 'يجب أن تكون المنصة android أو ios.',
+            'token_required' => 'رمز الإشعارات مطلوب.',
+            'token_max' => 'رمز الإشعارات طويل جداً.',
+        ],
+    ],
+
     'reports' => [
         'overview' => 'تم جلب ملخص التقارير بنجاح.',
         'retrieved' => 'تم جلب التقرير بنجاح.',

@@ -769,7 +769,7 @@ This project includes a production-ready Docker setup for deploying the Laravel 
 | `docker/nginx/default.conf` | Nginx virtual host for Laravel |
 | `docker/php/php.ini` | PHP upload limits and Opcache settings |
 | `docker/php/entrypoint.sh` | Container startup: permissions, optional migrations, Supervisor |
-| `docker/supervisor/supervisord.conf` | Runs PHP-FPM and Nginx in one container |
+| `docker/supervisor/supervisord.conf` | Runs PHP-FPM, Nginx, and `queue-push` (`queue:work --queue=push,default`) in one container |
 
 The production image does **not** include MySQL, phpMyAdmin, or a `.env` file.
 

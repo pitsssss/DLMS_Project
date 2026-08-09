@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "2321505b-50d8-4e0e-9c61-6bab34899f8b",
+    "_postman_id": "9dfb1a55-70dd-4d87-8869-b2069bbcb64e",
     "name": "SYRTAK Flutter API",
     "description": "Production-quality Postman kit for the Flutter team integrating with SYRTAK / DLMS.\n\nHow to use:\n1. Import this Collection + SYRTAK_Local environment\n2. Select environment SYRTAK Local\n3. Run 00 - Start Here top → bottom\n4. Follow 20 - Full Citizen Flows for end-to-end paths\n5. Toggle app_language = ar|en for localization\n\nCitizen APIs use Accept-Language + Bearer {{citizen_token}}.\nDashboard APIs are under 90 and use {{employee_token}} (no locale header).\nTokens/IDs are auto-captured by test scripts.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -5777,7 +5777,7 @@
                 }
               ]
             },
-            "description": "Purpose:\nPaginated notification inbox (data.items + pagination). Newest first. Max per_page=100. Envelope message follows Accept-Language; historical title/body stay as stored text. No Firebase yet.\n\nFlutter usage:\nOpen notification center.\n\nRequires:\ncitizen_token\n\nStores automatically:\nnotification_id"
+            "description": "Purpose:\nPaginated notification inbox (data.items + pagination). Newest first. Max per_page=100. Envelope message follows Accept-Language; historical title/body stay as stored text. Push is supplementary when FIREBASE_PUSH_ENABLED=true and a push worker runs.\n\nFlutter usage:\nOpen notification center.\n\nRequires:\ncitizen_token\n\nStores automatically:\nnotification_id"
           },
           "response": [],
           "event": [
@@ -6132,6 +6132,198 @@
               ]
             },
             "description": "Purpose:\nBulk marks all current unread notifications for the authenticated citizen. Returns marked_read_count + unread_count. Idempotent (second call marked_read_count=0).\n\nFlutter usage:\nMark all read button.\n\nRequires:\ncitizen_token"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function safeJson() {",
+                  "  try { return pm.response.json(); } catch (e) { return null; }",
+                  "}",
+                  "function setEnv(key, value) {",
+                  "  if (value === undefined || value === null || value === '') return;",
+                  "  pm.environment.set(key, String(value));",
+                  "}",
+                  "function firstArray(data) {",
+                  "  if (Array.isArray(data)) return data;",
+                  "  if (data && Array.isArray(data.items)) return data.items;",
+                  "  if (data && Array.isArray(data.data)) return data.data;",
+                  "  if (data && Array.isArray(data.tests)) return data.tests;",
+                  "  return [];",
+                  "}",
+                  "function pickByCode(arr, preferredCodes) {",
+                  "  if (!Array.isArray(arr) || !arr.length) return null;",
+                  "  if (preferredCodes && preferredCodes.length) {",
+                  "    for (const code of preferredCodes) {",
+                  "      const hit = arr.find(x => x && String(x.code) === String(code));",
+                  "      if (hit) return hit;",
+                  "    }",
+                  "  }",
+                  "  return arr[0];",
+                  "}",
+                  "pm.test('Status is successful', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "pm.test('success === true when present', function () {",
+                  "  const j = pm.response.json();",
+                  "  if (Object.prototype.hasOwnProperty.call(j, 'success')) {",
+                  "    pm.expect(j.success).to.eql(true);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register / Update Push Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{app_language}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/devices/push-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "devices",
+                "push-token"
+              ]
+            },
+            "description": "Purpose:\nRegisters or updates this app installation's FCM token for the authenticated citizen. Idempotent upsert: same device_id refreshes; new token rotates; multiple device_ids allowed. Token is never returned. When FIREBASE_PUSH_ENABLED=true and a push queue worker is running, future in-app notifications for this citizen become eligible for FCM delivery. The actual fcm_token is supplied by the Flutter Firebase Messaging integration in a later phase.\n\nFlutter usage:\nAfter login / app start / FCM token refresh — call with opaque installation device_id (not IMEI/MAC).\n\nRequires:\ncitizen_token; push_device_id; fcm_token\n\nNext:\nOn logout: Unregister Push Device, then POST /auth/logout.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"{{push_device_id}}\",\n  \"platform\": \"android\",\n  \"token\": \"{{fcm_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function safeJson() {",
+                  "  try { return pm.response.json(); } catch (e) { return null; }",
+                  "}",
+                  "function setEnv(key, value) {",
+                  "  if (value === undefined || value === null || value === '') return;",
+                  "  pm.environment.set(key, String(value));",
+                  "}",
+                  "function firstArray(data) {",
+                  "  if (Array.isArray(data)) return data;",
+                  "  if (data && Array.isArray(data.items)) return data.items;",
+                  "  if (data && Array.isArray(data.data)) return data.data;",
+                  "  if (data && Array.isArray(data.tests)) return data.tests;",
+                  "  return [];",
+                  "}",
+                  "function pickByCode(arr, preferredCodes) {",
+                  "  if (!Array.isArray(arr) || !arr.length) return null;",
+                  "  if (preferredCodes && preferredCodes.length) {",
+                  "    for (const code of preferredCodes) {",
+                  "      const hit = arr.find(x => x && String(x.code) === String(code));",
+                  "      if (hit) return hit;",
+                  "    }",
+                  "  }",
+                  "  return arr[0];",
+                  "}",
+                  "pm.test('Status is successful', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "pm.test('success === true when present', function () {",
+                  "  const j = pm.response.json();",
+                  "  if (Object.prototype.hasOwnProperty.call(j, 'success')) {",
+                  "    pm.expect(j.success).to.eql(true);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unregister Push Device",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{app_language}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/devices/push-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "devices",
+                "push-token"
+              ]
+            },
+            "description": "Purpose:\nUnregisters only this citizen's matching device_id. Idempotent. Does not affect other devices. Preferred before logout so phone A logout does not clear phone B.\n\nFlutter usage:\nBefore logout for this installation.\n\nRequires:\ncitizen_token; push_device_id\n\nNext:\nPOST /auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"{{push_device_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": [],
           "event": [

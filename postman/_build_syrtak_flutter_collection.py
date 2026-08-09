@@ -1305,7 +1305,8 @@ def build_notifications() -> dict:
                 query=[("page", "1"), ("per_page", "20")],
                 description=desc(
                     "Paginated notification inbox (data.items + pagination). Newest first. Max per_page=100. "
-                    "Envelope message follows Accept-Language; historical title/body stay as stored text. No Firebase yet.",
+                    "Envelope message follows Accept-Language; historical title/body stay as stored text. "
+                    "Push is supplementary when FIREBASE_PUSH_ENABLED=true and a push worker runs.",
                     "Open notification center.",
                     "citizen_token",
                     "notification_id",
@@ -1361,6 +1362,45 @@ def build_notifications() -> dict:
                     "Returns marked_read_count + unread_count. Idempotent (second call marked_read_count=0).",
                     "Mark all read button.",
                     "citizen_token",
+                ),
+                event=tests(),
+            ),
+            req(
+                "Register / Update Push Device",
+                "POST",
+                "/devices/push-token",
+                hdrs=H_CITIZEN_JSON,
+                body=body_json(
+                    {
+                        "device_id": "{{push_device_id}}",
+                        "platform": "android",
+                        "token": "{{fcm_token}}",
+                    }
+                ),
+                description=desc(
+                    "Registers or updates this app installation's FCM token for the authenticated citizen. "
+                    "Idempotent upsert: same device_id refreshes; new token rotates; multiple device_ids allowed. "
+                    "Token is never returned. When FIREBASE_PUSH_ENABLED=true and a push queue worker is running, "
+                    "future in-app notifications for this citizen become eligible for FCM delivery. "
+                    "The actual fcm_token is supplied by the Flutter Firebase Messaging integration in a later phase.",
+                    "After login / app start / FCM token refresh — call with opaque installation device_id (not IMEI/MAC).",
+                    "citizen_token; push_device_id; fcm_token",
+                    nxt="On logout: Unregister Push Device, then POST /auth/logout.",
+                ),
+                event=tests(),
+            ),
+            req(
+                "Unregister Push Device",
+                "DELETE",
+                "/devices/push-token",
+                hdrs=H_CITIZEN_JSON,
+                body=body_json({"device_id": "{{push_device_id}}"}),
+                description=desc(
+                    "Unregisters only this citizen's matching device_id. Idempotent. Does not affect other devices. "
+                    "Preferred before logout so phone A logout does not clear phone B.",
+                    "Before logout for this installation.",
+                    "citizen_token; push_device_id",
+                    nxt="POST /auth/logout",
                 ),
                 event=tests(),
             ),
@@ -2415,6 +2455,8 @@ def build_environment() -> dict:
         ("verification_token", "", True),
         ("fine_id", "", True),
         ("notification_id", "", True),
+        ("push_device_id", "00000000-0000-4000-8000-000000000001", True),
+        ("fcm_token", "", True),
         ("ai_session_id", "", True),
         ("ai_action_id", "", True),
         ("ai_upload_token", "", True),

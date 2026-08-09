@@ -19,6 +19,7 @@ use App\Modules\Tests\Controllers\ApplicationTestResultController;
 use App\Modules\Fines\Controllers\FineController;
 use App\Modules\Licenses\Controllers\LicenseController;
 use App\Modules\Licenses\Controllers\LicenseVerificationController;
+use App\Modules\Devices\Controllers\PushDeviceController;
 use App\Modules\Notifications\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -151,6 +152,9 @@ Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): voi
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::put('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
         ->whereNumber('notification');
+
+    Route::post('/devices/push-token', [PushDeviceController::class, 'register']);
+    Route::delete('/devices/push-token', [PushDeviceController::class, 'unregister']);
 
     Route::prefix('ai-agent')->group(function (): void {
         require base_path('app/Modules/AIAgent/Routes/ai-agent.php');

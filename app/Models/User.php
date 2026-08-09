@@ -102,6 +102,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function pushDevices(): HasMany
+    {
+        return $this->hasMany(PushDevice::class);
+    }
+
     public function fines(): HasMany
     {
         return $this->hasMany(Fine::class, 'citizen_id');
