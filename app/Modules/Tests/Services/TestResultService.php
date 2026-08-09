@@ -20,6 +20,7 @@ use App\Services\AuditLogService;
 use App\Support\RecipientNotificationTranslator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
 
 class TestResultService
 {
@@ -118,13 +119,17 @@ class TestResultService
 
             $locale = RecipientNotificationTranslator::localeForUserId((int) $application->citizen_id);
             $type = NotificationType::fromTestResultStatus($result);
+            $catalogKey = 'messages.catalog.test_types.'.$testType->code;
+            $testName = Lang::has($catalogKey, $locale)
+                ? RecipientNotificationTranslator::get($catalogKey, [], $locale)
+                : (string) $testType->name;
 
             $this->notifications->notify(
                 (int) $application->citizen_id,
                 $type,
                 ['application_id' => $application->id, 'test_result_id' => $testResult->id],
                 [
-                    'test_name' => $testType->name,
+                    'test_name' => $testName,
                     'result' => RecipientNotificationTranslator::get(
                         'messages.tests.result_'.$result->value,
                         [],

@@ -52,9 +52,10 @@ Final 4-operation contract (`auth:sanctum` + `locale` + `citizen`):
 | Mark all | `PUT` | `/api/notifications/read-all` |
 
 Notes:
+- Auth: `auth:sanctum` + `locale` + `citizen`. No Firebase / FCM delivery yet — in-app DB notifications only.
 - Query: `per_page` (default 20, max 100), `unread_only` (optional boolean). Do not derive badge count from the list.
 - Resource fields: `id`, `title`, `body`, `type`, `read_at`, `is_read`, `data`, `created_at`. Navigate with `type` + `data` (never parse localized title/body for routing).
-- `event_key` / `user_id` are never exposed. Historical `title`/`body` stay as stored text; `Accept-Language` localizes envelope messages only.
+- `event_key` / `user_id` are never exposed. Historical `title`/`body` stay as stored text (recipient `users.language` at write time); `Accept-Language` localizes envelope messages only and does **not** retranslate past notifications.
 - Source Flutter collection: `postman/SYRTAK_Flutter_API.postman_collection.json` (folder `10 - Notifications`).
 
 ## 4) Dashboard Demo Flow

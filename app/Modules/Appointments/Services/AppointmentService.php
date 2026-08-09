@@ -20,6 +20,7 @@ use App\Modules\Notifications\Support\NotificationEventKey;
 use App\Services\AuditLogService;
 use App\Support\BusinessClock;
 use App\Support\CitizenCatalogLabel;
+use App\Support\RecipientNotificationTranslator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -304,6 +305,8 @@ class AppointmentService
             default => NotificationEventKey::forAppointment($type, $appointment->id),
         };
 
+        $locale = RecipientNotificationTranslator::localeForUserId($citizenId);
+
         $this->notifications->notify(
             $citizenId,
             $type,
@@ -312,7 +315,7 @@ class AppointmentService
                 'appointment_id' => $appointment->id,
                 'test_type_id' => $appointment->test_type_id,
             ],
-            AppointmentNotificationCopy::placeholders($appointment),
+            AppointmentNotificationCopy::placeholders($appointment, $locale),
             $eventKey
         );
     }

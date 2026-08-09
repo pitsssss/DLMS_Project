@@ -128,7 +128,8 @@ class DashboardCitizenService
 
     public function activate(User $actor, int $citizenId): User
     {
-        $citizen = DB::transaction(function () use ($actor, $citizenId): User {
+        /** @var array{0: User, 1: bool} $result */
+        $result = DB::transaction(function () use ($actor, $citizenId): array {
             $citizen = User::query()
                 ->where('user_type', UserType::Citizen)
                 ->whereKey($citizenId)
@@ -136,7 +137,7 @@ class DashboardCitizenService
                 ->firstOrFail();
 
             if ($citizen->is_active) {
-                return $citizen;
+                return [$citizen, false];
             }
 
             $citizen->update([
@@ -155,20 +156,20 @@ class DashboardCitizenService
                 ['is_active' => true],
             );
 
-            return $citizen->fresh();
+            return [$citizen->fresh(), true];
         });
 
-        if (! $citizen->is_active) {
-            return $citizen;
-        }
+        [$citizen, $didActivate] = $result;
 
-        $this->notifications->notify(
-            $citizen->id,
-            NotificationType::AccountActivated,
-            [],
-            [],
-            NotificationEventKey::forUserAt(NotificationType::AccountActivated, $citizen->id, now())
-        );
+        if ($didActivate) {
+            $this->notifications->notify(
+                $citizen->id,
+                NotificationType::AccountActivated,
+                [],
+                [],
+                NotificationEventKey::forUserAt(NotificationType::AccountActivated, $citizen->id, now())
+            );
+        }
 
         return $citizen;
     }

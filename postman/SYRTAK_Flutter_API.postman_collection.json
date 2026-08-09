@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "54b935a1-e89d-4076-88ee-f4a24365c49e",
+    "_postman_id": "2321505b-50d8-4e0e-9c61-6bab34899f8b",
     "name": "SYRTAK Flutter API",
     "description": "Production-quality Postman kit for the Flutter team integrating with SYRTAK / DLMS.\n\nHow to use:\n1. Import this Collection + SYRTAK_Local environment\n2. Select environment SYRTAK Local\n3. Run 00 - Start Here top → bottom\n4. Follow 20 - Full Citizen Flows for end-to-end paths\n5. Toggle app_language = ar|en for localization\n\nCitizen APIs use Accept-Language + Bearer {{citizen_token}}.\nDashboard APIs are under 90 and use {{employee_token}} (no locale header).\nTokens/IDs are auto-captured by test scripts.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -5777,7 +5777,7 @@
                 }
               ]
             },
-            "description": "Purpose:\nPaginated notification inbox (data.items + pagination). Newest first. Max per_page=100.\n\nFlutter usage:\nOpen notification center.\n\nRequires:\ncitizen_token\n\nStores automatically:\nnotification_id"
+            "description": "Purpose:\nPaginated notification inbox (data.items + pagination). Newest first. Max per_page=100. Envelope message follows Accept-Language; historical title/body stay as stored text. No Firebase yet.\n\nFlutter usage:\nOpen notification center.\n\nRequires:\ncitizen_token\n\nStores automatically:\nnotification_id"
           },
           "response": [],
           "event": [
@@ -5966,7 +5966,7 @@
                 "unread-count"
               ]
             },
-            "description": "Purpose:\nLightweight badge count: data.unread_count (integer). One aggregate query; no list payload.\n\nFlutter usage:\nBell badge / app bar.\n\nRequires:\ncitizen_token"
+            "description": "Purpose:\nLightweight badge count: data.unread_count (integer). One aggregate query; no list payload. Accept-Language localizes envelope message only.\n\nFlutter usage:\nBell badge / app bar.\n\nRequires:\ncitizen_token"
           },
           "response": [],
           "event": [

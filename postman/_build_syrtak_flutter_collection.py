@@ -1304,7 +1304,8 @@ def build_notifications() -> dict:
                 hdrs=H_CITIZEN,
                 query=[("page", "1"), ("per_page", "20")],
                 description=desc(
-                    "Paginated notification inbox (data.items + pagination). Newest first. Max per_page=100.",
+                    "Paginated notification inbox (data.items + pagination). Newest first. Max per_page=100. "
+                    "Envelope message follows Accept-Language; historical title/body stay as stored text. No Firebase yet.",
                     "Open notification center.",
                     "citizen_token",
                     "notification_id",
@@ -1331,7 +1332,8 @@ def build_notifications() -> dict:
                 "/notifications/unread-count",
                 hdrs=H_CITIZEN,
                 description=desc(
-                    "Lightweight badge count: data.unread_count (integer). One aggregate query; no list payload.",
+                    "Lightweight badge count: data.unread_count (integer). One aggregate query; no list payload. "
+                    "Accept-Language localizes envelope message only.",
                     "Bell badge / app bar.",
                     "citizen_token",
                 ),

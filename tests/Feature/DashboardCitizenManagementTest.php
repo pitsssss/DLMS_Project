@@ -662,6 +662,11 @@ class DashboardCitizenManagementTest extends TestCase
             ->where('action', 'citizen.activated')
             ->where('entity_id', $citizen->id)
             ->count());
+
+        $this->assertSame(0, \App\Models\Notification::query()
+            ->where('user_id', $citizen->id)
+            ->where('type', 'account.activated')
+            ->count());
     }
 
     public function test_activating_employee_returns_404(): void

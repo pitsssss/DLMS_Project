@@ -88,6 +88,12 @@ class NotificationService
         $enum = is_string($type) ? NotificationType::tryFrom($type) : null;
 
         if ($enum !== null) {
+            if ($enum->isLegacyEmissionSuppressed()) {
+                throw new \InvalidArgumentException(
+                    'Legacy notification type is suppressed for new emission: '.$enum->value
+                );
+            }
+
             $normalized = NotificationPayload::normalize($enum, $data ?? []);
 
             return $this->persistLocalized($userId, $enum, $normalized, $replace, $eventKey);
@@ -146,7 +152,9 @@ class NotificationService
                 'application_number' => $application->application_number,
                 'status' => $newStatus->value,
             ],
-            [],
+            [
+                'application_number' => (string) $application->application_number,
+            ],
             $eventKey,
         );
     }
