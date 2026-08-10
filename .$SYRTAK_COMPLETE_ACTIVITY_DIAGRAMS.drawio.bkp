@@ -1,4 +1,5 @@
-<mxfile host="Electron" agent="SYRTAK-Activity-Diagram-Generator" pages="17">
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-08-10T12:00:00.000Z" agent="SYRTAK-Activity-Diagram-Generator" version="22.1.0" type="device" pages="17">
   <diagram id="activity-01" name="01 - النظام الشامل | System Overview">
     <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
       <root>
@@ -1807,224 +1808,224 @@
     </mxGraphModel>
   </diagram>
   <diagram id="activity-15" name="15 - الموظفون والمراجعات">
-    <mxGraphModel dx="5080" dy="3055" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="p15_1" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FEF3C7;swimlaneFillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="مراجع الملف الشخصي" vertex="1">
-          <mxGeometry height="2550" width="325" x="40" y="110" as="geometry" />
+        <mxCell id="p15_1" value="مراجع الملف الشخصي" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FEF3C7;swimlaneFillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_2" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FEF3C7;swimlaneFillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="مراجع الوثائق" vertex="1">
-          <mxGeometry height="2550" width="325" x="383" y="110" as="geometry" />
+        <mxCell id="p15_2" value="مراجع الوثائق" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FEF3C7;swimlaneFillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="383" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_3" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FFEDD5;swimlaneFillColor=#FFF7ED;strokeColor=#EA580C;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="الموظف المالي" vertex="1">
-          <mxGeometry height="2550" width="325" x="726" y="110" as="geometry" />
+        <mxCell id="p15_3" value="الموظف المالي" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FFEDD5;swimlaneFillColor=#FFF7ED;strokeColor=#EA580C;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="726" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_4" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#E0F2FE;swimlaneFillColor=#F0F9FF;strokeColor=#0284C7;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="الممتحن" vertex="1">
-          <mxGeometry height="2550" width="325" x="1069" y="110" as="geometry" />
+        <mxCell id="p15_4" value="الممتحن" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#E0F2FE;swimlaneFillColor=#F0F9FF;strokeColor=#0284C7;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1069" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_5" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FCE7F3;swimlaneFillColor=#FDF2F8;strokeColor=#DB2777;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="موظف الإصدار" vertex="1">
-          <mxGeometry height="2550" width="325" x="1412" y="110" as="geometry" />
+        <mxCell id="p15_5" value="موظف الإصدار" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#FCE7F3;swimlaneFillColor=#FDF2F8;strokeColor=#DB2777;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1412" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_6" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#D1FAE5;swimlaneFillColor=#ECFDF5;strokeColor=#059669;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="نظام DLMS / Backend" vertex="1">
-          <mxGeometry height="2550" width="325" x="1755" y="110" as="geometry" />
+        <mxCell id="p15_6" value="نظام DLMS / Backend" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#D1FAE5;swimlaneFillColor=#ECFDF5;strokeColor=#059669;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1755" y="110" width="325" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p15_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#111827;strokeColor=#111827;fontColor=#111827;" value="" vertex="1">
-          <mxGeometry height="30" width="30" x="158" y="150" as="geometry" />
+        <mxCell id="p15_7" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#111827;strokeColor=#111827;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="158" y="150" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="p15_8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="توزيع قوائم العمل" vertex="1">
-          <mxGeometry height="54" width="220" x="1775" y="215" as="geometry" />
+        <mxCell id="p15_8" value="توزيع قوائم العمل" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="215" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_9" edge="1" parent="1" source="p15_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_8" value="">
+        <mxCell id="p15_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_7" target="p15_8">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="مراجعة Profile: approve/reject" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="305" as="geometry" />
+        <mxCell id="p15_10" value="مراجعة Profile: approve/reject" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="305" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_11" edge="1" parent="1" source="p15_8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_10" value="">
+        <mxCell id="p15_11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_8" target="p15_10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="مراجعة Documents: approve/reject" vertex="1">
-          <mxGeometry height="54" width="220" x="403" y="395" as="geometry" />
+        <mxCell id="p15_12" value="مراجعة Documents: approve/reject" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="403" y="395" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_13" edge="1" parent="1" source="p15_10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_12" value="">
+        <mxCell id="p15_13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_10" target="p15_12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="تحقق Payment: reconcile" vertex="1">
-          <mxGeometry height="54" width="220" x="746" y="485" as="geometry" />
+        <mxCell id="p15_14" value="تحقق Payment: reconcile" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="746" y="485" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_15" edge="1" parent="1" source="p15_12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_14" value="">
+        <mxCell id="p15_15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_12" target="p15_14">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="تسجيل Test result" vertex="1">
-          <mxGeometry height="54" width="220" x="1089" y="575" as="geometry" />
+        <mxCell id="p15_16" value="تسجيل Test result" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1089" y="575" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_17" edge="1" parent="1" source="p15_14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_16" value="">
+        <mxCell id="p15_17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_14" target="p15_16">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="فحص eligibility وإصدار License" vertex="1">
-          <mxGeometry height="54" width="220" x="1432" y="665" as="geometry" />
+        <mxCell id="p15_18" value="فحص eligibility وإصدار License" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1432" y="665" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_19" edge="1" parent="1" source="p15_16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_18" value="">
+        <mxCell id="p15_19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_16" target="p15_18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_20" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#B45309;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=center;verticalAlign=middle;" value="التفويض/الصلاحية صحيحة؟" vertex="1">
-          <mxGeometry height="84" width="120" x="1830" y="755" as="geometry" />
+        <mxCell id="p15_20" value="التفويض/الصلاحية صحيحة؟" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#B45309;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="755" width="120" height="84" as="geometry" />
         </mxCell>
-        <mxCell id="p15_21" edge="1" parent="1" source="p15_18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_20" value="">
+        <mxCell id="p15_21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_18" target="p15_20">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="حفظ العملية وسجل التدقيق" vertex="1">
-          <mxGeometry height="54" width="220" x="1775" y="870" as="geometry" />
+        <mxCell id="p15_22" value="حفظ العملية وسجل التدقيق" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="870" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="رفض العملية" vertex="1">
-          <mxGeometry height="54" width="220" x="1775" y="870" as="geometry" />
+        <mxCell id="p15_23" value="رفض العملية" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="870" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_24" edge="1" parent="1" source="p15_20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_22" value="[مصرح]">
+        <mxCell id="p15_24" value="[مصرح]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_20" target="p15_22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_25" edge="1" parent="1" source="p15_20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_23" value="[غير مصرح]">
+        <mxCell id="p15_25" value="[غير مصرح]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_20" target="p15_23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_26" parent="1" style="shape=line;strokeWidth=8;strokeColor=#111827;fillColor=#111827;" value="" vertex="1">
-          <mxGeometry height="8" width="170" x="1800" y="960" as="geometry" />
+        <mxCell id="p15_26" value="" style="shape=line;strokeWidth=8;strokeColor=#111827;fillColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1800" y="960" width="170" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="p15_27" edge="1" parent="1" source="p15_22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_26" value="">
+        <mxCell id="p15_27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_22" target="p15_26">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_28" edge="1" parent="1" source="p15_23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_26" value="">
+        <mxCell id="p15_28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_23" target="p15_26">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="تحديث حالة المجال" vertex="1">
-          <mxGeometry height="54" width="220" x="1775" y="1005" as="geometry" />
+        <mxCell id="p15_29" value="تحديث حالة المجال" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="1005" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_30" edge="1" parent="1" source="p15_26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_29" value="">
+        <mxCell id="p15_30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_26" target="p15_29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_31" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="إشعار المواطن" vertex="1">
-          <mxGeometry height="54" width="220" x="1775" y="1095" as="geometry" />
+        <mxCell id="p15_31" value="إشعار المواطن" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="1095" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p15_32" edge="1" parent="1" source="p15_29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_31" value="">
+        <mxCell id="p15_32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_29" target="p15_31">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_33" parent="1" style="ellipse;html=1;shape=umlActivityFinal;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
-          <mxGeometry height="48" width="48" x="1863" y="1185" as="geometry" />
+        <mxCell id="p15_33" value="" style="ellipse;html=1;shape=umlActivityFinal;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1863" y="1185" width="48" height="48" as="geometry" />
         </mxCell>
-        <mxCell id="p15_34" edge="1" parent="1" source="p15_31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p15_33" value="">
+        <mxCell id="p15_34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p15_31" target="p15_33">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p15_35" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=left;verticalAlign=top;spacing=8;" value="طوابير العمل منفصلة: مراجعة الملف، مراجعة الوثائق، المالية، الاختبارات، والإصدار." vertex="1">
-          <mxGeometry height="92" width="310" x="1780" y="170" as="geometry" />
+        <mxCell id="p15_35" value="طوابير العمل منفصلة: مراجعة الملف، مراجعة الوثائق، المالية، الاختبارات، والإصدار." style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="170" width="310" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="p15_36" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Segoe UI;fontStyle=1;fontSize=20;fontColor=#0F172A;" value="15 - الموظفون والمراجعات" vertex="1">
-          <mxGeometry height="48" width="2060" x="40" y="30" as="geometry" />
+        <mxCell id="p15_36" value="15 - الموظفون والمراجعات" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Segoe UI;fontStyle=1;fontSize=20;fontColor=#0F172A;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2060" height="48" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="activity-16" name="16 - الإدارة والصلاحيات">
-    <mxGraphModel dx="1195" dy="719" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="p16_1" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#E5E7EB;swimlaneFillColor=#F3F4F6;strokeColor=#4B5563;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="المدير / Super Admin" vertex="1">
-          <mxGeometry height="2550" width="668" x="40" y="110" as="geometry" />
+        <mxCell id="p16_1" value="المدير / Super Admin" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#E5E7EB;swimlaneFillColor=#F3F4F6;strokeColor=#4B5563;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="668" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p16_2" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#D1FAE5;swimlaneFillColor=#ECFDF5;strokeColor=#059669;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="نظام DLMS / Backend" vertex="1">
-          <mxGeometry height="2550" width="668" x="726" y="110" as="geometry" />
+        <mxCell id="p16_2" value="نظام DLMS / Backend" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#D1FAE5;swimlaneFillColor=#ECFDF5;strokeColor=#059669;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="726" y="110" width="668" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p16_3" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#F1F5F9;swimlaneFillColor=#F8FAFC;strokeColor=#64748B;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" value="إكمال" vertex="1">
-          <mxGeometry height="2550" width="668" x="1412" y="110" as="geometry" />
+        <mxCell id="p16_3" value="إكمال" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=36;fillColor=#F1F5F9;swimlaneFillColor=#F8FAFC;strokeColor=#64748B;fontFamily=Segoe UI;fontSize=13;fontColor=#1E293B;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1412" y="110" width="668" height="2550" as="geometry" />
         </mxCell>
-        <mxCell id="p16_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#111827;strokeColor=#111827;fontColor=#111827;" value="" vertex="1">
-          <mxGeometry height="30" width="30" x="158" y="150" as="geometry" />
+        <mxCell id="p16_4" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#111827;strokeColor=#111827;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="158" y="150" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="p16_5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="إدارة الموظفين" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="215" as="geometry" />
+        <mxCell id="p16_5" value="إدارة الموظفين" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="215" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_6" edge="1" parent="1" source="p16_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_5" value="">
+        <mxCell id="p16_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_4" target="p16_5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="إنشاء Roles" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="305" as="geometry" />
+        <mxCell id="p16_7" value="إنشاء Roles" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="305" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_8" edge="1" parent="1" source="p16_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_7" value="">
+        <mxCell id="p16_8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_5" target="p16_7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="مزامنة Permissions" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="395" as="geometry" />
+        <mxCell id="p16_9" value="مزامنة Permissions" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="395" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_10" edge="1" parent="1" source="p16_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_9" value="">
+        <mxCell id="p16_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_7" target="p16_9">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="تطبيق RBAC" vertex="1">
-          <mxGeometry height="54" width="220" x="746" y="485" as="geometry" />
+        <mxCell id="p16_11" value="تطبيق RBAC" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="746" y="485" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_12" edge="1" parent="1" source="p16_9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_11" value="">
+        <mxCell id="p16_12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_9" target="p16_11">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_13" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#B45309;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=center;verticalAlign=middle;" value="للمستخدم permission?" vertex="1">
-          <mxGeometry height="84" width="120" x="801" y="575" as="geometry" />
+        <mxCell id="p16_13" value="للمستخدم permission؟" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#B45309;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="801" y="575" width="120" height="84" as="geometry" />
         </mxCell>
-        <mxCell id="p16_14" edge="1" parent="1" source="p16_11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_13" value="">
+        <mxCell id="p16_14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_11" target="p16_13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="السماح بالعملية" vertex="1">
-          <mxGeometry height="54" width="220" x="746" y="690" as="geometry" />
+        <mxCell id="p16_15" value="السماح بالعملية" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="746" y="690" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="403 Authorization denied" vertex="1">
-          <mxGeometry height="54" width="220" x="746" y="690" as="geometry" />
+        <mxCell id="p16_16" value="403 Authorization denied" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="746" y="690" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_17" edge="1" parent="1" source="p16_13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_15" value="[مصرح]">
+        <mxCell id="p16_17" value="[مصرح]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_13" target="p16_15">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_18" edge="1" parent="1" source="p16_13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_16" value="[مرفوض]">
+        <mxCell id="p16_18" value="[مرفوض]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_13" target="p16_16">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_19" parent="1" style="shape=line;strokeWidth=8;strokeColor=#111827;fillColor=#111827;" value="" vertex="1">
-          <mxGeometry height="8" width="170" x="771" y="780" as="geometry" />
+        <mxCell id="p16_19" value="" style="shape=line;strokeWidth=8;strokeColor=#111827;fillColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="771" y="780" width="170" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="p16_20" edge="1" parent="1" source="p16_15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_19" value="">
+        <mxCell id="p16_20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_15" target="p16_19">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_21" edge="1" parent="1" source="p16_16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_19" value="">
+        <mxCell id="p16_21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_16" target="p16_19">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="عرض Sessions الموظفين" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="825" as="geometry" />
+        <mxCell id="p16_22" value="عرض Sessions الموظفين" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="825" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_23" edge="1" parent="1" source="p16_19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_22" value="">
+        <mxCell id="p16_23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_19" target="p16_22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Revoke session" vertex="1">
-          <mxGeometry height="54" width="220" x="60" y="915" as="geometry" />
+        <mxCell id="p16_24" value="Revoke session" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="915" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_25" edge="1" parent="1" source="p16_22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_24" value="">
+        <mxCell id="p16_25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_22" target="p16_24">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="إبطال الجلسة وتسجيل التدقيق" vertex="1">
-          <mxGeometry height="54" width="220" x="746" y="1005" as="geometry" />
+        <mxCell id="p16_26" value="إبطال الجلسة وتسجيل التدقيق" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="746" y="1005" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_27" edge="1" parent="1" source="p16_24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_26" value="">
+        <mxCell id="p16_27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_24" target="p16_26">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_28" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" value="وصول إداري مضبوط" vertex="1">
-          <mxGeometry height="54" width="220" x="1432" y="1095" as="geometry" />
+        <mxCell id="p16_28" value="وصول إداري مضبوط" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#FFFFFF;strokeColor=#334155;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1432" y="1095" width="220" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="p16_29" edge="1" parent="1" source="p16_26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_28" value="">
+        <mxCell id="p16_29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_26" target="p16_28">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_30" parent="1" style="ellipse;html=1;shape=umlActivityFinal;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
-          <mxGeometry height="48" width="48" x="1520" y="1185" as="geometry" />
+        <mxCell id="p16_30" value="" style="ellipse;html=1;shape=umlActivityFinal;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="1185" width="48" height="48" as="geometry" />
         </mxCell>
-        <mxCell id="p16_31" edge="1" parent="1" source="p16_28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" target="p16_30" value="">
+        <mxCell id="p16_31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.4;endArrow=block;endFill=1;fontFamily=Segoe UI;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="p16_28" target="p16_30">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p16_32" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=left;verticalAlign=top;spacing=8;" value="مسارات الموظفين محمية بالتحقق من الدور/الصلاحية، مع دعم مراجعة وإبطال الجلسات." vertex="1">
-          <mxGeometry height="92" width="310" x="1780" y="170" as="geometry" />
+        <mxCell id="p16_32" value="مسارات الموظفين محمية بالتحقق من الدور/الصلاحية، مع دعم مراجعة وإبطال الجلسات." style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Segoe UI;fontSize=11;fontColor=#78350F;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="170" width="310" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="p16_33" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Segoe UI;fontStyle=1;fontSize=20;fontColor=#0F172A;" value="16 - الإدارة والصلاحيات" vertex="1">
-          <mxGeometry height="48" width="2060" x="40" y="30" as="geometry" />
+        <mxCell id="p16_33" value="16 - الإدارة والصلاحيات" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Segoe UI;fontStyle=1;fontSize=20;fontColor=#0F172A;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2060" height="48" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
