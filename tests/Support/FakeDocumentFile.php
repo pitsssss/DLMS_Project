@@ -68,12 +68,47 @@ final class FakeDocumentFile
         return self::fromContent($name, '');
     }
 
-    public static function oversizedPdf(string $name = 'huge.pdf', int $kilobytes = 6000): UploadedFile
+    public static function oversizedPdf(string $name = 'huge.pdf', int $kilobytes = 4200): UploadedFile
     {
-        $prefix = "%PDF-1.4\n%%EOF\n";
-        $content = $prefix.str_repeat('A', max(0, ($kilobytes * 1024) - strlen($prefix)));
+        $path = tempnam(sys_get_temp_dir(), 'dlms_doc_');
 
-        return self::fromContent($name, $content);
+        if ($path === false) {
+            throw new \RuntimeException('Unable to create temporary file for document fixture.');
+        }
+
+        $handle = fopen($path, 'wb');
+
+        if ($handle === false) {
+            throw new \RuntimeException('Unable to write oversized document fixture.');
+        }
+
+        $prefix = "%PDF-1.4\n%%EOF\n";
+        fwrite($handle, $prefix);
+
+        $remaining = max(0, ($kilobytes * 1024) - strlen($prefix));
+        $chunk = str_repeat('A', 8192);
+
+        while ($remaining > 0) {
+            $write = min(8192, $remaining);
+            fwrite($handle, $write === 8192 ? $chunk : str_repeat('A', $write));
+            $remaining -= $write;
+        }
+
+        fclose($handle);
+
+        // Size-rejection tests must not invoke Fileinfo on multi-MB payloads.
+        return new class($path, $name) extends UploadedFile
+        {
+            public function __construct(string $path, string $originalName)
+            {
+                parent::__construct($path, $originalName, 'application/pdf', null, true);
+            }
+
+            public function getMimeType(): string
+            {
+                return 'application/pdf';
+            }
+        };
     }
 
     private static function fromContent(string $originalName, string $content): UploadedFile

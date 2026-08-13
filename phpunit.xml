@@ -20,6 +20,9 @@
     </source>
 
     <php>
+        <!-- Fileinfo MIME guessing + feature suite peak above PHP CLI default 128M. -->
+        <ini name="memory_limit" value="512M"/>
+
         <env name="APP_ENV" value="testing"/>
         <env name="APP_TIMEZONE" value="UTC"/>
         <env name="BUSINESS_TIMEZONE" value="Asia/Damascus"/>

@@ -592,7 +592,7 @@ class AIAgentDocumentUploadTest extends TestCase
             $session->id,
             $application->id,
             (int) $required['id'],
-            FakeDocumentFile::oversizedPdf('huge.pdf', 6000)
+            FakeDocumentFile::oversizedPdf('huge.pdf', 4200)
         )->assertStatus(422);
     }
 
