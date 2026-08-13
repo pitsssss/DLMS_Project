@@ -2,7 +2,7 @@
 
 **Audience:** a new Cursor coding agent with no prior chat history.  
 **System:** Digital License Management System (DLMS), product name **SYRTAK**.  
-**This repository:** Laravel 11 REST API backend only. Flutter (citizen) and Next.js dashboard (employees) are **external clients**, not source in this repo.
+**This repository:** Laravel 12 REST API backend only. Flutter (citizen) and Next.js dashboard (employees) are **external clients**, not source in this repo.
 
 ### Source precedence (always)
 
@@ -76,8 +76,8 @@ There is **one** business backend. Manual REST and Agent must converge on the sa
 
 | Layer | Choice |
 |-------|--------|
-| PHP | ^8.2 |
-| Framework | Laravel 11 |
+| PHP | ^8.4 |
+| Framework | Laravel 12 |
 | Auth | Laravel Sanctum personal access tokens |
 | DB | MySQL in tests (`dlms_testing`); sqlite default in `.env.example` |
 | Queue | `database` in prod config; `sync` in phpunit |
