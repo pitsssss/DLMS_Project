@@ -1,0 +1,45 @@
+---
+description: Core SYRTAK/DLMS project context and development rules
+alwaysApply: true
+---
+
+# SYRTAK / DLMS Development Context
+
+For any non-trivial task in this repository:
+
+1. Use the following source precedence:
+   - Current implementation/code
+   - Automated tests
+   - docs/PROJECT_MASTER_CONTEXT.md
+   - Current maintained documentation
+   - Historical/stale documentation
+
+2. Read `docs/PROJECT_MASTER_CONTEXT.md` whenever domain, workflow, architecture, AI Agent, security, localization, or business context is relevant.
+
+3. Inspect the actual implementation involved in the requested task before modifying it.
+
+4. Never invent or silently change:
+   - business rules
+   - roles or permissions
+   - application statuses
+   - state transitions
+   - workflows
+   - API behavior
+
+5. Preserve existing:
+   - ownership and IDOR protections
+   - validation
+   - authorization
+   - audit behavior
+   - AI Agent confirmation requirements
+   - AR/EN localization architecture
+
+6. Do not assume documentation is current when it conflicts with code/tests.
+
+7. Do not remove or consolidate `/admin` and `/dashboard` APIs unless explicitly requested and migration impact has been analyzed.
+
+8. Do not call `ApplicationRepository::transitionStatus()` without validating that the requested state transition is allowed.
+
+9. Never expose secrets, API keys, tokens, or credentials.
+
+10. When uncertain, inspect code and tests instead of guessing.
