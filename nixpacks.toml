@@ -1,0 +1,4 @@
+# Railway Nixpacks defaults to PHP 8.2. This project requires 8.4
+# (endroid/qr-code ^6.1 and Symfony 8 in composer.lock).
+[variables]
+NIXPACKS_PHP_VERSION = "8.4"
