@@ -77,12 +77,13 @@ class AppointmentFlowTest extends TestCase
     private function visionSlot(): AppointmentSlot
     {
         $vision = TestType::query()->where('code', 'vision')->firstOrFail();
+        $businessToday = app(\App\Support\BusinessClock::class)->now()->toDateString();
 
         return AppointmentSlot::query()
             ->where('test_type_id', $vision->id)
             ->where('is_active', true)
             ->whereColumn('booked_count', '<', 'capacity')
-            ->where('date', '>=', now()->toDateString())
+            ->where('date', '>=', $businessToday)
             ->firstOrFail();
     }
 
@@ -132,7 +133,7 @@ class AppointmentFlowTest extends TestCase
         $slot = $this->visionSlot();
         $appointmentId = (int) $this->postJson("/api/applications/{$application->id}/appointments", [
             'appointment_slot_id' => $slot->id,
-        ])->json('data.id');
+        ])->assertOk()->json('data.id');
 
         $employee = $this->employeeUser();
         Sanctum::actingAs($employee);
@@ -141,6 +142,16 @@ class AppointmentFlowTest extends TestCase
             'result' => TestResultStatus::Passed->value,
         ])->assertOk()
             ->assertJsonPath('data.result', TestResultStatus::Passed->value);
+
+        $testResultId = (int) \App\Models\TestResult::query()
+            ->where('test_appointment_id', $appointmentId)
+            ->value('id');
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'test_result.recorded',
+            'entity_type' => 'test_result',
+            'entity_id' => $testResultId,
+            'user_id' => $employee->id,
+        ]);
 
         $this->assertDatabaseHas('license_applications', [
             'id' => $application->id,

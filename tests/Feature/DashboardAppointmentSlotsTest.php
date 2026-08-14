@@ -290,6 +290,11 @@ class DashboardAppointmentSlotsTest extends TestCase
             ->json('data');
 
         $this->assertSame(0, $created['booked_count']);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'appointment_slot.created',
+            'entity_type' => 'appointment_slot',
+            'entity_id' => (int) $created['id'],
+        ]);
 
         $this->postJson('/api/dashboard/appointment-slots', $payload)
             ->assertStatus(422)

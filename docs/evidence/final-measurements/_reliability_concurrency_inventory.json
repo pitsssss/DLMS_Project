@@ -1,0 +1,2258 @@
+{
+    "meta": {
+        "system": "SYRTAK / DLMS Backend",
+        "scope": "tests Feature reliability/idempotency/concurrency evidence",
+        "suite_tests": 1043,
+        "suite_assertions": 6557,
+        "suite_duration_seconds": 217.86,
+        "date": "2026-08-15",
+        "counting_rule": "Distinct method counts per metric_id; methods may appear under multiple metrics; never sum overlapping metrics",
+        "impl_verified": {
+            "lockForUpdate": 56,
+            "lockForUpdate_files": 18,
+            "DB_transaction": 68,
+            "DB_afterCommit": 1
+        }
+    },
+    "methods": [
+        {
+            "file": "tests/Feature/PaymentConcurrencyAndIntegrityTest.php",
+            "method": "test_money_to_minor_units_exact_without_float",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "Money::toMinorUnits/equals",
+            "stimulus": "decimal strings USD/SYP/JPY",
+            "outcome": "exact minor units; equals ignores trailing zeros",
+            "http_status": null,
+            "notes": "Exact minor-unit math without float drift.",
+            "classification": "money_precision",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/PaymentConcurrencyAndIntegrityTest.php",
+            "method": "test_money_rejects_excess_precision",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "Money::toMinorUnits",
+            "stimulus": "USD with 3 fractional digits",
+            "outcome": "InvalidArgumentException",
+            "http_status": null,
+            "notes": "Rejects excess fractional precision.",
+            "classification": "money_precision",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/PaymentConcurrencyAndIntegrityTest.php",
+            "method": "test_duplicate_initiation_reuses_active_attempt",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "PAY-CONCURRENCY-INTEGRITY-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/applications/{id}/payments",
+            "stimulus": "second create while pending exists",
+            "outcome": "same payment id; one payment row",
+            "http_status": "200",
+            "notes": "Duplicate initiation reuses active attempt.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "http",
+            "side_effect": "payment_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentConcurrencyAndIntegrityTest.php",
+            "method": "test_provider_reference_unique_constraint",
+            "metrics": [
+                "PAY-UNIQUENESS-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "payments.provider_reference unique",
+            "stimulus": "second row same provider_reference",
+            "outcome": "QueryException",
+            "http_status": null,
+            "notes": "DB uniqueness on provider_reference.",
+            "classification": "db_invariant",
+            "side_effect": "insert_rejected",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentConcurrencyAndIntegrityTest.php",
+            "method": "test_settled_obligation_key_unique",
+            "metrics": [
+                "PAY-UNIQUENESS-METHODS",
+                "PAY-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "payments.settled_obligation_key unique",
+            "stimulus": "second completed same settled_obligation_key",
+            "outcome": "QueryException",
+            "http_status": null,
+            "notes": "Prevents double-settlement of same obligation.",
+            "classification": "db_invariant",
+            "side_effect": "insert_rejected",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentFlowTest.php",
+            "method": "test_create_payment_is_idempotent_when_pending_exists",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/applications/{id}/payments",
+            "stimulus": "repeated create with pending",
+            "outcome": "same payment id",
+            "http_status": "200",
+            "notes": "Pending create idempotent by id reuse.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "http",
+            "side_effect": "payment_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentFlowTest.php",
+            "method": "test_cannot_confirm_payment_twice",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST .../payments/{id}/confirm",
+            "stimulus": "second confirm after completed",
+            "outcome": "422",
+            "http_status": "422",
+            "notes": "Double confirm rejected.",
+            "classification": "duplicate_reject",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "confirm",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentStripeTest.php",
+            "method": "test_duplicate_webhook_is_idempotent",
+            "metrics": [
+                "PAY-WEBHOOK-IDEMPOTENCY-METHODS",
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/webhooks/stripe completed",
+            "stimulus": "identical webhook twice",
+            "outcome": "both OK; one completed payment",
+            "http_status": "200",
+            "notes": "Duplicate Stripe webhook does not re-settle.",
+            "classification": "webhook_idempotency",
+            "idempotency_class": "integration",
+            "side_effect": "payment_status",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PaymentStripeTest.php",
+            "method": "test_cannot_create_payment_when_completed_row_exists_for_fee",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/applications/{id}/payments",
+            "stimulus": "create after completed fee payment",
+            "outcome": "422 already_completed",
+            "http_status": "422",
+            "notes": "Blocks new attempt when fee settled.",
+            "classification": "duplicate_reject",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "payment_create",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PaymentStripeTest.php",
+            "method": "test_cannot_create_second_stripe_payment_after_successful_flow",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/applications/{id}/payments",
+            "stimulus": "second create after status completed",
+            "outcome": "422",
+            "http_status": "422",
+            "notes": "Post-success create blocked.",
+            "classification": "duplicate_reject",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "payment_create",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PaymentStripeTest.php",
+            "method": "test_stripe_manual_confirm_is_disabled",
+            "metrics": [
+                "PAY-CONCURRENCY-INTEGRITY-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST .../payments/{id}/confirm under stripe",
+            "stimulus": "manual confirm when provider=stripe",
+            "outcome": "400 manual_confirm_disabled",
+            "http_status": "400",
+            "notes": "Stripe path disables manual confirm (payment integrity).",
+            "classification": "provider_integrity",
+            "idempotency_class": "http",
+            "side_effect": "confirm_blocked",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/ApplicationFeeUsdCatalogTest.php",
+            "method": "test_usd_minor_unit_conversion_is_exact",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "Money::toMinorUnits USD",
+            "stimulus": "catalog/sample amounts",
+            "outcome": "exact minor units",
+            "http_status": null,
+            "notes": "USD minor-unit conversion exact.",
+            "classification": "money_precision",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/ApplicationFeeUsdCatalogTest.php",
+            "method": "test_client_cannot_override_amount_or_currency",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST payments with client amount/currency",
+            "stimulus": "client sends amount=1.00 currency=EUR",
+            "outcome": "server snapshots catalog USD amount",
+            "http_status": "200",
+            "notes": "Client cannot override fee amount/currency.",
+            "classification": "money_precision",
+            "idempotency_class": "http",
+            "side_effect": "amount_snapshot",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/ApplicationFeeUsdCatalogTest.php",
+            "method": "test_currency_mismatch_moves_payment_to_under_verification",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "Stripe webhook currency mismatch",
+            "stimulus": "webhook currency eur vs USD payment",
+            "outcome": "UnderVerification; app stays PaymentPending",
+            "http_status": "200",
+            "notes": "Currency mismatch financial integrity (underpayment verification).",
+            "classification": "money_precision",
+            "idempotency_class": "integration",
+            "side_effect": "under_verification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/ApplicationFeeUsdCatalogTest.php",
+            "method": "test_amount_mismatch_moves_payment_to_under_verification",
+            "metrics": [
+                "PAY-MONEY-PRECISION-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "Stripe webhook amount mismatch",
+            "stimulus": "webhook amount_total 999 vs expected",
+            "outcome": "UnderVerification",
+            "http_status": "200",
+            "notes": "Amount mismatch financial integrity.",
+            "classification": "money_precision",
+            "idempotency_class": "integration",
+            "side_effect": "under_verification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardPaymentManagementTest.php",
+            "method": "test_verify_stripe_payment_completes_idempotently",
+            "metrics": [
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "payments",
+            "operation": "POST /api/dashboard/payments/{id}/verify",
+            "stimulus": "verify twice after Stripe paid",
+            "outcome": "both OK; payment.completed audit count unchanged",
+            "http_status": "200",
+            "notes": "Dashboard verify idempotent on audits.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "http",
+            "side_effect": "payment.completed_audit",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/NotificationIdempotencyTest.php",
+            "method": "test_same_event_key_does_not_duplicate",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "notifications",
+            "operation": "NotificationService::notify",
+            "stimulus": "same event_key twice",
+            "outcome": "one notification row",
+            "http_status": null,
+            "notes": "Event-key dedupe proven.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/NotificationIdempotencyTest.php",
+            "method": "test_status_history_event_key_dedupes_reprocessing_same_history_row",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "notifications",
+            "operation": "notifyApplicationStatusChange reprocess",
+            "stimulus": "re-notify same history id",
+            "outcome": "one ApplicationPaymentPending notification",
+            "http_status": null,
+            "notes": "History-keyed reprocessing deduped.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/NotificationTransactionSafetyTest.php",
+            "method": "test_rolled_back_business_transaction_creates_no_notification",
+            "metrics": [
+                "REL-AFTERCOMMIT-SAFETY-METHODS",
+                "REL-ROLLBACK-METHODS",
+                "REL-ATOMICITY-METHODS",
+                "NOTIF-TX-SAFETY-METHODS"
+            ],
+            "domain": "notifications",
+            "operation": "notify inside rolled-back DB::transaction",
+            "stimulus": "RuntimeException after notify",
+            "outcome": "zero notifications",
+            "http_status": null,
+            "notes": "Rolled-back domain TX leaves no notification (afterCommit/tx safety).",
+            "classification": "tx_safety",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/NotificationTransactionSafetyTest.php",
+            "method": "test_notification_persist_failure_does_not_roll_back_business_success",
+            "metrics": [
+                "REL-AFTERCOMMIT-SAFETY-METHODS",
+                "REL-ATOMICITY-METHODS",
+                "NOTIF-TX-SAFETY-METHODS"
+            ],
+            "domain": "notifications",
+            "operation": "FineService::create with failing notify persist",
+            "stimulus": "notification persist throws",
+            "outcome": "fine committed; zero notifications",
+            "http_status": null,
+            "notes": "Notification failure isolated from business commit.",
+            "classification": "tx_safety",
+            "idempotency_class": "service",
+            "side_effect": "fine_kept",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/NotificationProductionReadinessTest.php",
+            "method": "test_already_active_citizen_activation_does_not_spam_notifications",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "citizens",
+            "operation": "DashboardCitizenService::activate already active",
+            "stimulus": "activate twice on active citizen",
+            "outcome": "zero AccountActivated notifications",
+            "http_status": null,
+            "notes": "No-op activation emits no spam.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/NotificationProductionReadinessTest.php",
+            "method": "test_reactivation_after_deactivate_emits_exactly_one_activated_notification",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "citizens",
+            "operation": "deactivate then activate twice",
+            "stimulus": "second activate after reactivation",
+            "outcome": "exactly one AccountActivated",
+            "http_status": null,
+            "notes": "Repeated activate after reactivation does not duplicate.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/NotificationEventCoverageTest.php",
+            "method": "test_payment_failed_and_under_verification_notify_once_per_code",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "PAY-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "payments/notifications",
+            "operation": "markFailed/markUnderVerification twice",
+            "stimulus": "same failure codes applied twice",
+            "outcome": "one PaymentFailed + one UnderVerification notification",
+            "http_status": null,
+            "notes": "Per-code lifecycle notify idempotent.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentNotificationTest.php",
+            "method": "test_cancel_notifies_once_and_repeat_does_not_duplicate",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "appointments/notifications",
+            "operation": "AppointmentService::cancel twice",
+            "stimulus": "repeat cancel after success",
+            "outcome": "AppointmentCancelled count stays 1",
+            "http_status": null,
+            "notes": "Cancel notify once; repeat cancel no duplicate notification.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "stale_class": "workflow_guard",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryPlanningTest.php",
+            "method": "test_duplicate_business_event_does_not_create_new_push",
+            "metrics": [
+                "NOTIF-IDEMPOTENCY-METHODS",
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "notify same event_key",
+            "stimulus": "duplicate business event",
+            "outcome": "one PushDelivery; one job",
+            "http_status": null,
+            "notes": "Deduped notification prevents second push plan.",
+            "classification": "idempotent_dedupe",
+            "idempotency_class": "service",
+            "side_effect": "push_delivery",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryPlanningTest.php",
+            "method": "test_delivery_key_uniqueness_enforced",
+            "metrics": [
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push",
+            "operation": "push_deliveries.delivery_key unique",
+            "stimulus": "insert duplicate delivery_key",
+            "outcome": "QueryException",
+            "http_status": null,
+            "notes": "DB uniqueness on delivery_key.",
+            "classification": "db_invariant",
+            "side_effect": "insert_rejected",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryPlanningTest.php",
+            "method": "test_pending_recovery_is_idempotent_for_already_sent",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "PUSH-RECOVERY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "dispatchPending",
+            "stimulus": "dispatch when already Sent",
+            "outcome": "dispatched=0",
+            "http_status": null,
+            "notes": "Recovery skips terminal Sent.",
+            "classification": "recovery",
+            "idempotency_class": "command",
+            "side_effect": "job_dispatch",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryRetryTest.php",
+            "method": "test_retry_delay_uses_backoff_and_honors_retry_after_minimum",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "retryDelaySeconds",
+            "stimulus": "attempt index + Retry-After floors",
+            "outcome": "60/120/300; floor 60; honor larger",
+            "http_status": null,
+            "notes": "Backoff and Retry-After minimum.",
+            "classification": "retry",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryRetryTest.php",
+            "method": "test_retries_exhausted_marks_failed",
+            "metrics": [
+                "PUSH-RETRY-METHODS",
+                "PUSH-TERMINAL-NO-RESEND-METHODS"
+            ],
+            "domain": "push",
+            "operation": "processDelivery near budget",
+            "stimulus": "503 with attempts=2 tries=3",
+            "outcome": "Failed; attempts=3; failed_at set",
+            "http_status": null,
+            "notes": "Exhausted retries become terminal Failed.",
+            "classification": "retry",
+            "idempotency_class": "service",
+            "side_effect": "delivery_failed",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeliveryRetryTest.php",
+            "method": "test_dispatch_pending_command_dispatches_only_pending",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "PUSH-RECOVERY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "artisan push:dispatch-pending",
+            "stimulus": "pending + Sent",
+            "outcome": "job only for pending",
+            "http_status": null,
+            "notes": "Recovery command skips Sent.",
+            "classification": "recovery",
+            "idempotency_class": "command",
+            "side_effect": "job_dispatch",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_fcm_attempts_count_only_real_sends",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "processDelivery deleted device",
+            "stimulus": "device missing",
+            "outcome": "FCM never; attempts=0",
+            "http_status": null,
+            "notes": "Attempts only on real FCM sends.",
+            "classification": "retry",
+            "idempotency_class": "service",
+            "side_effect": "attempts",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_quota_429_minimum_delay_is_60_seconds",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "retryDelaySeconds",
+            "stimulus": "Retry-After 10 vs 90",
+            "outcome": "floor 60; honor 90",
+            "http_status": null,
+            "notes": "Quota delay floor.",
+            "classification": "retry",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_503_retry_after_honored",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "job handle 503",
+            "stimulus": "Retry-After 180",
+            "outcome": "releasedFor=180; attempts=1",
+            "http_status": null,
+            "notes": "Retry-After drives release delay.",
+            "classification": "retry",
+            "idempotency_class": "service",
+            "side_effect": "job_release",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_malformed_retry_after_falls_back_to_backoff",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "parseRetryAfterSeconds",
+            "stimulus": "invalid Retry-After",
+            "outcome": "null parse; delay 60",
+            "http_status": null,
+            "notes": "Malformed Retry-After falls back.",
+            "classification": "retry",
+            "side_effect": "none"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_terminal_delivery_never_resent",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "processDelivery on Sent",
+            "stimulus": "reprocess terminal Sent",
+            "outcome": "skipped; FCM never; stays Sent",
+            "http_status": null,
+            "notes": "Terminal Sent never resent.",
+            "classification": "terminal",
+            "idempotency_class": "service",
+            "side_effect": "fcm_send",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_duplicate_job_safe_after_sent",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push",
+            "operation": "SendPushNotificationJob twice",
+            "stimulus": "duplicate job after success",
+            "outcome": "Sent; attempts=1",
+            "http_status": null,
+            "notes": "Second job after Sent is no-op.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "service",
+            "side_effect": "fcm_send",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_invalid_token_never_retries",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "UNREGISTERED then reprocess",
+            "stimulus": "invalid token then process again",
+            "outcome": "InvalidToken; FCM never on second",
+            "http_status": null,
+            "notes": "InvalidToken terminal non-retry.",
+            "classification": "terminal",
+            "idempotency_class": "service",
+            "side_effect": "fcm_send",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_stale_processing_recovered_recent_not_stolen",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS",
+                "REL-RECOVERY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "push",
+            "operation": "recoverStaleProcessing",
+            "stimulus": "stale Processing 10m vs fresh 30s",
+            "outcome": "reclaimed=1; fresh stays Processing",
+            "http_status": null,
+            "notes": "Lease recovery selective.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "stale_class": "workflow_guard",
+            "side_effect": "status_reset",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_dispatch_pending_never_redispatches_terminal",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "PUSH-RECOVERY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "dispatchPending",
+            "stimulus": "pending+Sent+Failed+InvalidToken",
+            "outcome": "dispatched=1 only pending",
+            "http_status": null,
+            "notes": "Terminal statuses never redispatched.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "side_effect": "job_dispatch",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_failed_dispatch_leaves_pending_recoverable",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS",
+                "REL-RECOVERY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "dispatchPending orphan pending",
+            "stimulus": "Pending with no prior job",
+            "outcome": "dispatched=1",
+            "http_status": null,
+            "notes": "Orphan pending recoverable.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "side_effect": "job_dispatch",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_worker_crash_after_claim_leaves_recoverable_processing",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS",
+                "REL-RECOVERY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "recoverStaleProcessing after crash claim",
+            "stimulus": "Processing + stale last_attempt_at",
+            "outcome": "reclaimed to Pending",
+            "http_status": null,
+            "notes": "Crash-after-claim recoverable.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "side_effect": "status_reset",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushProductionCertificationTest.php",
+            "method": "test_db_notification_isolation_when_push_planning_errors",
+            "metrics": [
+                "NOTIF-TX-SAFETY-METHODS",
+                "REL-ATOMICITY-METHODS"
+            ],
+            "domain": "notifications/push",
+            "operation": "sendToUser no devices",
+            "stimulus": "push planning no-ops",
+            "outcome": "notification persisted; zero deliveries",
+            "http_status": null,
+            "notes": "In-app notification isolated from empty push plan.",
+            "classification": "tx_safety",
+            "idempotency_class": "service",
+            "side_effect": "notification",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/SendPushNotificationJobTest.php",
+            "method": "test_permanent_failure_does_not_delete_device_or_retry",
+            "metrics": [
+                "PUSH-TERMINAL-NO-RESEND-METHODS",
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "processDelivery INVALID_ARGUMENT",
+            "stimulus": "permanent FCM failure",
+            "outcome": "Failed; device kept",
+            "http_status": null,
+            "notes": "Permanent failure terminal without device delete.",
+            "classification": "terminal",
+            "idempotency_class": "service",
+            "side_effect": "delivery_failed",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/SendPushNotificationJobTest.php",
+            "method": "test_retryable_failure_releases_job_and_keeps_pending",
+            "metrics": [
+                "PUSH-RETRY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "job handle 503",
+            "stimulus": "Retry-After 120",
+            "outcome": "releasedFor=120; Pending; attempts=1",
+            "http_status": null,
+            "notes": "Retryable failure keeps Pending.",
+            "classification": "retry",
+            "idempotency_class": "service",
+            "side_effect": "job_release",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/SendPushNotificationJobTest.php",
+            "method": "test_deleted_device_before_processing_is_safe",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "push",
+            "operation": "job after device delete",
+            "stimulus": "device deleted before process",
+            "outcome": "InvalidToken; attempts=0",
+            "http_status": null,
+            "notes": "Missing device handled without FCM.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "stale_class": "workflow_guard",
+            "side_effect": "fcm_send",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/SendPushNotificationJobTest.php",
+            "method": "test_token_rotation_during_unregistered_does_not_delete_new_token",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "UNREGISTERED while rotate in-flight",
+            "stimulus": "rotate during FCM call",
+            "outcome": "new token kept; delivery InvalidToken",
+            "http_status": null,
+            "notes": "Hash-guarded delete avoids killing rotated token.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/SendPushNotificationJobTest.php",
+            "method": "test_token_rotation_race_does_not_delete_new_token",
+            "metrics": [
+                "PUSH-RECOVERY-METHODS"
+            ],
+            "domain": "push",
+            "operation": "deleteByIdAndTokenHash after rotation",
+            "stimulus": "delete with stale token_hash",
+            "outcome": "deleted=0; device exists",
+            "http_status": null,
+            "notes": "Stale-hash delete no-op after rotation.",
+            "classification": "recovery",
+            "idempotency_class": "service",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceRegistrationTest.php",
+            "method": "test_repeated_register_is_idempotent_and_refreshes_last_registered_at",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "POST /api/devices/push-token",
+            "stimulus": "identical register twice",
+            "outcome": "one row; same id; last_registered_at advances",
+            "http_status": "200",
+            "notes": "Repeated register upserts one device.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "http",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceRegistrationTest.php",
+            "method": "test_owner_can_unregister_one_device_idempotently",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "DELETE /api/devices/push-token",
+            "stimulus": "unregister same device_id twice",
+            "outcome": "both OK; other device untouched",
+            "http_status": "200",
+            "notes": "Second unregister idempotent success.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "device_delete",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceRegistrationTest.php",
+            "method": "test_same_token_cannot_exist_in_two_rows",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "PushDeviceService::register shared token",
+            "stimulus": "two device_ids same token",
+            "outcome": "one row reconciled to second device",
+            "http_status": null,
+            "notes": "Token uniqueness reconciled to single row.",
+            "classification": "idempotent_reconcile",
+            "idempotency_class": "service",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceTokenRotationTest.php",
+            "method": "test_same_device_new_token_updates_same_row",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "register rotate token",
+            "stimulus": "new token same device_id",
+            "outcome": "same row id; old hash gone",
+            "http_status": "200",
+            "notes": "Rotation updates in place.",
+            "classification": "idempotent_reuse",
+            "idempotency_class": "http",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceTokenRotationTest.php",
+            "method": "test_duplicate_token_on_two_devices_reconciles_to_one_row",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "register token owned by other device",
+            "stimulus": "move shared token to device-new",
+            "outcome": "count=1; device-new wins",
+            "http_status": null,
+            "notes": "Duplicate token collapses to one registration.",
+            "classification": "idempotent_reconcile",
+            "idempotency_class": "service",
+            "side_effect": "device_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/PushDeviceTokenRotationTest.php",
+            "method": "test_token_uniqueness_constraint_is_enforced_at_database_level",
+            "metrics": [
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "push-devices",
+            "operation": "push_devices.token_hash unique",
+            "stimulus": "second row same token_hash",
+            "outcome": "QueryException",
+            "http_status": null,
+            "notes": "DB unique on token_hash.",
+            "classification": "db_invariant",
+            "side_effect": "insert_rejected",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentSlotConcurrencyTest.php",
+            "method": "test_concurrent_booking_cannot_overbook_single_capacity_slot",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS",
+                "REL-ATOMICITY-METHODS"
+            ],
+            "domain": "appointments",
+            "operation": "POST /api/applications/{id}/appointments",
+            "stimulus": "two citizens book capacity=1 (sequential HTTP loop)",
+            "outcome": "success=1; failure=1; booked_count=1; overbook=0",
+            "http_status": null,
+            "notes": "capacity=1; success=1; failure=1; booked_count=1. Sequential requests not OS threads.",
+            "classification": "concurrency",
+            "idempotency_class": "http",
+            "side_effect": "booking",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentSlotConcurrencyTest.php",
+            "method": "test_cancel_releases_capacity_and_is_idempotent_on_status",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "appointments",
+            "operation": "DELETE /api/appointments/{id}/cancel",
+            "stimulus": "cancel then cancel again",
+            "outcome": "booked_count 1->0; second 422",
+            "http_status": "422",
+            "notes": "Capacity released; second cancel rejected.",
+            "classification": "idempotent_reject",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "cancel",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentSlotConcurrencyTest.php",
+            "method": "test_reschedule_releases_and_consumes_capacity_with_audit",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS"
+            ],
+            "domain": "appointments",
+            "operation": "PUT /api/appointments/{id}/reschedule",
+            "stimulus": "move slotA->slotB",
+            "outcome": "slotA=0; slotB=1; audit",
+            "http_status": "200",
+            "notes": "Reschedule transfers capacity with audit.",
+            "classification": "concurrency",
+            "idempotency_class": "http",
+            "side_effect": "booked_count",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentSlotConcurrencyTest.php",
+            "method": "test_reschedule_lock_order_preserves_booked_counts",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS",
+                "REL-ATOMICITY-METHODS"
+            ],
+            "domain": "appointments",
+            "operation": "cross reschedule low<->high",
+            "stimulus": "A low->high then B high->low",
+            "outcome": "each booked_count=1 within capacity",
+            "http_status": "200",
+            "notes": "Cross-reschedule preserves counts under lock order.",
+            "classification": "concurrency",
+            "idempotency_class": "http",
+            "side_effect": "booked_count",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AppointmentSlotConcurrencyTest.php",
+            "method": "test_concurrent_slot_update_cannot_reduce_capacity_below_booked_count",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "appointments",
+            "operation": "PATCH appointment-slots capacity",
+            "stimulus": "capacity 5 booked 3 -> set 2",
+            "outcome": "422; capacity remains 5",
+            "http_status": "422",
+            "notes": "Unsafe capacity reduction rejected (not 409 optimistic).",
+            "classification": "stale_reject",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "capacity",
+            "expected_max": "5"
+        },
+        {
+            "file": "tests/Feature/DashboardAppointmentSlotsTest.php",
+            "method": "test_update_requires_version_and_stale_returns_409",
+            "metrics": [
+                "CONC-OPTIMISTIC-CONFLICT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "appointment-slots",
+            "operation": "PATCH /api/dashboard/appointment-slots/{id}",
+            "stimulus": "stale version 999",
+            "outcome": "409 stale_version",
+            "http_status": "409",
+            "notes": "Optimistic AppointmentSlot.version conflict.",
+            "classification": "optimistic_conflict",
+            "idempotency_class": "http",
+            "stale_class": "optimistic_version",
+            "side_effect": "slot_update",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/DashboardAppointmentSlotsTest.php",
+            "method": "test_capacity_cannot_drop_below_booked_count",
+            "metrics": [
+                "CONC-APPOINTMENT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "appointment-slots",
+            "operation": "PATCH capacity below booked",
+            "stimulus": "capacity 2 with booked 3",
+            "outcome": "422 unsafe_capacity_reduction",
+            "http_status": "422",
+            "notes": "Capacity integrity guard.",
+            "classification": "stale_reject",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "capacity"
+        },
+        {
+            "file": "tests/Feature/DashboardAppointmentSlotsTest.php",
+            "method": "test_create_rejects_duplicate_and_ignores_client_booked_count",
+            "metrics": [
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "CONC-APPOINTMENT-METHODS"
+            ],
+            "domain": "appointment-slots",
+            "operation": "POST /api/dashboard/appointment-slots",
+            "stimulus": "duplicate identity + client booked_count=99",
+            "outcome": "first created booked_count=0; second 422 duplicate_identity",
+            "http_status": "422",
+            "notes": "Duplicate slot identity rejected; client booked_count ignored.",
+            "classification": "duplicate_reject",
+            "idempotency_class": "http",
+            "side_effect": "slot_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionRevocationTest.php",
+            "method": "test_reason_required_and_duplicate_revoke_is_409",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "POST .../employee-sessions/{uuid}/revoke",
+            "stimulus": "second revoke after success",
+            "outcome": "409; audit count unchanged",
+            "http_status": "409",
+            "notes": "Duplicate revoke conflict without extra audit.",
+            "classification": "session",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "revoke_audit",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionRevocationTest.php",
+            "method": "test_revoke_all_preserves_current_by_default",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "POST .../sessions/revoke-all",
+            "stimulus": "revoke-all default",
+            "outcome": "revoked=1 preserved_current=1; current token still OK",
+            "http_status": "200",
+            "notes": "Revoke-all preserves current session by default.",
+            "classification": "session",
+            "idempotency_class": "http",
+            "side_effect": "session_revoke"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionRevocationTest.php",
+            "method": "test_revoke_all_can_include_current_and_rejects_citizens",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "revoke-all include_current + citizen target",
+            "stimulus": "include current; then citizen id",
+            "outcome": "current revoked; citizen 404",
+            "http_status": "200",
+            "notes": "Revoke-all can include current; citizens rejected.",
+            "classification": "session",
+            "idempotency_class": "http",
+            "side_effect": "session_revoke"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionLastSeenTest.php",
+            "method": "test_write_throttling_prevents_update_every_request",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "last_seen write throttle",
+            "stimulus": "two /me within interval",
+            "outcome": "last_seen_at unchanged on second",
+            "http_status": "200",
+            "notes": "Throttled last_seen prevents write churn.",
+            "classification": "session",
+            "idempotency_class": "http",
+            "side_effect": "last_seen_write",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionLifecycleTest.php",
+            "method": "test_reconcile_and_prune_commands",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS",
+                "REL-RECOVERY-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "employee-sessions:reconcile/prune",
+            "stimulus": "open missing credential; old ended",
+            "outcome": "CredentialMissing; prune removes aged",
+            "http_status": null,
+            "notes": "Reconcile recovers orphans; prune removes aged ended.",
+            "classification": "recovery",
+            "idempotency_class": "command",
+            "side_effect": "session_end"
+        },
+        {
+            "file": "tests/Feature/EmployeeSessionLifecycleTest.php",
+            "method": "test_repeated_logout_is_idempotent",
+            "metrics": [
+                "REL-SESSION-LIFECYCLE-METHODS"
+            ],
+            "domain": "employee-sessions",
+            "operation": "logout then force revoked precedence",
+            "stimulus": "ended session force-filled revoked",
+            "outcome": "status Revoked; not relabeled logout",
+            "http_status": "200",
+            "notes": "Does NOT prove double-logout HTTP; proves ended-reason precedence only.",
+            "classification": "session",
+            "idempotency_class": "service",
+            "stale_class": "workflow_guard",
+            "side_effect": "ended_reason",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardCitizenManagementTest.php",
+            "method": "test_repeated_deactivation_is_idempotent",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "citizens",
+            "operation": "POST .../citizens/{id}/deactivate",
+            "stimulus": "deactivate twice",
+            "outcome": "exactly one citizen.deactivated audit",
+            "http_status": "200",
+            "notes": "Second deactivate does not duplicate audit.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "audit",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardCitizenManagementTest.php",
+            "method": "test_repeated_activation_is_idempotent",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "NOTIF-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "citizens",
+            "operation": "POST .../citizens/{id}/activate",
+            "stimulus": "activate already-active twice",
+            "outcome": "zero activated audits/notifications",
+            "http_status": "200",
+            "notes": "No-op activation has no side effects.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "audit+notification",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/EmployeeManagementTest.php",
+            "method": "test_repeated_deactivation_is_idempotent",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "employees",
+            "operation": "PATCH .../toggle-active is_active=false",
+            "stimulus": "toggle false when already false",
+            "outcome": "OK; stays inactive",
+            "http_status": "200",
+            "notes": "Repeated employee deactivation is no-op.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "is_active",
+            "expected_max": "false"
+        },
+        {
+            "file": "tests/Feature/EmployeeManagementTest.php",
+            "method": "test_repeated_activation_is_idempotent",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "employees",
+            "operation": "PATCH .../toggle-active is_active=true",
+            "stimulus": "toggle true when already true",
+            "outcome": "OK; stays active",
+            "http_status": "200",
+            "notes": "Repeated employee activation is no-op.",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "is_active",
+            "expected_max": "true"
+        },
+        {
+            "file": "tests/Feature/DashboardLicenseIssuanceQueueTest.php",
+            "method": "test_stale_condition_causes_issue_license_422_after_ready_get",
+            "metrics": [
+                "LIC-STALE-REVALIDATION-METHODS",
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "POST issue-license after ready GET",
+            "stimulus": "unpaid fine added after ready view",
+            "outcome": "422; leaves ready queue",
+            "http_status": "422",
+            "notes": "Issuance revalidates readiness.",
+            "classification": "stale_revalidation",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "license_issue",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/DashboardLicenseIssuanceQueueTest.php",
+            "method": "test_application_with_unpaid_fine_is_excluded",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "GET license-issuance queue",
+            "stimulus": "issuable app + unpaid fine vs ready",
+            "outcome": "total=1 only ready app",
+            "http_status": "200",
+            "notes": "Unpaid fine excludes from issuance queue.",
+            "classification": "issuance_integrity",
+            "idempotency_class": "http",
+            "side_effect": "queue_membership",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardLicenseIssuanceQueueTest.php",
+            "method": "test_already_issued_application_is_excluded",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "LIC-DUPLICATE-PREVENTION-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "GET license-issuance queue",
+            "stimulus": "already has license row",
+            "outcome": "total=1 only other ready",
+            "http_status": "200",
+            "notes": "Already-issued excluded from queue.",
+            "classification": "duplicate_prevention",
+            "idempotency_class": "http",
+            "side_effect": "queue_membership",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardLicenseIssuanceQueueTest.php",
+            "method": "test_existing_issue_license_still_succeeds_for_ready_application",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "POST issue-license",
+            "stimulus": "ready application issue",
+            "outcome": "OK active license; queue empties",
+            "http_status": "200",
+            "notes": "Happy-path issue succeeds and removes from queue.",
+            "classification": "issuance_integrity",
+            "idempotency_class": "http",
+            "side_effect": "license_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/LicenseExpirySyncTest.php",
+            "method": "test_effective_status_detects_expired_without_mutating_row",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "LicenseEffectiveStatus::resolve",
+            "stimulus": "past expiry_date read",
+            "outcome": "effective Expired; stored Active",
+            "http_status": null,
+            "notes": "Read path does not mutate status.",
+            "classification": "idempotent_read",
+            "idempotency_class": "service",
+            "side_effect": "status_column",
+            "expected_max": "Active"
+        },
+        {
+            "file": "tests/Feature/LicenseExpirySyncTest.php",
+            "method": "test_sync_command_updates_and_is_idempotent",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "REL-RECOVERY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "licenses:sync-expired",
+            "stimulus": "command twice",
+            "outcome": "Expired; history count unchanged",
+            "http_status": null,
+            "notes": "Expiry sync idempotent on history.",
+            "classification": "recovery",
+            "idempotency_class": "command",
+            "side_effect": "expired_history",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardOverviewTest.php",
+            "method": "test_license_unblock_is_excluded_from_ready_and_issue_license",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "LIC-DUPLICATE-PREVENTION-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "issue-license license_unblock",
+            "stimulus": "disallowed service",
+            "outcome": "422; license count unchanged",
+            "http_status": "422",
+            "notes": "Failed issue creates no license.",
+            "classification": "issuance_integrity",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "license_row",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/DashboardOverviewTest.php",
+            "method": "test_unknown_custom_service_code_is_not_issuable",
+            "metrics": [
+                "LIC-ISSUANCE-INTEGRITY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "issue-license unknown service",
+            "stimulus": "unsupported service type",
+            "outcome": "422; licenses/audits unchanged",
+            "http_status": "422",
+            "notes": "Failed issue no license/audit.",
+            "classification": "issuance_integrity",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "license_row",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/DashboardOverviewTest.php",
+            "method": "test_duplicate_issue_license_is_prevented_after_success",
+            "metrics": [
+                "LIC-DUPLICATE-PREVENTION-METHODS",
+                "LIC-ISSUANCE-INTEGRITY-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "issue-license twice",
+            "stimulus": "second issue after success",
+            "outcome": "422; exactly one license",
+            "http_status": "422",
+            "notes": "Duplicate issuance prevented.",
+            "classification": "duplicate_prevention",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "license_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/OtherLicenseServicesFlowTest.php",
+            "method": "test_duplicate_renew_application_is_blocked",
+            "metrics": [
+                "LIC-DUPLICATE-PREVENTION-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "applications",
+            "operation": "POST /api/applications renew",
+            "stimulus": "second renew while active exists",
+            "outcome": "422 duplicate_active_application_license",
+            "http_status": "422",
+            "notes": "Duplicate renew blocked.",
+            "classification": "duplicate_prevention",
+            "idempotency_class": "http",
+            "side_effect": "application_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DemoLicenseServiceSeedersTest.php",
+            "method": "test_running_seeder_twice_does_not_duplicate_licenses",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "LIC-DUPLICATE-PREVENTION-METHODS"
+            ],
+            "domain": "licenses",
+            "operation": "demo license seeder twice",
+            "stimulus": "run seeder twice",
+            "outcome": "each demo license_number count=1",
+            "http_status": null,
+            "notes": "Demo seeder does not duplicate licenses.",
+            "classification": "idempotent_seed",
+            "idempotency_class": "command",
+            "side_effect": "license_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardLicenseTypesTest.php",
+            "method": "test_activate_deactivate_idempotent_and_audited",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "license-types",
+            "operation": "activate/deactivate twice",
+            "stimulus": "repeat deactivate/activate",
+            "outcome": "state unchanged on repeat; audits exist",
+            "http_status": "200",
+            "notes": "HTTP/state idempotent activate/deactivate (audit uniqueness not asserted).",
+            "classification": "idempotent_noop",
+            "idempotency_class": "http",
+            "side_effect": "is_active"
+        },
+        {
+            "file": "tests/Feature/DashboardFeesManagementTest.php",
+            "method": "test_stale_version_returns_409",
+            "metrics": [
+                "CONC-OPTIMISTIC-CONFLICT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "fees",
+            "operation": "PATCH /api/dashboard/fees/{id}",
+            "stimulus": "version 999",
+            "outcome": "409 stale_version",
+            "http_status": "409",
+            "notes": "Optimistic Fee.version conflict.",
+            "classification": "optimistic_conflict",
+            "idempotency_class": "http",
+            "stale_class": "optimistic_version",
+            "side_effect": "fee_update",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/DashboardFeesManagementTest.php",
+            "method": "test_seeder_rerun_does_not_overwrite_admin_edited_amount",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "fees",
+            "operation": "FeesSeeder rerun",
+            "stimulus": "admin-edited amount then reseed",
+            "outcome": "amount remains 77.77",
+            "http_status": null,
+            "notes": "Seeder idempotent w.r.t. admin edits.",
+            "classification": "idempotent_seed",
+            "idempotency_class": "command",
+            "side_effect": "fee_amount",
+            "expected_max": "77.77"
+        },
+        {
+            "file": "tests/Feature/DashboardFeesManagementTest.php",
+            "method": "test_create_rejects_duplicate_identity",
+            "metrics": [
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "fees",
+            "operation": "POST /api/dashboard/fees",
+            "stimulus": "duplicate fee identity",
+            "outcome": "422 duplicate_identity",
+            "http_status": "422",
+            "notes": "Fee identity_key duplicate rejected.",
+            "classification": "duplicate_reject",
+            "idempotency_class": "http",
+            "side_effect": "fee_row",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardRoleManagementTest.php",
+            "method": "test_update_role_version_conflict_returns_409",
+            "metrics": [
+                "CONC-OPTIMISTIC-CONFLICT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "access-control/roles",
+            "operation": "PATCH /api/dashboard/access-control/roles/{id}",
+            "stimulus": "version 999",
+            "outcome": "409",
+            "http_status": "409",
+            "notes": "Optimistic Role.version conflict.",
+            "classification": "optimistic_conflict",
+            "idempotency_class": "http",
+            "stale_class": "optimistic_version",
+            "side_effect": "role_update",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/SuperAdminProtectionTest.php",
+            "method": "test_bootstrap_is_idempotent_and_does_not_overwrite_role_permissions",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "rbac",
+            "operation": "rbac:bootstrap + PermissionsSeeder",
+            "stimulus": "bootstrap after intentional mutation",
+            "outcome": "custom reduced permissions preserved",
+            "http_status": null,
+            "notes": "Bootstrap/seed do not overwrite role perms.",
+            "classification": "idempotent_seed",
+            "idempotency_class": "command",
+            "side_effect": "role_permissions"
+        },
+        {
+            "file": "tests/Feature/CommitteeDemoSeederTest.php",
+            "method": "test_committee_demo_seeder_is_idempotent",
+            "metrics": [
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "demo-data",
+            "operation": "CommitteeDemoSeeder twice",
+            "stimulus": "seed twice",
+            "outcome": "same APP_A id; 4 apps; waiting=3",
+            "http_status": null,
+            "notes": "Demo seeder rerun does not duplicate entities.",
+            "classification": "idempotent_seed",
+            "idempotency_class": "command",
+            "side_effect": "demo_rows",
+            "expected_max": "4"
+        },
+        {
+            "file": "tests/Feature/DashboardDocumentReviewTest.php",
+            "method": "test_approve_sets_fields_audit_notification_and_blocks_stale_second_decision",
+            "metrics": [
+                "REL-STALE-STATE-REJECTION-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS",
+                "REL-IDEMPOTENCY-METHODS"
+            ],
+            "domain": "document-review",
+            "operation": "approve then stale reject",
+            "stimulus": "second reviewer rejects approved doc",
+            "outcome": "422; stays Approved; no reject side effects",
+            "http_status": "422",
+            "notes": "Stale second decision blocked after approve.",
+            "classification": "stale_reject",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "document_status",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/DashboardDocumentReviewTest.php",
+            "method": "test_reject_validation_structured_storage_notification_and_stale_approve",
+            "metrics": [
+                "REL-STALE-STATE-REJECTION-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "document-review",
+            "operation": "reject then stale approve",
+            "stimulus": "approve after reject",
+            "outcome": "422; rejected notification stays 1",
+            "http_status": "422",
+            "notes": "Stale approve after reject blocked.",
+            "classification": "stale_reject",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "document_status",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_expired_workflow_chat_returns_expired_not_general_help",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "AI-RELIABILITY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "POST /api/ai-agent/message expired workflow",
+            "stimulus": "chat after pending_workflow expired",
+            "outcome": "application_selection_expired; workflow cleared",
+            "http_status": "200",
+            "notes": "Expired workflow not general help.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "expiring_token",
+            "side_effect": "pending_workflow",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_expired_interaction_token_returns_pending_workflow_expired",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "select_application",
+            "stimulus": "token after expiry",
+            "outcome": "422 PENDING_WORKFLOW_EXPIRED",
+            "http_status": "422",
+            "notes": "Expired interaction token rejected.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "expiring_token",
+            "side_effect": "selection",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_show_choices_after_expiry_returns_expired_response",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "show_application_choices_again",
+            "stimulus": "after expiry",
+            "outcome": "application_selection_expired",
+            "http_status": "200",
+            "notes": "Post-expiry show-choices expired.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "expiring_token",
+            "side_effect": "pending_workflow"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_retryable_resume_failure_keeps_pending_workflow",
+            "metrics": [
+                "AI-RELIABILITY-METHODS",
+                "REL-RECOVERY-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "select_application transient failure",
+            "stimulus": "first resume throws then retry OK",
+            "outcome": "422 RETRY_REQUIRED keeps workflow; retry clears",
+            "http_status": "422",
+            "notes": "Transient failure preserves workflow for retry.",
+            "classification": "ai_recovery",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "pending_workflow",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_book_appointment_selection_does_not_create_incomplete_pending_action",
+            "metrics": [
+                "AI-RELIABILITY-METHODS",
+                "AI-CANCEL-NO-MUTATION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "select_application in book flow",
+            "stimulus": "app selected before slot",
+            "outcome": "no incomplete book_appointment pending action",
+            "http_status": "200",
+            "notes": "No incomplete confirmable action created.",
+            "classification": "ai_reliability",
+            "idempotency_class": "http",
+            "side_effect": "ai_action",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_exact_ma_badi_cancels_pending_workflow",
+            "metrics": [
+                "AI-CANCEL-NO-MUTATION-METHODS",
+                "AI-RELIABILITY-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "cancel phrase \u0645\u0627 \u0628\u062f\u064a",
+            "stimulus": "exact cancel awaiting selection",
+            "outcome": "cancelled; pending_workflow removed",
+            "http_status": "200",
+            "notes": "Cancel clears pending workflow.",
+            "classification": "ai_cancel",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "pending_workflow",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPendingWorkflowReliabilityTest.php",
+            "method": "test_ma_badi_araaf_al_mokhalafat_switches_to_fines_not_cancel",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "AI-RELIABILITY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "topic switch then old token",
+            "stimulus": "old token after workflow cleared",
+            "outcome": "old select 422",
+            "http_status": "422",
+            "notes": "Stale token invalid after topic switch.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "selection",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPhase1CriticalActionsTest.php",
+            "method": "test_cancel_submit_documents_for_review_does_not_change_application_or_create_audit_notification_or_queue",
+            "metrics": [
+                "AI-CANCEL-NO-MUTATION-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "POST /api/ai-agent/actions/{id}/cancel",
+            "stimulus": "cancel pending submit",
+            "outcome": "Draft unchanged; audits/notifications/queue unchanged",
+            "http_status": "200",
+            "notes": "Cancel has no domain side effects.",
+            "classification": "ai_cancel",
+            "idempotency_class": "http",
+            "side_effect": "application_status",
+            "expected_max": "Draft"
+        },
+        {
+            "file": "tests/Feature/AIAgentPhase1CriticalActionsTest.php",
+            "method": "test_confirm_submit_documents_for_review_fails_when_application_state_changes_before_confirmation",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "confirm submit_documents_for_review",
+            "stimulus": "external status change before confirm",
+            "outcome": "422; action Failed",
+            "http_status": "422",
+            "notes": "Stale application state blocks confirm.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "confirm",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentPhase1CriticalActionsTest.php",
+            "method": "test_submit_documents_for_review_fails_when_required_documents_become_rejected_before_confirmation",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "confirm submit_documents_for_review",
+            "stimulus": "docs rejected before confirm",
+            "outcome": "confirm fails stale eligibility",
+            "http_status": "422",
+            "notes": "Stale document eligibility blocks confirm.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "confirm",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentAppointmentMultiSlotFlowTest.php",
+            "method": "test_stale_slot_and_expired_and_foreign_token",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "CONC-APPOINTMENT-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent/appointments",
+            "operation": "select_appointment_slot",
+            "stimulus": "slot at capacity; expired workflow; foreign token",
+            "outcome": "422 NO_LONGER_AVAILABLE; 422 EXPIRED; foreign 404",
+            "http_status": "422",
+            "notes": "Stale capacity and expired workflow guarded.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "expiring_token",
+            "side_effect": "slot_select",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentAppointmentMultiSlotFlowTest.php",
+            "method": "test_reschedule_end_to_end_and_stale_replacement_slot",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "CONC-APPOINTMENT-METHODS",
+                "AI-RELIABILITY-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent/appointments",
+            "operation": "reschedule then select filled slot",
+            "stimulus": "candidate slot filled before select",
+            "outcome": "422 APPOINTMENT_SLOT_NO_LONGER_AVAILABLE",
+            "http_status": "422",
+            "notes": "Stale replacement slot rejected.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "slot_select",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentAppointmentMultiSlotFlowTest.php",
+            "method": "test_topic_change_and_cancel_phrase_clear_slot_workflow",
+            "metrics": [
+                "AI-CANCEL-NO-MUTATION-METHODS",
+                "AI-RELIABILITY-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "topic change / \u0645\u0627 \u0628\u062f\u064a during slot workflow",
+            "stimulus": "status question then cancel",
+            "outcome": "pending_workflow cleared",
+            "http_status": "200",
+            "notes": "Topic change and cancel clear slot workflow.",
+            "classification": "ai_cancel",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "pending_workflow",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentActionExecutionTest.php",
+            "method": "test_cancelled_action_cannot_be_confirmed",
+            "metrics": [
+                "AI-STALE-GUARD-METHODS",
+                "REL-STALE-STATE-REJECTION-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "confirm cancelled action",
+            "stimulus": "confirm after Cancelled",
+            "outcome": "422",
+            "http_status": "422",
+            "notes": "Cancelled action cannot be confirmed.",
+            "classification": "ai_stale",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "confirm",
+            "expected_max": "0"
+        },
+        {
+            "file": "tests/Feature/AIAgentActionExecutionTest.php",
+            "method": "test_executed_action_cannot_be_confirmed_again",
+            "metrics": [
+                "AI-RELIABILITY-METHODS",
+                "REL-IDEMPOTENCY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "ai-agent",
+            "operation": "confirm executed action again",
+            "stimulus": "second confirm",
+            "outcome": "422 already executed",
+            "http_status": "422",
+            "notes": "Re-confirm after execute rejected.",
+            "classification": "idempotent_reject",
+            "idempotency_class": "http",
+            "stale_class": "workflow_guard",
+            "side_effect": "confirm",
+            "expected_max": "1"
+        },
+        {
+            "file": "tests/Feature/AIAgentActionExecutionTest.php",
+            "method": "test_confirm_create_application_fails_when_duplicate_active_application_exists",
+            "metrics": [
+                "LIC-DUPLICATE-PREVENTION-METHODS",
+                "AI-RELIABILITY-METHODS",
+                "REL-DUPLICATE-SIDE-EFFECT-METHODS"
+            ],
+            "domain": "applications",
+            "operation": "confirm create_application",
+            "stimulus": "active duplicate same license/service",
+            "outcome": "422; Failed; still one application",
+            "http_status": "422",
+            "notes": "Duplicate active application blocked on confirm.",
+            "classification": "duplicate_prevention",
+            "idempotency_class": "http",
+            "stale_class": "revalidation_before_commit",
+            "side_effect": "application_row",
+            "expected_max": "1"
+        }
+    ],
+    "optimistic_entities": [
+        {
+            "entity": "AppointmentSlot",
+            "field": "version",
+            "conflict_http": 409
+        },
+        {
+            "entity": "Role",
+            "field": "version",
+            "conflict_http": 409
+        },
+        {
+            "entity": "Fee",
+            "field": "version",
+            "conflict_http": 409
+        }
+    ],
+    "locked_domains": {
+        "identified": [
+            "licenses",
+            "payments",
+            "appointments",
+            "fees",
+            "citizens",
+            "access-control/roles",
+            "employee-sessions",
+            "push-devices",
+            "push-deliveries",
+            "fines",
+            "test-results",
+            "document-review",
+            "ai-agent-sessions"
+        ],
+        "with_behavioral_tests": [
+            "licenses",
+            "payments",
+            "appointments",
+            "fees",
+            "citizens",
+            "access-control/roles",
+            "employee-sessions",
+            "push-devices",
+            "push-deliveries",
+            "document-review",
+            "ai-agent-sessions"
+        ],
+        "implemented_locks_without_concurrency_behavioral_tests": [
+            "fines",
+            "test-results"
+        ]
+    },
+    "db_invariants": [
+        {
+            "id": 1,
+            "constraint": "payments.settled_obligation_key",
+            "tested": true,
+            "evidence": "PaymentConcurrencyAndIntegrityTest::test_settled_obligation_key_unique"
+        },
+        {
+            "id": 2,
+            "constraint": "payments.active_obligation_key",
+            "tested": false,
+            "evidence": "UNTESTED direct constraint"
+        },
+        {
+            "id": 3,
+            "constraint": "payments.(provider,provider_reference)",
+            "tested": true,
+            "evidence": "PaymentConcurrencyAndIntegrityTest::test_provider_reference_unique_constraint"
+        },
+        {
+            "id": 4,
+            "constraint": "payment_gateway_events.(provider,event_id)",
+            "tested": false,
+            "evidence": "Webhook idempotency is behavioral not QueryException"
+        },
+        {
+            "id": 5,
+            "constraint": "notifications.event_key",
+            "tested": true,
+            "evidence": "NotificationIdempotencyTest::test_same_event_key_does_not_duplicate"
+        },
+        {
+            "id": 6,
+            "constraint": "push_deliveries.delivery_key",
+            "tested": true,
+            "evidence": "PushDeliveryPlanningTest::test_delivery_key_uniqueness_enforced"
+        },
+        {
+            "id": 7,
+            "constraint": "push_devices.token_hash",
+            "tested": true,
+            "evidence": "PushDeviceTokenRotationTest::test_token_uniqueness_constraint_is_enforced_at_database_level"
+        },
+        {
+            "id": 8,
+            "constraint": "push_devices.(user_id,device_id)",
+            "tested": false,
+            "evidence": "UNTESTED direct"
+        },
+        {
+            "id": 9,
+            "constraint": "licenses.license_number",
+            "tested": false,
+            "evidence": "UNTESTED direct"
+        },
+        {
+            "id": 10,
+            "constraint": "licenses.verification_token",
+            "tested": false,
+            "evidence": "UNTESTED direct"
+        },
+        {
+            "id": 11,
+            "constraint": "fees.identity_key",
+            "tested": true,
+            "evidence": "DashboardFeesManagementTest::test_create_rejects_duplicate_identity"
+        },
+        {
+            "id": 12,
+            "constraint": "appointment_slots.identity_key",
+            "tested": true,
+            "evidence": "DashboardAppointmentSlotsTest::test_create_rejects_duplicate_and_ignores_client_booked_count"
+        }
+    ],
+    "gaps": [
+        {
+            "gap": "Feature test for payment reconcile (ReconcilePendingPaymentsCommand / PaymentReconciliationService) proving recover stuck/paid sessions without double-settle",
+            "committee_value": "High",
+            "risk": "High (money)",
+            "effort": "Med"
+        },
+        {
+            "gap": "Issuance race: two employees issue same ready application concurrently",
+            "committee_value": "High",
+            "risk": "High (duplicate license)",
+            "effort": "Med"
+        },
+        {
+            "gap": "True parallel/OS-thread booking stress beyond sequential HTTP loop",
+            "committee_value": "High",
+            "risk": "Med\u2013High (overbook)",
+            "effort": "Med\u2013High"
+        },
+        {
+            "gap": "Additional forced-rollback atomicity tests outside notifications (payment settle, license issue, appointment book)",
+            "committee_value": "High",
+            "risk": "Med",
+            "effort": "Med"
+        },
+        {
+            "gap": "Positive production-mode afterCommit emit test (notify appears only after commit)",
+            "committee_value": "Med\u2013High",
+            "risk": "Med",
+            "effort": "Med"
+        },
+        {
+            "gap": "Direct QueryException tests for active_obligation_key, gateway event unique, license_number/verification_token, push (user_id,device_id)",
+            "committee_value": "Med",
+            "risk": "Med",
+            "effort": "Low"
+        },
+        {
+            "gap": "Concurrent behavioral tests for FineService and TestResultService lockForUpdate sites",
+            "committee_value": "Med",
+            "risk": "Med",
+            "effort": "Med"
+        }
+    ],
+    "claims": [
+        {
+            "claim": "Duplicate payment initiation reuses the active attempt (idempotent create)",
+            "status": "VERIFIED"
+        },
+        {
+            "claim": "Duplicate Stripe webhook processing is idempotent in the tested checkout.session.completed flow",
+            "status": "VERIFIED"
+        },
+        {
+            "claim": "Concurrent booking tests resulted in zero overbooking for the covered capacity=1 scenario (success=1, failure=1, booked_count=1)",
+            "status": "VERIFIED",
+            "limitation": "Sequential HTTP loop in PHPUnit \u2014 not OS-thread parallelism"
+        },
+        {
+            "claim": "License issuance re-validates readiness at mutation time and rejects stale eligibility (GET readiness is advisory)",
+            "status": "VERIFIED",
+            "note": "DashboardLicenseIssuanceQueueTest::test_stale_condition_causes_issue_license_422_after_ready_get"
+        },
+        {
+            "claim": "Optimistic version conflicts return HTTP 409 for AppointmentSlot, Fee, and Role",
+            "status": "VERIFIED"
+        },
+        {
+            "claim": "Notification event_key and push delivery_key prevent duplicate side effects in tested flows",
+            "status": "VERIFIED"
+        },
+        {
+            "claim": "afterCommit / notification isolation: rolled-back business TX creates no notification; notification persist failure does not roll back business success",
+            "status": "PARTIALLY VERIFIED",
+            "note": "Rollback/isolation proven; positive production afterCommit emit not Feature-proven"
+        },
+        {
+            "claim": "Application-level recoverability exists for push leases, employee sessions, and license expiry sync",
+            "status": "PARTIALLY VERIFIED",
+            "note": "Payment reconcile implemented but unmeasured; not disaster recovery"
+        },
+        {
+            "claim": "Payment reconcile is fully measured by Feature tests",
+            "status": "DO NOT CLAIM",
+            "note": "IMPLEMENTED BUT UNMEASURED"
+        },
+        {
+            "claim": "The entire platform is race-condition free / exactly-once processing is guaranteed system-wide / the system is fault tolerant",
+            "status": "DO NOT CLAIM"
+        },
+        {
+            "claim": "RPO / RTO / disaster-recovery backup restoration",
+            "status": "DO NOT CLAIM",
+            "note": "Not measured"
+        },
+        {
+            "claim": "OS-thread true parallel booking stress tested",
+            "status": "DO NOT CLAIM"
+        }
+    ],
+    "mechanisms": [
+        {
+            "mechanism": "DB::transaction",
+            "where": "68 call sites across domain services (payments, appointments, licenses, access-control, notifications callers, etc.)",
+            "failure_mode": "Partial multi-row mutation / inconsistent domain state",
+            "behavioral_evidence": "PARTIALLY \u2014 REL-ROLLBACK=1, REL-ATOMICITY=5; call-site count is implementation only"
+        },
+        {
+            "mechanism": "lockForUpdate",
+            "where": "56 call sites / 18 files (see CONC-LOCK-CALLS)",
+            "failure_mode": "Lost updates / overbooking / double-settlement races under concurrent writers",
+            "behavioral_evidence": "PARTIALLY \u2014 11/13 locked domains have behavioral tests; not every lock site tested"
+        },
+        {
+            "mechanism": "Database unique constraints",
+            "where": "payments obligation/provider keys; payment_gateway_events; notifications.event_key; push delivery_key/token_hash; license_number/verification_token; fee/slot identity_key",
+            "failure_mode": "Duplicate business identities / double settlement / duplicate notifications/push",
+            "behavioral_evidence": "PARTIALLY \u2014 7/12 critical invariants have direct automated evidence"
+        },
+        {
+            "mechanism": "Stripe Checkout idempotency_key",
+            "where": "StripePaymentGatewayService (dlms-payment-{payment_number})",
+            "failure_mode": "Duplicate Stripe Checkout Session creation on retry",
+            "behavioral_evidence": "IMPLEMENTED BUT UNMEASURED as isolated Stripe API idempotency proof (related webhook/initiation tests exist)"
+        },
+        {
+            "mechanism": "event_key / delivery_key",
+            "where": "NotificationService event_key unique; PushDelivery delivery_key unique",
+            "failure_mode": "Duplicate notifications / duplicate push plans for same business event",
+            "behavioral_evidence": "VERIFIED for covered notify/push planning flows"
+        },
+        {
+            "mechanism": "Stripe gateway event uniqueness",
+            "where": "payment_gateway_events unique(provider,event_id)",
+            "failure_mode": "Replayed webhook double-applies provider event",
+            "behavioral_evidence": "PARTIALLY \u2014 duplicate webhook Feature test proves safe outcome; direct QueryException on constraint untested"
+        },
+        {
+            "mechanism": "State/status guards",
+            "where": "Payments confirm, appointments cancel/reschedule, document review, license issue, AI action confirm",
+            "failure_mode": "Illegal transitions / double transitions",
+            "behavioral_evidence": "VERIFIED for covered scenarios (REL-STALE / duplicate prevention inventories)"
+        },
+        {
+            "mechanism": "Optimistic version checks",
+            "where": "AppointmentSlot.version, Role.version, Fee.version",
+            "failure_mode": "TOCTOU overwrite of admin edits",
+            "behavioral_evidence": "VERIFIED \u2014 3 entities / 3 HTTP 409 stale tests"
+        },
+        {
+            "mechanism": "Scheduled reconciliation",
+            "where": "ReconcilePendingPaymentsCommand, employee-sessions:reconcile/prune, licenses:sync-expired, push:dispatch-pending / recoverStaleProcessing",
+            "failure_mode": "Stuck pending payments/sessions/push leases; expired license status drift",
+            "behavioral_evidence": "PARTIALLY \u2014 push/session/license sync tested; payment reconcile IMPLEMENTED BUT UNMEASURED"
+        },
+        {
+            "mechanism": "Queued retry/backoff",
+            "where": "SendPushNotificationJob + PushDeliveryService retryDelaySeconds / Retry-After",
+            "failure_mode": "Transient FCM failures lost or thundering-herd retries",
+            "behavioral_evidence": "VERIFIED for covered push retry/terminal paths"
+        },
+        {
+            "mechanism": "afterCommit side effects",
+            "where": "NotificationService::runAfterCommit (DB::afterCommit); bypassed when runningUnitTests()",
+            "failure_mode": "Notification emitted for rolled-back business work; or notification failure rolling back business",
+            "behavioral_evidence": "PARTIALLY \u2014 rollback/isolation safety tested (2 methods); positive production afterCommit emit untested"
+        },
+        {
+            "mechanism": "AI pending-action expiry / stale guards",
+            "where": "AIAgent pending_workflow expiry; interaction tokens; confirm-time state revalidation",
+            "failure_mode": "Stale confirmation executes outdated intent",
+            "behavioral_evidence": "VERIFIED for covered AI stale/cancel/retry scenarios"
+        }
+    ]
+}

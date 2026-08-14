@@ -1,0 +1,743 @@
+row_type,file_or_group,method,category,module,metric,value,notes
+translation_file_parity,messages,,,,parity_pct,69.69,AR=828 EN=577 shared=577 AR-only=251 EN-only=0
+ar_only_key,messages,,,,key,messages.access_control.archived_role_cannot_be_assigned,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.access_role.archived,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.access_role.created,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.access_role.permissions_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.access_role.restored,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.access_role.updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.document_reviewer.permissions_repaired,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.activated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.created,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.deactivated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.direct_permissions_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.role_assigned,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.roles_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_actions.employee.updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.audit_logs_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.cannot_archive_role_with_employees,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.cannot_archive_system_role,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.cannot_assign_direct_permissions_to_super_admin,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.cannot_remove_last_super_admin,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.cannot_update_archived_role,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.employee_access_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.employee_direct_permissions_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.employee_role_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.invalid_permission,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.invalid_role_assignment,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.invalid_role_name,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.not_dashboard_employee,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.overview_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.password_confirmation_failed,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.permission_not_assignable,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.permissions_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.protected_permission,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.protected_role_immutable,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.protected_role_permissions_immutable,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.reason_required,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_archived,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_created,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_employees_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_name_reserved_or_taken,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_not_archived,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_not_assignable,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_options_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_permissions_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_restored,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.role_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.roles_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.stale_version,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.super_admin_required,Missing in EN
+ar_only_key,messages,,,,key,messages.access_control.unregistered_permission,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.action_cancelled,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.action_executed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.action_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.admin_denied,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.already_cancelled,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.already_executed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.already_processing,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_id_arg_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_id_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.administrative_review,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.appointment_pending,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.approved,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.cancelled,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.documents_rejected,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.documents_under_review,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.draft,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.in_testing,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.license_issued,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.multiple_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.no_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.payment_completed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.payment_pending,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.rejected,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.unknown,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_next_step.waiting_retest,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.application_status.with_next_step,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.appointments.current.choose_application,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.appointments.current.multiple,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.appointments.current.no_application,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.appointments.current.none,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.appointments.current.single,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.cannot_cancel,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.cannot_execute_yet,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.confirm_action,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.confirm_new_license,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.disabled,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.employee_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.existing_active_application,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.failed_cannot_confirm,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.general_help,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.license_type_arg_invalid,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.license_type_arg_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.license_type_invalid,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.license_type_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.message_empty,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.message_required,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.multiple_active_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.new_license_prompt,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.no_active_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.not_awaiting_confirmation,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.out_of_scope,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.already_uploaded_hint,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.list,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.multiple_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.no_applications,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.stage_completed_hint,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.unavailable,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.required_documents.upload_hint,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.response,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.response_generated,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.service_type_arg_invalid,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.service_type_invalid,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.session_closed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.session_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.session_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.session_show,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.sessions_list,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.status_cancelled,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.status_executed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.status_failed,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.status_processing,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.status_prompt_confirm,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.unavailable,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.unsupported_action,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.multiple_applications.appointment,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.multiple_applications.payment,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.multiple_applications.test_results,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.no_application.appointment,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.no_application.payment,Missing in EN
+ar_only_key,messages,,,,key,messages.ai_agent.workflow.no_application.test_results,Missing in EN
+ar_only_key,messages,,,,key,messages.audit.list,Missing in EN
+ar_only_key,messages,,,,key,messages.audit.status_history,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.application_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.cannot_deactivate_last_super_admin,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.cannot_deactivate_self,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_activated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_already_active,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_already_inactive,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_applications_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_audit_logs_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_created,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_deactivated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_deleted,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_fines_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_licenses_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_not_allowed,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_stats_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizen_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.citizens_list_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_activated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_created,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_deactivated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_password_reset,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_status_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employee_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.employees_list_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.forbidden,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.forgot_password_sent,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.inactive_account,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.invalid_credentials,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.invalid_role,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_activated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_created,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_deactivated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_type_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.license_types_list_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.login_success,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.logout_success,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.me_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.otp_verified,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.overview_other,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.overview_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.password_reset,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.permissions_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.profile_statuses_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.role_assigned,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.role_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.roles_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_activated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_created,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_deactivated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_type_updated,Missing in EN
+ar_only_key,messages,,,,key,messages.dashboard.service_types_list_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.application_id_missing,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.batch_approve_done,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.missing_session_id,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.no_action,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.session_cleared,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.unknown_action,Missing in EN
+ar_only_key,messages,,,,key,messages.dev_dashboard.unknown_scenario,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.already_ended,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.audit_actions.employee_session.logged_out,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.audit_actions.employee_session.revoked,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.audit_actions.employee_session.started,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.audit_actions.employee_sessions.revoked_all,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.audit_logs_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Chrome,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Edge,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Firefox,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Other,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Safari,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.browsers.Unknown,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.commands.prune_applied,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.commands.prune_dry_run,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.commands.reconcile_done,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.current_session_confirmation_required,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.current_session_missing,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.details_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.device_types.desktop,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.device_types.mobile,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.device_types.tablet,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.device_types.unknown,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.employee_history_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.heartbeat_disabled,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.heartbeat_ok,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.invalid_employee,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.list_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.not_found,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.Android,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.Linux,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.Unknown,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.Windows,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.iOS,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.operating_systems.macOS,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.options_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.password_confirmation_failed,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.revoked,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.revoked_all,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.root_super_admin_required,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.session_start_failed,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.sort.last_seen_desc,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.sort.logged_in_asc,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.sort.logged_in_desc,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.stats_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.status.active,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.status.expired,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.status.idle,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.status.logged_out,Missing in EN
+ar_only_key,messages,,,,key,messages.employee_sessions.status.revoked,Missing in EN
+ar_only_key,messages,,,,key,messages.reports.invalid_period,Missing in EN
+ar_only_key,messages,,,,key,messages.reports.options_retrieved,Missing in EN
+ar_only_key,messages,,,,key,messages.reports.overview,Missing in EN
+ar_only_key,messages,,,,key,messages.reports.retrieved,Missing in EN
+translation_file_parity,validation,,,,parity_pct,50.28,AR=90 EN=179 shared=90 AR-only=0 EN-only=89
+en_only_key,validation,,,,key,validation.accepted_if,Missing in AR
+en_only_key,validation,,,,key,validation.ascii,Missing in AR
+en_only_key,validation,,,,key,validation.attributes.language,Missing in AR
+en_only_key,validation,,,,key,validation.attributes.related_license_id,Missing in AR
+en_only_key,validation,,,,key,validation.attributes.theme,Missing in AR
+en_only_key,validation,,,,key,validation.can,Missing in AR
+en_only_key,validation,,,,key,validation.contains,Missing in AR
+en_only_key,validation,,,,key,validation.current_password,Missing in AR
+en_only_key,validation,,,,key,validation.custom.attribute-name.rule-name,Missing in AR
+en_only_key,validation,,,,key,validation.decimal,Missing in AR
+en_only_key,validation,,,,key,validation.declined,Missing in AR
+en_only_key,validation,,,,key,validation.declined_if,Missing in AR
+en_only_key,validation,,,,key,validation.dimensions,Missing in AR
+en_only_key,validation,,,,key,validation.distinct,Missing in AR
+en_only_key,validation,,,,key,validation.doesnt_end_with,Missing in AR
+en_only_key,validation,,,,key,validation.doesnt_start_with,Missing in AR
+en_only_key,validation,,,,key,validation.ends_with,Missing in AR
+en_only_key,validation,,,,key,validation.enum,Missing in AR
+en_only_key,validation,,,,key,validation.extensions,Missing in AR
+en_only_key,validation,,,,key,validation.gt.array,Missing in AR
+en_only_key,validation,,,,key,validation.gt.file,Missing in AR
+en_only_key,validation,,,,key,validation.gt.numeric,Missing in AR
+en_only_key,validation,,,,key,validation.gt.string,Missing in AR
+en_only_key,validation,,,,key,validation.gte.array,Missing in AR
+en_only_key,validation,,,,key,validation.gte.file,Missing in AR
+en_only_key,validation,,,,key,validation.gte.numeric,Missing in AR
+en_only_key,validation,,,,key,validation.gte.string,Missing in AR
+en_only_key,validation,,,,key,validation.hex_color,Missing in AR
+en_only_key,validation,,,,key,validation.in_array,Missing in AR
+en_only_key,validation,,,,key,validation.ip,Missing in AR
+en_only_key,validation,,,,key,validation.ipv4,Missing in AR
+en_only_key,validation,,,,key,validation.ipv6,Missing in AR
+en_only_key,validation,,,,key,validation.json,Missing in AR
+en_only_key,validation,,,,key,validation.list,Missing in AR
+en_only_key,validation,,,,key,validation.lowercase,Missing in AR
+en_only_key,validation,,,,key,validation.lt.array,Missing in AR
+en_only_key,validation,,,,key,validation.lt.file,Missing in AR
+en_only_key,validation,,,,key,validation.lt.numeric,Missing in AR
+en_only_key,validation,,,,key,validation.lt.string,Missing in AR
+en_only_key,validation,,,,key,validation.lte.array,Missing in AR
+en_only_key,validation,,,,key,validation.lte.file,Missing in AR
+en_only_key,validation,,,,key,validation.lte.numeric,Missing in AR
+en_only_key,validation,,,,key,validation.lte.string,Missing in AR
+en_only_key,validation,,,,key,validation.mac_address,Missing in AR
+en_only_key,validation,,,,key,validation.max_digits,Missing in AR
+en_only_key,validation,,,,key,validation.mimetypes,Missing in AR
+en_only_key,validation,,,,key,validation.min_digits,Missing in AR
+en_only_key,validation,,,,key,validation.missing,Missing in AR
+en_only_key,validation,,,,key,validation.missing_if,Missing in AR
+en_only_key,validation,,,,key,validation.missing_unless,Missing in AR
+en_only_key,validation,,,,key,validation.missing_with,Missing in AR
+en_only_key,validation,,,,key,validation.missing_with_all,Missing in AR
+en_only_key,validation,,,,key,validation.multiple_of,Missing in AR
+en_only_key,validation,,,,key,validation.not_in,Missing in AR
+en_only_key,validation,,,,key,validation.not_regex,Missing in AR
+en_only_key,validation,,,,key,validation.password.letters,Missing in AR
+en_only_key,validation,,,,key,validation.password.mixed,Missing in AR
+en_only_key,validation,,,,key,validation.password.numbers,Missing in AR
+en_only_key,validation,,,,key,validation.password.symbols,Missing in AR
+en_only_key,validation,,,,key,validation.password.uncompromised,Missing in AR
+en_only_key,validation,,,,key,validation.present,Missing in AR
+en_only_key,validation,,,,key,validation.present_if,Missing in AR
+en_only_key,validation,,,,key,validation.present_unless,Missing in AR
+en_only_key,validation,,,,key,validation.present_with,Missing in AR
+en_only_key,validation,,,,key,validation.present_with_all,Missing in AR
+en_only_key,validation,,,,key,validation.prohibited,Missing in AR
+en_only_key,validation,,,,key,validation.prohibited_if,Missing in AR
+en_only_key,validation,,,,key,validation.prohibited_if_accepted,Missing in AR
+en_only_key,validation,,,,key,validation.prohibited_if_declined,Missing in AR
+en_only_key,validation,,,,key,validation.prohibited_unless,Missing in AR
+en_only_key,validation,,,,key,validation.prohibits,Missing in AR
+en_only_key,validation,,,,key,validation.regex,Missing in AR
+en_only_key,validation,,,,key,validation.required_array_keys,Missing in AR
+en_only_key,validation,,,,key,validation.required_if_accepted,Missing in AR
+en_only_key,validation,,,,key,validation.required_if_declined,Missing in AR
+en_only_key,validation,,,,key,validation.required_unless,Missing in AR
+en_only_key,validation,,,,key,validation.required_with,Missing in AR
+en_only_key,validation,,,,key,validation.required_with_all,Missing in AR
+en_only_key,validation,,,,key,validation.required_without,Missing in AR
+en_only_key,validation,,,,key,validation.required_without_all,Missing in AR
+en_only_key,validation,,,,key,validation.size.array,Missing in AR
+en_only_key,validation,,,,key,validation.size.file,Missing in AR
+en_only_key,validation,,,,key,validation.size.numeric,Missing in AR
+en_only_key,validation,,,,key,validation.starts_with,Missing in AR
+en_only_key,validation,,,,key,validation.timezone,Missing in AR
+en_only_key,validation,,,,key,validation.ulid,Missing in AR
+en_only_key,validation,,,,key,validation.uploaded,Missing in AR
+en_only_key,validation,,,,key,validation.uppercase,Missing in AR
+en_only_key,validation,,,,key,validation.uuid,Missing in AR
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_without_header_resolves_ar,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_without_header_resolves_ar,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_without_header_resolves_ar,F,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_accept_language_ar_resolves_ar,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_accept_language_ar_resolves_ar,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_accept_language_en_resolves_en,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_guest_accept_language_en_resolves_en,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_en_us_normalizes_to_en,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_en_us_normalizes_to_en,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_ar_sy_normalizes_to_ar,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_ar_sy_normalizes_to_ar,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_q_value_negotiation_prefers_supported_locale,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_q_value_negotiation_prefers_supported_locale,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_q_value_negotiation_prefers_supported_locale,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_without_user_falls_back_to_ar,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_without_user_falls_back_to_ar,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_without_user_falls_back_to_ar,F,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_authenticated_user_language_en_without_header_resolves_en,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_authenticated_user_language_en_without_header_resolves_en,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_authenticated_user_language_ar_without_header_resolves_ar,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_authenticated_user_language_ar_without_header_resolves_ar,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_authenticated_user_language_ar_without_header_resolves_ar,F,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_accept_language_overrides_stored_preference_for_request_only,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_accept_language_overrides_stored_preference_for_request_only,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_accept_language_overrides_stored_preference_for_request_only,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_accept_language_overrides_stored_preference_for_request_only,E,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_does_not_override_stored_user_preference,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_does_not_override_stored_user_preference,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_does_not_override_stored_user_preference,E,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_unsupported_header_does_not_override_stored_user_preference,F,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_malformed_accept_language_falls_back_safely,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_malformed_accept_language_falls_back_safely,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_malformed_accept_language_falls_back_safely,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_malformed_accept_language_falls_back_safely,F,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_existing_vary_header_is_preserved_and_accept_language_appended,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_existing_vary_header_is_preserved_and_accept_language_appended,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_locale_does_not_leak_between_requests,A,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_locale_does_not_leak_between_requests,B,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_locale_does_not_leak_between_requests,D,locale_negotiation,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_dashboard_routes_do_not_use_citizen_locale_middleware,A,dashboard_boundary,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_dashboard_routes_do_not_use_citizen_locale_middleware,B,dashboard_boundary,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_dashboard_routes_do_not_use_citizen_locale_middleware,D,dashboard_boundary,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_english_validation_uses_en_pack_for_guest_login,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_english_validation_uses_en_pack_for_guest_login,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_english_validation_uses_en_pack_for_guest_login,G,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_arabic_validation_remains_compatible_for_guest_login,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_arabic_validation_remains_compatible_for_guest_login,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RequestLocaleTest.php,test_arabic_validation_remains_compatible_for_guest_login,G,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_auth_me_exposes_language,A,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_auth_me_exposes_language,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_login_user_payload_exposes_language,B,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_login_user_payload_exposes_language,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_en_persists_without_rotating_token,A,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_en_persists_without_rotating_token,B,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_en_persists_without_rotating_token,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_ar_persists,A,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_ar_persists,B,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_put_language_ar_persists,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_invalid_stored_language_remains_impossible_through_settings_api,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_accept_language_does_not_persist_preference,A,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_accept_language_does_not_persist_preference,B,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_accept_language_does_not_persist_preference,D,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_accept_language_does_not_persist_preference,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLanguagePreferenceTest.php,test_citizen_authorization_unchanged_for_settings,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_auth_and_profile_messages_are_bilingual,A,profile,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_auth_and_profile_messages_are_bilingual,B,profile,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_auth_and_profile_messages_are_bilingual,C,profile,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_auth_and_profile_messages_are_bilingual,D,profile,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_application_and_document_messages_are_bilingual,A,documents,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_application_and_document_messages_are_bilingual,B,documents,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_application_and_document_messages_are_bilingual,C,documents,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_application_and_document_messages_are_bilingual,D,documents,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_application_and_document_messages_are_bilingual,J,documents,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_payment_messages_are_bilingual,A,payments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_payment_messages_are_bilingual,B,payments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_payment_messages_are_bilingual,C,payments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_payment_messages_are_bilingual,D,payments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_appointment_and_test_availability_messages_are_bilingual,A,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_appointment_and_test_availability_messages_are_bilingual,B,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_appointment_and_test_availability_messages_are_bilingual,C,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_appointment_and_test_availability_messages_are_bilingual,D,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_appointment_and_test_availability_messages_are_bilingual,J,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_license_and_fine_messages_are_bilingual,A,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_license_and_fine_messages_are_bilingual,B,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_license_and_fine_messages_are_bilingual,C,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_license_and_fine_messages_are_bilingual,D,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_license_and_fine_messages_are_bilingual,J,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_middleware_access_errors_are_bilingual,A,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_middleware_access_errors_are_bilingual,B,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_middleware_access_errors_are_bilingual,C,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_middleware_access_errors_are_bilingual,D,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_middleware_access_errors_are_bilingual,H,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_validation_failure_is_bilingual,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_validation_failure_is_bilingual,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_validation_failure_is_bilingual,C,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_validation_failure_is_bilingual,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_validation_failure_is_bilingual,G,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_dashboard_and_ai_remain_isolated_from_english_citizen_pack,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_dashboard_and_ai_remain_isolated_from_english_citizen_pack,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenBilingualMessagesTest.php,test_dashboard_and_ai_remain_isolated_from_english_citizen_pack,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,A,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,B,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,C,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,D,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,G,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_eligibility_failures_are_bilingual,H,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,A,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,B,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,C,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,D,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,G,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_renewal_too_early_eligibility_is_bilingual,H,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,A,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,B,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,C,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,D,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,G,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_tests_not_required_is_bilingual,J,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_type_and_test_type_labels_are_bilingual,A,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_type_and_test_type_labels_are_bilingual,B,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_type_and_test_type_labels_are_bilingual,C,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_type_and_test_type_labels_are_bilingual,D,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_type_and_test_type_labels_are_bilingual,J,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_slot_test_type_labels_are_bilingual,A,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_slot_test_type_labels_are_bilingual,B,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_slot_test_type_labels_are_bilingual,C,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_slot_test_type_labels_are_bilingual,D,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_appointment_slot_test_type_labels_are_bilingual,J,appointments,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_status_label_is_bilingual,A,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_status_label_is_bilingual,B,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_status_label_is_bilingual,C,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_status_label_is_bilingual,D,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenHardcodeLocalizationTest.php,test_license_status_label_is_bilingual,J,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_service_type_name_and_description_are_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_service_type_name_and_description_are_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_service_type_name_and_description_are_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_service_type_name_and_description_are_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_service_type_name_and_description_are_bilingual,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_required_documents_are_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_required_documents_are_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_required_documents_are_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_required_documents_are_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_required_documents_are_bilingual,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_fee_names_are_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_fee_names_are_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_fee_names_are_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_fee_names_are_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_fee_names_are_bilingual,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_application_nested_catalog_labels_are_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_application_nested_catalog_labels_are_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_application_nested_catalog_labels_are_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_application_nested_catalog_labels_are_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_application_nested_catalog_labels_are_bilingual,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_available_tests_and_appointment_result_labels_are_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_available_tests_and_appointment_result_labels_are_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_available_tests_and_appointment_result_labels_are_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_available_tests_and_appointment_result_labels_are_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_available_tests_and_appointment_result_labels_are_bilingual,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_unknown_code_falls_back_to_db_name,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_unknown_code_falls_back_to_db_name,F,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_unknown_code_falls_back_to_db_name,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_known_code_ignores_admin_edited_db_name,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_known_code_ignores_admin_edited_db_name,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_payment_resource_fee_name_is_localized,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_payment_resource_fee_name_is_localized,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenCatalogLocalizationTest.php,test_payment_resource_fee_name_is_localized,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_faq_is_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_faq_is_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_faq_is_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_faq_is_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_privacy_policy_is_bilingual,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_privacy_policy_is_bilingual,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_privacy_policy_is_bilingual,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_privacy_policy_is_bilingual,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_contact_presentation_is_bilingual_while_raw_values_stay,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_contact_presentation_is_bilingual_while_raw_values_stay,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_contact_presentation_is_bilingual_while_raw_values_stay,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_contact_presentation_is_bilingual_while_raw_values_stay,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_contact_presentation_is_bilingual_while_raw_values_stay,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_theme_labels_are_bilingual_while_codes_remain,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_theme_labels_are_bilingual_while_codes_remain,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_theme_labels_are_bilingual_while_codes_remain,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_theme_labels_are_bilingual_while_codes_remain,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_theme_labels_are_bilingual_while_codes_remain,J,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_unknown_faq_falls_back_to_db_values,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_unknown_faq_falls_back_to_db_values,F,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_response_structure_matches_across_locales,A,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_response_structure_matches_across_locales,B,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_response_structure_matches_across_locales,C,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenContentLocalizationTest.php,test_response_structure_matches_across_locales,D,catalog,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_arabic_citizen_request_still_returns_arabic_envelope,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_arabic_citizen_request_still_returns_arabic_envelope,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_english_request_returns_english_envelope,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_english_request_returns_english_envelope,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_authenticated_english_settings_envelope_is_english,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_authenticated_english_settings_envelope_is_english,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_dashboard_msg_labels_remain_arabic_when_app_locale_is_english,A,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_dashboard_msg_labels_remain_arabic_when_app_locale_is_english,B,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_dashboard_login_still_returns_arabic_when_accept_language_is_english,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_dashboard_login_still_returns_arabic_when_accept_language_is_english,B,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/CitizenLocaleAwareTranslatorTest.php,test_dashboard_login_still_returns_arabic_when_accept_language_is_english,D,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_ping_returns_arabic_message,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_login_validation_error_is_arabic,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_login_validation_error_is_arabic,G,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_seeded_license_type_names_are_arabic,A,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_seeded_license_type_names_are_arabic,J,licenses,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/ArabicLocalizationTest.php,test_ai_agent_cancel_reply_is_arabic,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_valid_verification_is_bilingual,A,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_valid_verification_is_bilingual,B,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_valid_verification_is_bilingual,C,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_valid_verification_is_bilingual,D,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_valid_verification_is_bilingual,J,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_invalid_status_verification_is_bilingual,A,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_invalid_status_verification_is_bilingual,B,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_invalid_status_verification_is_bilingual,C,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_invalid_status_verification_is_bilingual,D,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_not_found_verification_is_bilingual,A,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_not_found_verification_is_bilingual,B,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_not_found_verification_is_bilingual,C,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_not_found_verification_is_bilingual,D,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_not_found_verification_is_bilingual,H,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_short_token_and_unknown_token_share_not_found_message,B,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_short_token_and_unknown_token_share_not_found_message,D,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_short_token_and_unknown_token_share_not_found_message,H,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_dashboard_license_status_labels_remain_arabic_when_app_locale_is_english,A,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_dashboard_license_status_labels_remain_arabic_when_app_locale_is_english,B,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/LicenseVerificationLocalizationTest.php,test_dashboard_license_status_labels_remain_arabic_when_app_locale_is_english,J,public_license_verification,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_notify_uses_recipient_language_not_request_locale,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_notify_uses_recipient_language_not_request_locale,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_notify_uses_recipient_language_not_request_locale,D,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_notify_uses_recipient_language_not_request_locale,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_historical_notification_does_not_retranslate,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_historical_notification_does_not_retranslate,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_historical_notification_does_not_retranslate,D,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/NotificationLocalizationTest.php,test_historical_notification_does_not_retranslate,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_ar_recipient_stores_arabic_title_and_body,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_ar_recipient_stores_arabic_title_and_body,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_en_recipient_stores_english_title_and_body,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_en_recipient_stores_english_title_and_body,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_request_locale_does_not_override_recipient_language,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_request_locale_does_not_override_recipient_language,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_request_locale_does_not_override_recipient_language,D,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_request_locale_does_not_override_recipient_language,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_dashboard_created_notification_respects_recipient_language,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_dashboard_created_notification_respects_recipient_language,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_dashboard_created_notification_respects_recipient_language,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_dashboard_created_notification_respects_recipient_language,J,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_payment_lifecycle_notification_respects_recipient_language,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_payment_lifecycle_notification_respects_recipient_language,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_payment_lifecycle_notification_respects_recipient_language,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_payment_lifecycle_notification_respects_recipient_language,J,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_placeholders_are_substituted_and_free_text_is_preserved,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_placeholders_are_substituted_and_free_text_is_preserved,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_placeholders_are_substituted_and_free_text_is_preserved,J,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_unsupported_or_null_language_falls_back_to_arabic,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_unsupported_or_null_language_falls_back_to_arabic,F,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_unsupported_or_null_language_falls_back_to_arabic,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_historical_notification_is_returned_unchanged_after_language_change,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_historical_notification_is_returned_unchanged_after_language_change,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_historical_notification_is_returned_unchanged_after_language_change,D,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_historical_notification_is_returned_unchanged_after_language_change,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_application_status_notification_uses_recipient_language,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_application_status_notification_uses_recipient_language,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_application_status_notification_uses_recipient_language,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_application_status_notification_uses_recipient_language,J,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_send_localized_does_not_mutate_app_locale,A,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_send_localized_does_not_mutate_app_locale,B,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/RecipientNotificationLocaleTest.php,test_send_localized_does_not_mutate_app_locale,I,notifications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_first_message_arabic_sets_language_ar,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_first_message_arabic_sets_language_ar,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_first_message_english_sets_language_en,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_first_message_english_sets_language_en,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_first_message_english_sets_language_en,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_mid_session_language_switch_preserves_pending_workflow,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_mid_session_language_switch_preserves_pending_workflow,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_explicit_language_switch_keeps_pending_selection,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_explicit_language_switch_keeps_pending_selection,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_short_yes_inherits_workflow_locale_during_confirmation,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_short_yes_inherits_workflow_locale_during_confirmation,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_mixed_technical_terms_do_not_flip_arabic_locale,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_mixed_technical_terms_do_not_flip_arabic_locale,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_core_flows_new_renew_lost_damaged_payment_licenses_fines,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_core_flows_new_renew_lost_damaged_payment_licenses_fines,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_core_flows_new_renew_lost_damaged_payment_licenses_fines,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_core_flows_new_renew_lost_damaged_payment_licenses_fines,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_arabic_and_english_general_help_and_empty_states,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_arabic_and_english_general_help_and_empty_states,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_arabic_and_english_general_help_and_empty_states,C,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_arabic_and_english_general_help_and_empty_states,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_interactions_restore_session_language,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_interactions_restore_session_language,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_documents_and_tests_phrases,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_documents_and_tests_phrases,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_documents_and_tests_phrases,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_appointment_book_reschedule_cancel_phrases,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_appointment_book_reschedule_cancel_phrases,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentBilingualHardeningTest.php,test_english_appointment_book_reschedule_cancel_phrases,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_catalog_localizer_resolves_known_codes,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_catalog_localizer_resolves_known_codes,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_catalog_localizer_resolves_known_codes,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_english_required_documents_reply_has_no_arabic_catalog_labels,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_english_required_documents_reply_has_no_arabic_catalog_labels,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_english_required_documents_reply_has_no_arabic_catalog_labels,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_english_required_documents_reply_has_no_arabic_catalog_labels,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_arabic_required_documents_reply_uses_arabic_catalog_labels,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_arabic_required_documents_reply_uses_arabic_catalog_labels,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_arabic_required_documents_reply_uses_arabic_catalog_labels,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_language_switch_changes_subsequent_document_labels,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_contract_fields_on_document_offer,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/AIAgentCatalogLocalizationTest.php,test_contract_fields_on_document_offer,J,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_arabic_locale_returns_arabic_message,A,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_english_locale_returns_english_when_en_pack_exists,B,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_missing_english_key_falls_back_to_arabic_without_exposing_key,A,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_missing_english_key_falls_back_to_arabic_without_exposing_key,B,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_missing_english_key_falls_back_to_arabic_without_exposing_key,F,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_replacements_still_work_in_english,B,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_unsupported_locale_falls_back_to_arabic,A,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_unsupported_locale_falls_back_to_arabic,F,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_arabic_message_translator_and_msg_remain_forced_arabic,A,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/CitizenMessageTranslatorTest.php,test_arabic_message_translator_and_msg_remain_forced_arabic,B,applications,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_pure_arabic,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_pure_arabic,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_pure_english,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_pure_english,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_mixed_arabic_with_technical_term,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_mixed_arabic_with_technical_term,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_with_session_fallback,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_with_session_fallback,F,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_with_session_fallback,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_without_session,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_without_session,F,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_numeric_only_without_session,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_explicit_arabic_request,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_explicit_arabic_request,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_explicit_english_request,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_explicit_english_request,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_arabic_short_response,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_arabic_short_response,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_english_short_response,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_detects_english_short_response,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_short_response_inherits_session_locale,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_short_response_inherits_session_locale,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_short_response_inherits_session_locale,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_empty_string,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_handles_punctuation_only,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_uses_session_locale_for_ambiguous,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_uses_session_locale_for_ambiguous,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_technical_terms_dont_override_arabic,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_technical_terms_dont_override_arabic,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_english_dominant_mixed_message,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_english_dominant_mixed_message,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_explicit_request_in_mixed_context,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_explicit_request_in_mixed_context,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLanguageDetectorTest.php,test_case_insensitive_detection,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic,F,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_english_locale,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_english_locale,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_english_locale,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_arabic_locale,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_arabic_locale,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_can_set_arabic_locale,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_invalid_locale_defaults_to_arabic,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_invalid_locale_defaults_to_arabic,F,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_invalid_locale_defaults_to_arabic,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_arabic_has_rtl_direction,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_arabic_has_rtl_direction,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_english_has_ltr_direction,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_english_has_ltr_direction,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_detection_metadata_can_be_stored,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_supported_locales_contains_arabic_and_english,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_supported_locales_contains_arabic_and_english,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_supported_locales_contains_arabic_and_english,C,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_supported_locales_contains_arabic_and_english,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic_static,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic_static,F,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_default_locale_is_arabic_static,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_is_supported_validates_correctly,A,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_is_supported_validates_correctly,B,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Unit/AgentLocaleContextTest.php,test_is_supported_validates_correctly,I,ai_agent,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/SettingsTest.php,test_authenticated_citizen_can_get_settings_with_account_and_preferences,A,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/SettingsTest.php,test_authenticated_citizen_can_get_settings_with_account_and_preferences,E,auth,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/SettingsTest.php,test_citizen_can_update_language_and_theme,B,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/SettingsTest.php,test_citizen_can_update_language_and_theme,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+behavior_method,tests/Feature/SettingsTest.php,test_invalid_theme_or_language_returns_validation_error,E,settings,1,1,Whitelisted localization suite method; categories from method body signals
+module_coverage,auth,,,Auth,bilingual,1,ar=1 en=1 methods=13
+module_coverage,profile,,,Profile,bilingual,1,ar=1 en=1 methods=1
+module_coverage,applications,,,Applications,bilingual,1,ar=1 en=1 methods=8
+module_coverage,documents,,,Documents,bilingual,1,ar=1 en=1 methods=1
+module_coverage,payments,,,Payments,bilingual,1,ar=1 en=1 methods=1
+module_coverage,appointments,,,Appointments/tests,bilingual,1,ar=1 en=1 methods=5
+module_coverage,licenses,,,Licenses,bilingual,1,ar=1 en=1 methods=6
+module_coverage,fines,,,Fines,bilingual,1,ar=1 en=1 methods=2
+module_coverage,settings,,,Settings,bilingual,1,ar=1 en=1 methods=9
+module_coverage,notifications,,,Notifications,bilingual,1,ar=1 en=1 methods=12
+module_coverage,catalog,,,Catalog/content,bilingual,1,ar=1 en=1 methods=14
+module_coverage,ai_agent,,,AI Agent,bilingual,1,ar=1 en=1 methods=43
+module_coverage,public_license_verification,,,Public license verification,bilingual,1,ar=1 en=1 methods=5

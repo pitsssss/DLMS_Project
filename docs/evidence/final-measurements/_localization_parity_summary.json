@@ -1,0 +1,61 @@
+{
+    "LOC-AR-KEYS": 918,
+    "LOC-EN-KEYS": 756,
+    "LOC-SHARED-KEYS": 667,
+    "LOC-AR-ONLY": 251,
+    "LOC-EN-ONLY": 89,
+    "LOC-KEY-PARITY": 66.24,
+    "LOC-EN-COVERAGE-OF-AR": 72.66,
+    "LOC-AR-COVERAGE-OF-EN": 88.23,
+    "LOC-EMPTY-AR": 0,
+    "LOC-EMPTY-EN": 0,
+    "LOC-BEHAVIOR-METHODS": 130,
+    "category_counts": {
+        "A": 93,
+        "B": 87,
+        "C": 28,
+        "D": 55,
+        "E": 12,
+        "F": 15,
+        "G": 7,
+        "H": 5,
+        "I": 55,
+        "J": 30
+    },
+    "LOC-NEGOTIATION-SCENARIOS": 17,
+    "LOC-PREFERENCE-SCENARIOS": 12,
+    "LOC-MODULE-AR": [
+        13,
+        13
+    ],
+    "LOC-MODULE-EN": [
+        13,
+        13
+    ],
+    "LOC-MODULE-BI": [
+        13,
+        13
+    ],
+    "LOC-NOTIFICATION-LOCALE-METHODS": 12,
+    "LOC-NOTIFICATION-HISTORY-STABILITY-METHODS": 2,
+    "LOC-AI-LOCALE-METHODS": 43,
+    "whitelist_files": [
+        "tests\/Feature\/RequestLocaleTest.php",
+        "tests\/Feature\/CitizenLanguagePreferenceTest.php",
+        "tests\/Feature\/CitizenBilingualMessagesTest.php",
+        "tests\/Feature\/CitizenHardcodeLocalizationTest.php",
+        "tests\/Feature\/CitizenCatalogLocalizationTest.php",
+        "tests\/Feature\/CitizenContentLocalizationTest.php",
+        "tests\/Feature\/CitizenLocaleAwareTranslatorTest.php",
+        "tests\/Feature\/ArabicLocalizationTest.php",
+        "tests\/Feature\/LicenseVerificationLocalizationTest.php",
+        "tests\/Feature\/NotificationLocalizationTest.php",
+        "tests\/Feature\/RecipientNotificationLocaleTest.php",
+        "tests\/Feature\/AIAgentBilingualHardeningTest.php",
+        "tests\/Feature\/AIAgentCatalogLocalizationTest.php",
+        "tests\/Unit\/CitizenMessageTranslatorTest.php",
+        "tests\/Unit\/AgentLanguageDetectorTest.php",
+        "tests\/Unit\/AgentLocaleContextTest.php",
+        "tests\/Feature\/SettingsTest.php"
+    ]
+}

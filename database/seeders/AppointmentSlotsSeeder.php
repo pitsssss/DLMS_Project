@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\AppointmentCenter;
 use App\Models\AppointmentSlot;
 use App\Models\TestType;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class AppointmentSlotsSeeder extends Seeder
@@ -15,11 +14,12 @@ class AppointmentSlotsSeeder extends Seeder
         $this->call(AppointmentCentersSeeder::class);
 
         $center = AppointmentCenter::query()->where('name', 'المركز الرئيسي')->firstOrFail();
-        $start = Carbon::today();
+        // Slot calendar follows business timezone (not APP_TIMEZONE/UTC).
+        $start = app(\App\Support\BusinessClock::class)->now()->startOfDay();
 
         foreach (TestType::orderBy('sequence_order')->get() as $testType) {
             for ($d = 0; $d < 14; $d++) {
-                $date = (clone $start)->addDays($d)->toDateString();
+                $date = $start->copy()->addDays($d)->toDateString();
 
                 AppointmentSlot::updateOrCreate(
                     [

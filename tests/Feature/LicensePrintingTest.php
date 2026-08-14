@@ -163,7 +163,11 @@ class LicensePrintingTest extends TestCase
         $this->assertSame($expectedUrl, $details['verification']['url']);
         $this->assertSame($expectedUrl, $details['digital_license']['verification_url']);
         $this->assertStringNotContainsString('/api/licenses/verify/', (string) $details['verification']['url']);
-        $this->assertStringNotContainsString((string) $license->id, (string) $details['verification']['url']);
+        // Assert structure: public verify path + token only (token may coincidentally contain id digits).
+        $this->assertSame(
+            '/licenses/verify/'.$license->verification_token,
+            parse_url((string) $details['verification']['url'], PHP_URL_PATH)
+        );
         $this->assertStringNotContainsString($license->license_number, (string) $details['verification']['url']);
     }
 

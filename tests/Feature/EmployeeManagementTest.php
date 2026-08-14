@@ -47,6 +47,13 @@ class EmployeeManagementTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('message', __('messages.dashboard.employee_created'));
 
+        $employeeId = (int) User::query()->where('email', 'new.employee@test.sy')->value('id');
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'employee.created',
+            'entity_type' => 'user',
+            'entity_id' => $employeeId,
+        ]);
+
         $this->assertDatabaseHas('users', [
             'email' => 'new.employee@test.sy',
             'user_type' => UserType::Employee->value,
@@ -68,6 +75,12 @@ class EmployeeManagementTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('message', __('messages.dashboard.employee_updated'));
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'employee.updated',
+            'entity_type' => 'user',
+            'entity_id' => $employee->id,
+        ]);
 
         $employee->refresh();
         $this->assertSame('updated@test.sy', $employee->email);

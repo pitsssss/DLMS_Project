@@ -245,16 +245,30 @@ class DashboardFeesManagementTest extends TestCase
 
     public function test_test_fee_can_be_deactivated(): void
     {
-        $this->asSettingsEmployee();
+        $employee = $this->asSettingsEmployee();
         $fee = Fee::query()->where('code', 'vision_test_fee')->firstOrFail();
 
         $this->patchJson("/api/dashboard/fees/{$fee->id}/deactivate")
             ->assertOk()
             ->assertJsonPath('data.is_active', false);
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'fee.deactivated',
+            'entity_type' => 'fee',
+            'entity_id' => $fee->id,
+            'user_id' => $employee->id,
+        ]);
+
         $this->patchJson("/api/dashboard/fees/{$fee->id}/activate")
             ->assertOk()
             ->assertJsonPath('data.is_active', true);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'fee.activated',
+            'entity_type' => 'fee',
+            'entity_id' => $fee->id,
+            'user_id' => $employee->id,
+        ]);
     }
 
     public function test_used_fee_cannot_change_code_or_scope(): void

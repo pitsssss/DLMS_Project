@@ -63,6 +63,12 @@ class DashboardEmployeeAccessTest extends TestCase
             'reason' => 'منح عرض الرخص مباشرة',
         ])->assertOk();
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'employee.direct_permissions_updated',
+            'entity_type' => 'user',
+            'entity_id' => $employee->id,
+        ]);
+
         $employee->refresh();
         $this->assertTrue($employee->hasPermission('view_licenses'));
         $this->assertTrue($employee->hasPermission('view_fines'));

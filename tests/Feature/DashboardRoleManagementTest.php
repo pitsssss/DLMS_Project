@@ -55,6 +55,11 @@ class DashboardRoleManagementTest extends TestCase
 
         $this->assertSame('custom_ops_role', $created->json('data.name'));
         $this->assertSame(1, $created->json('data.version'));
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'access_role.created',
+            'entity_type' => 'role',
+            'entity_id' => (int) $created->json('data.id'),
+        ]);
 
         $this->postJson('/api/dashboard/access-control/roles', [
             'name' => 'super_admin',
@@ -62,13 +67,24 @@ class DashboardRoleManagementTest extends TestCase
         ])->assertStatus(422);
     }
 
-    public function test_update_role_version_conflict_returns_409(): void
+    public function test_update_role_writes_audit_and_stale_version_returns_409(): void
     {
         Sanctum::actingAs($this->superAdmin());
         $role = Role::query()->where('name', 'fines_employee')->firstOrFail();
 
         $this->patchJson("/api/dashboard/access-control/roles/{$role->id}", [
             'display_name' => 'موظف الغرامات المحدّث',
+            'version' => $role->version,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'access_role.updated',
+            'entity_type' => 'role',
+            'entity_id' => $role->id,
+        ]);
+
+        $this->patchJson("/api/dashboard/access-control/roles/{$role->id}", [
+            'display_name' => 'نسخة قديمة',
             'version' => 999,
         ])->assertStatus(409);
     }
@@ -153,8 +169,20 @@ class DashboardRoleManagementTest extends TestCase
             'reason' => 'لم يعد مستخدماً',
         ])->assertOk()->assertJsonPath('data.is_archived', true);
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'access_role.archived',
+            'entity_type' => 'role',
+            'entity_id' => $id,
+        ]);
+
         $this->patchJson("/api/dashboard/access-control/roles/{$id}/restore")
             ->assertOk()
             ->assertJsonPath('data.is_archived', false);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'access_role.restored',
+            'entity_type' => 'role',
+            'entity_id' => $id,
+        ]);
     }
 }

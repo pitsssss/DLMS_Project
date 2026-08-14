@@ -260,6 +260,13 @@ class DashboardIssuedLicensesTest extends TestCase
             ->assertJsonPath('data.status', 'blocked')
             ->assertJsonPath('data.block.reason', 'تحقيق إداري');
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'license.blocked',
+            'entity_type' => 'license',
+            'entity_id' => $license->id,
+            'user_id' => $employee->id,
+        ]);
+
         $license->refresh();
         $this->assertSame('تحقيق إداري', $license->block_reason);
         $this->assertNotNull($license->blocked_at);
@@ -268,6 +275,13 @@ class DashboardIssuedLicensesTest extends TestCase
         $this->postJson("/api/dashboard/licenses/{$license->id}/unblock")
             ->assertOk()
             ->assertJsonPath('data.status', 'active');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'license.unblocked',
+            'entity_type' => 'license',
+            'entity_id' => $license->id,
+            'user_id' => $employee->id,
+        ]);
 
         Sanctum::actingAs(User::factory()->dashboardEmployee('audit_employee')->create());
         $this->getJson("/api/dashboard/licenses/{$license->id}/audit-logs")->assertForbidden();

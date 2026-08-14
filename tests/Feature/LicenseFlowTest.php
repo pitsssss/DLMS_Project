@@ -183,6 +183,13 @@ class LicenseFlowTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', LicenseStatus::Active->value);
 
+        $licenseId = (int) \App\Models\License::query()->where('application_id', $application->id)->value('id');
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'license.issued',
+            'entity_type' => 'license',
+            'entity_id' => $licenseId,
+        ]);
+
         $this->assertDatabaseHas('license_applications', [
             'id' => $application->id,
             'status' => ApplicationStatus::LicenseIssued->value,
@@ -227,10 +234,22 @@ class LicenseFlowTest extends TestCase
             'reason' => 'Late document submission',
         ])->json('data.id');
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'fine.created',
+            'entity_type' => 'fine',
+            'entity_id' => $fineId,
+        ]);
+
         $this->putJson("/api/admin/fines/{$fineId}", [
             'status' => FineStatus::Paid->value,
         ])->assertOk()
             ->assertJsonPath('data.status', FineStatus::Paid->value);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'fine.updated',
+            'entity_type' => 'fine',
+            'entity_id' => $fineId,
+        ]);
 
         Sanctum::actingAs($citizen);
 
@@ -253,6 +272,12 @@ class LicenseFlowTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('data.status', LicenseStatus::Blocked->value);
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'license.blocked',
+            'entity_type' => 'license',
+            'entity_id' => $licenseId,
+        ]);
+
         Sanctum::actingAs($citizen);
         $this->postJson("/api/licenses/{$licenseId}/unblock-request")->assertOk();
 
@@ -260,6 +285,12 @@ class LicenseFlowTest extends TestCase
         $this->postJson("/api/admin/licenses/{$licenseId}/unblock")
             ->assertOk()
             ->assertJsonPath('data.status', LicenseStatus::Active->value);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'license.unblocked',
+            'entity_type' => 'license',
+            'entity_id' => $licenseId,
+        ]);
     }
 
     public function test_citizen_can_renew_eligible_license(): void
