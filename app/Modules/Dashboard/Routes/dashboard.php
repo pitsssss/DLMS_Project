@@ -9,6 +9,8 @@ use App\Modules\Dashboard\Controllers\DashboardCitizenController;
 use App\Modules\Dashboard\Controllers\DashboardDocumentReviewController;
 use App\Modules\Dashboard\Controllers\DashboardEmployeeController;
 use App\Modules\Dashboard\Controllers\DashboardAppointmentSlotController;
+use App\Modules\Dashboard\Controllers\DashboardLicenseIssuanceController;
+use App\Modules\Dashboard\Controllers\DashboardTestAppointmentController;
 use App\Modules\Dashboard\Controllers\DashboardFeeController;
 use App\Modules\Dashboard\Controllers\DashboardLicenseTypeController;
 use App\Modules\Dashboard\Controllers\DashboardIssuedLicenseController;
@@ -102,6 +104,16 @@ Route::prefix('dashboard')
             Route::get('/appointment-slots/{slot}', [DashboardAppointmentSlotController::class, 'show'])->whereNumber('slot');
             Route::get('/appointment-slots/{slot}/bookings', [DashboardAppointmentSlotController::class, 'bookings'])->whereNumber('slot');
             Route::get('/appointment-slots/{slot}/audit-logs', [DashboardAppointmentSlotController::class, 'auditLogs'])->whereNumber('slot');
+        });
+
+        Route::middleware('permission:view_appointments,manage_appointments,record_test_result')->group(function (): void {
+            Route::get('/test-appointments', [DashboardTestAppointmentController::class, 'index']);
+        });
+
+        Route::middleware('permission:issue_license,view_applications,manage_applications')->group(function (): void {
+            Route::get('/license-issuance/applications', [DashboardLicenseIssuanceController::class, 'index']);
+            Route::get('/license-issuance/applications/{application}', [DashboardLicenseIssuanceController::class, 'show'])
+                ->whereNumber('application');
         });
 
         Route::middleware('permission:manage_appointments')->group(function (): void {

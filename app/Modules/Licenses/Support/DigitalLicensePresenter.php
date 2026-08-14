@@ -14,10 +14,7 @@ final class DigitalLicensePresenter
     {
         $license->loadMissing(['citizen:id,name', 'licenseType:id,code,name']);
 
-        $token = $license->verification_token;
-        $verificationUrl = $token
-            ? url('/api/licenses/verify/'.$token)
-            : null;
+        $verificationUrl = self::verificationPublicUrl($license);
 
         return [
             'authority' => Msg::get('licenses.digital.authority'),
@@ -37,5 +34,19 @@ final class DigitalLicensePresenter
             'days_remaining' => LicenseEffectiveStatus::daysRemaining($license),
             'is_expiring_soon' => LicenseEffectiveStatus::isExpiringSoon($license),
         ];
+    }
+
+    /**
+     * Public frontend verification URL encoded in the printed license QR.
+     * Does not include license id or license number.
+     */
+    public static function verificationPublicUrl(License $license): ?string
+    {
+        $token = $license->verification_token;
+        if (! is_string($token) || $token === '') {
+            return null;
+        }
+
+        return rtrim((string) config('license.verification_public_url'), '/').'/'.$token;
     }
 }

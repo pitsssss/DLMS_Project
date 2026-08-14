@@ -31,7 +31,7 @@ class LicensePrintService
         $license->refresh();
 
         $payload = DigitalLicensePresenter::payload($license);
-        $qrPng = $this->qrPngDataUri((string) $payload['verification_url']);
+        $qrPng = $this->qrPngDataUri((string) DigitalLicensePresenter::verificationPublicUrl($license));
 
         try {
             $binary = $this->renderPdf($payload, $qrPng);

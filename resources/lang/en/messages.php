@@ -358,6 +358,7 @@ return [
 
     'tests' => [
         'list' => 'Test results retrieved successfully.',
+        'dashboard_list_retrieved' => 'Test appointments retrieved successfully.',
         'recorded' => 'Test result recorded successfully.',
         'appointment_not_found' => 'Test appointment not found.',
         'only_booked_result' => 'Results can only be recorded for booked appointments.',
@@ -446,6 +447,8 @@ return [
         'dashboard_details_retrieved' => 'License details retrieved successfully.',
         'dashboard_history_retrieved' => 'License lifecycle history retrieved successfully.',
         'dashboard_audit_logs_retrieved' => 'License audit logs retrieved successfully.',
+        'dashboard_issuance_queue_retrieved' => 'License issuance queue retrieved successfully.',
+        'dashboard_issuance_details_retrieved' => 'License issuance application retrieved successfully.',
         'verification_retrieved' => 'License verified.',
         'statuses' => [
             'active' => 'Active',

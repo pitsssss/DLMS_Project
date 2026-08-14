@@ -49,6 +49,49 @@ class TestResultService
             ->get();
     }
 
+    /**
+     * Application statuses that allow recording a result.
+     * Mirrors the guard inside {@see recordForAppointment()} — do not diverge.
+     *
+     * @return list<ApplicationStatus>
+     */
+    public static function recordableApplicationStatuses(): array
+    {
+        return [ApplicationStatus::InTesting, ApplicationStatus::WaitingRetest];
+    }
+
+    /**
+     * Read-side check for the same preconditions as {@see recordForAppointment()}.
+     */
+    public function isAppointmentRecordable(TestAppointment $appointment): bool
+    {
+        if ($appointment->status !== AppointmentStatus::Booked) {
+            return false;
+        }
+
+        $hasResult = $appointment->relationLoaded('testResult')
+            ? $appointment->testResult !== null
+            : $appointment->testResult()->exists();
+
+        if ($hasResult) {
+            return false;
+        }
+
+        $application = $appointment->relationLoaded('application')
+            ? $appointment->application
+            : $appointment->application()->first();
+
+        if ($application === null) {
+            return false;
+        }
+
+        $status = $application->status instanceof ApplicationStatus
+            ? $application->status
+            : ApplicationStatus::tryFrom((string) $application->status);
+
+        return $status !== null && in_array($status, self::recordableApplicationStatuses(), true);
+    }
+
     public function recordForAppointment(User $employee, int $appointmentId, TestResultStatus $result, ?string $notes = null): TestResult
     {
         return DB::transaction(function () use ($employee, $appointmentId, $result, $notes) {

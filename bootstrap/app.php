@@ -18,6 +18,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // API has no named `login` route. Calling route('login') for non-JSON
+        // guests (browsers / smoke clients without Accept: application/json)
+        // throws RouteNotFoundException → HTML 500 before AuthenticationException.
+        $middleware->redirectGuestsTo(function (Request $request): ?string {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+
+            return '/';
+        });
+
         $middleware->alias([
             'citizen' => \App\Http\Middleware\EnsureCitizen::class,
             'dashboard' => \App\Http\Middleware\EnsureDashboardUser::class,
@@ -31,6 +42,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(function (Request $request, \Throwable $e): bool {
+            return $request->is('api/*') || $request->expectsJson();
+        });
+
         $exceptions->render(function (ValidationException $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;

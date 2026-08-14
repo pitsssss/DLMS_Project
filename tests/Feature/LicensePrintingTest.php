@@ -21,6 +21,8 @@ use App\Models\TestAppointment;
 use App\Models\TestResult;
 use App\Models\TestType;
 use App\Models\User;
+use App\Modules\Licenses\Services\LicensePrintService;
+use App\Modules\Licenses\Support\DigitalLicensePresenter;
 use Database\Seeders\AppointmentSlotsSeeder;
 use Database\Seeders\FeesSeeder;
 use Database\Seeders\LicenseTypesSeeder;
@@ -157,8 +159,56 @@ class LicensePrintingTest extends TestCase
         );
 
         $details = $this->getJson("/api/dashboard/licenses/{$license->id}")->assertOk()->json('data');
-        $this->assertStringContainsString('/api/licenses/verify/', (string) $details['verification']['url']);
-        $this->assertStringContainsString($license->verification_token, (string) $details['verification']['url']);
+        $expectedUrl = rtrim((string) config('license.verification_public_url'), '/').'/'.$license->verification_token;
+        $this->assertSame($expectedUrl, $details['verification']['url']);
+        $this->assertSame($expectedUrl, $details['digital_license']['verification_url']);
+        $this->assertStringNotContainsString('/api/licenses/verify/', (string) $details['verification']['url']);
+        $this->assertStringNotContainsString((string) $license->id, (string) $details['verification']['url']);
+        $this->assertStringNotContainsString($license->license_number, (string) $details['verification']['url']);
+    }
+
+    public function test_qr_url_uses_configured_public_verification_url_and_appends_token(): void
+    {
+        [, $license] = $this->issueLicense();
+        $license->refresh();
+
+        config(['license.verification_public_url' => 'http://localhost:3000/licenses/verify/']);
+
+        $url = DigitalLicensePresenter::verificationPublicUrl($license);
+
+        $this->assertSame(
+            'http://localhost:3000/licenses/verify/'.$license->verification_token,
+            $url
+        );
+        $this->assertSame($url, DigitalLicensePresenter::payload($license)['verification_url']);
+        $this->assertSame(
+            '/licenses/verify/'.$license->verification_token,
+            parse_url((string) $url, PHP_URL_PATH)
+        );
+        $this->assertStringNotContainsString('/api/licenses/verify', (string) $url);
+        $this->assertStringNotContainsString($license->license_number, (string) $url);
+
+        $png = app(LicensePrintService::class)->qrPngDataUri((string) $url);
+        $this->assertStringStartsWith('data:image/png;base64,', $png);
+    }
+
+    public function test_production_style_public_verification_url_can_be_configured(): void
+    {
+        [, $license] = $this->issueLicense();
+        $license->refresh();
+
+        config(['license.verification_public_url' => 'https://syrtak.example/licenses/verify']);
+
+        $url = DigitalLicensePresenter::verificationPublicUrl($license);
+
+        $this->assertSame(
+            'https://syrtak.example/licenses/verify/'.$license->verification_token,
+            $url
+        );
+        $this->assertStringStartsWith('https://', $url);
+        $this->assertStringNotContainsString('127.0.0.1', (string) $url);
+        $this->assertStringNotContainsString(':8000', (string) $url);
+        $this->assertStringNotContainsString('/api/licenses/verify', (string) $url);
     }
 
     public function test_unauthorized_print_forbidden(): void

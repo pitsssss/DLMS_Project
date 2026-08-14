@@ -19,6 +19,7 @@ use App\Models\TestType;
 use App\Modules\Applications\Support\ServiceWorkflow;
 use App\Modules\Appointments\Services\TestProgressionService;
 use App\Modules\Payments\Support\ApplicationFeeResolver;
+use App\Support\CitizenMessageTranslator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -86,7 +87,54 @@ class LicenseIssuanceEligibilityService
     }
 
     /**
-     * Efficient countable query matching {@see assertReady()}.
+     * Read-only issuance inspection. Does not mutate and does not replace {@see assertReady()}.
+     *
+     * `is_ready` is true only when {@see assertReady()} would pass and any required
+     * related license is present (the extra check `issueForApplication` runs after assertReady).
+     *
+     * @return array{
+     *     is_ready: bool,
+     *     checklist: array<string, bool>,
+     *     blockers: list<array{code: string, message: string}>
+     * }
+     */
+    public function evaluate(LicenseApplication $application): array
+    {
+        $application->loadMissing(['serviceType', 'relatedLicense']);
+        $code = $application->serviceType?->code;
+
+        $notUnblock = ! ServiceWorkflow::usesUnblockWorkflow($code);
+        $serviceIssuable = ServiceWorkflow::producesLicense($code);
+        $approved = $application->status === ApplicationStatus::Approved;
+        $notIssued = ! $this->alreadyIssued($application->id);
+        $paymentCompleted = $this->applicationFeePaid($application);
+        $documentsApproved = $this->allRequiredDocumentsApproved($application);
+        $testsRequired = ServiceWorkflow::requiresTests($code);
+        $requiredTestsPassed = ! $testsRequired || $this->progression->allRequiredTestsPassed($application);
+        $noUnpaidFines = ! $this->citizenHasUnpaidFines((int) $application->citizen_id);
+        $relatedLicensePresent = $this->hasRequiredRelatedLicense($application);
+
+        $checklist = [
+            'service_issuable' => $notUnblock && $serviceIssuable,
+            'application_approved' => $approved,
+            'payment_completed' => $paymentCompleted,
+            'documents_approved' => $documentsApproved,
+            'required_tests_passed' => $requiredTestsPassed,
+            'no_unpaid_fines' => $noUnpaidFines,
+            'not_already_issued' => $notIssued,
+            'related_license_present' => $relatedLicensePresent,
+        ];
+
+        return [
+            'is_ready' => $this->isReady($application) && $relatedLicensePresent,
+            'checklist' => $checklist,
+            'blockers' => $this->blockersFor($checklist, $notUnblock, $serviceIssuable),
+        ];
+    }
+
+    /**
+     * Efficient countable query matching {@see assertReady()} plus related-license
+     * presence for renew/replacement (checked by issueForApplication after assertReady).
      *
      * @return Builder<LicenseApplication>
      */
@@ -152,6 +200,18 @@ class LicenseIssuanceEligibilityService
             )',
             [$approvedDocument]
         );
+
+        $relatedRequiredCodes = [
+            ServiceCode::RenewLicense->value,
+            ServiceCode::LostReplacement->value,
+            ServiceCode::DamagedReplacement->value,
+        ];
+
+        $applications->where(function (Builder $outer) use ($relatedRequiredCodes): void {
+            $outer->whereHas('serviceType', function (Builder $service) use ($relatedRequiredCodes): void {
+                $service->whereNotIn('code', $relatedRequiredCodes);
+            })->orWhereNotNull('related_license_id');
+        });
 
         // Tests required only for new_license among issuable codes.
         $applications->where(function (Builder $outer) use ($requiredTestTypeIds, $passedResult): void {
@@ -244,5 +304,75 @@ class LicenseIssuanceEligibilityService
     public function alreadyIssued(int $applicationId): bool
     {
         return License::query()->where('application_id', $applicationId)->exists();
+    }
+
+    public function hasRequiredRelatedLicense(LicenseApplication $application): bool
+    {
+        $application->loadMissing('serviceType');
+        $code = $application->serviceType?->code;
+
+        if (! ServiceWorkflow::producesLicense($code) || ! ServiceWorkflow::requiresRelatedLicense($code)) {
+            return true;
+        }
+
+        return $application->related_license_id !== null;
+    }
+
+    /**
+     * @param  array<string, bool>  $checklist
+     * @return list<array{code: string, message: string}>
+     */
+    private function blockersFor(array $checklist, bool $notUnblock, bool $serviceIssuable): array
+    {
+        $blockers = [];
+
+        if (! $checklist['service_issuable']) {
+            if (! $notUnblock) {
+                $blockers[] = $this->blocker('use_unblock_endpoint', 'messages.licenses.use_unblock_endpoint');
+            } elseif (! $serviceIssuable) {
+                $blockers[] = $this->blocker('service_not_issuable', 'messages.licenses.service_not_issuable');
+            }
+        }
+
+        if (! $checklist['application_approved']) {
+            $blockers[] = $this->blocker('must_be_approved', 'messages.licenses.must_be_approved');
+        }
+
+        if (! $checklist['not_already_issued']) {
+            $blockers[] = $this->blocker('already_issued', 'messages.licenses.already_issued');
+        }
+
+        if (! $checklist['payment_completed']) {
+            $blockers[] = $this->blocker('payment_required', 'messages.licenses.payment_required');
+        }
+
+        if (! $checklist['documents_approved']) {
+            $blockers[] = $this->blocker('documents_required', 'messages.licenses.documents_required');
+        }
+
+        if (! $checklist['required_tests_passed']) {
+            $blockers[] = $this->blocker('tests_required', 'messages.licenses.tests_required');
+        }
+
+        if (! $checklist['no_unpaid_fines']) {
+            $blockers[] = $this->blocker('unpaid_fines_issue', 'messages.licenses.unpaid_fines_issue');
+        }
+
+        if (! $checklist['related_license_present']) {
+            $blockers[] = $this->blocker('related_license_required', 'messages.applications.related_license_required');
+        }
+
+        return $blockers;
+    }
+
+    /**
+     * @return array{code: string, message: string}
+     */
+    private function blocker(string $code, string $messageKey): array
+    {
+        return [
+            'code' => $code,
+            'message' => CitizenMessageTranslator::get($messageKey),
+        ];
     }
 }

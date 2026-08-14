@@ -420,6 +420,7 @@ return [
 
     'tests' => [
         'list' => 'تم جلب نتائج الاختبارات بنجاح.',
+        'dashboard_list_retrieved' => 'تم جلب مواعيد الاختبار بنجاح.',
         'recorded' => 'تم تسجيل نتيجة الاختبار بنجاح.',
         'appointment_not_found' => 'موعد الاختبار غير موجود.',
         'only_booked_result' => 'يمكن تسجيل النتيجة لموعد محجوز فقط.',
@@ -508,6 +509,8 @@ return [
         'dashboard_details_retrieved' => 'تم جلب تفاصيل الرخصة بنجاح.',
         'dashboard_history_retrieved' => 'تم جلب سجل دورة حياة الرخصة بنجاح.',
         'dashboard_audit_logs_retrieved' => 'تم جلب سجلات تدقيق الرخصة بنجاح.',
+        'dashboard_issuance_queue_retrieved' => 'تم جلب طابور إصدار الرخص بنجاح.',
+        'dashboard_issuance_details_retrieved' => 'تم جلب طلب إصدار الرخصة بنجاح.',
         'verification_retrieved' => 'تم التحقق من الرخصة.',
         'statuses' => [
             'active' => 'فعالة',
