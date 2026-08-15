@@ -1,581 +1,912 @@
-# Digital License Management System (DLMS)
-
-**DLMS** is a Laravel 12 RESTful API backend for a government-style digital driving license management platform.
-
-The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a simple chatbot assistant.
-
----
-
-# Table of Contents
-
-* Project Overview
-* Main Objectives
-* Core Features
-* System Actors
-* Main Workflow
-* Tech Stack
-* Architecture
-* Modules
-* Database Overview
-* Business Rules
-* Application Statuses
-* Authentication and Security
-* API Response Format
-* Installation
-* Environment Configuration
-* Default Seeded Users
-* API Routes Summary
-* Testing
-* Postman Collection
-* Project Structure
-* Development Guidelines
-* Mock Services
-* Future Enhancements
-
----
-
-# Project Overview
-
-The **Digital License Management System (DLMS)** is designed to digitize and organize driving license services in a realistic public-sector environment.
-
-The platform provides:
-
-* A mobile API for citizens.
-* A single admin dashboard API for employees and administrators.
-* A secure, modular, maintainable Laravel backend.
-* A structured workflow for license services from application submission to final license issuance.
-
-The project focuses on:
-
-* Functional requirements.
-* Non-functional requirements.
-* Workflow design.
-* Security.
-* Scalability.
-* Maintainability.
-* Auditability.
-
----
-
-# Main Objectives
-
-The system aims to:
-
-1. Digitize driving license services.
-2. Reduce manual paperwork.
-3. Organize citizen applications and employee processing.
-4. Enforce business rules automatically.
-5. Provide clear application tracking.
-6. Support sequential driving tests.
-7. Provide mock payment handling.
-8. Support role-based access control.
-9. Store audit logs for sensitive actions.
-10. Provide a maintainable modular backend architecture.
-
----
-
-# Core Features
-
-## Citizen Features
-
-* Register account.
-* Verify phone number using mock OTP.
-* Login and logout using Laravel Sanctum.
-* Complete and update profile.
-* Submit new license application.
-* Upload required documents.
-* Pay service, test, and fine fees.
-* Book test appointments.
-* Reschedule or cancel appointments.
-* View test results.
-* Retake failed tests.
-* Track application status.
-* View issued licenses.
-* Request license renewal.
-* Request lost/damaged license replacement.
-* Request license unblock.
-* View notifications.
-* Use a simple chatbot assistant.
-
----
-
-## Employee Features
-
-* Login to admin dashboard API.
-* View license applications.
-* Review citizen documents.
-* Approve or reject documents.
-* Record test results.
-* Issue licenses.
-* Manage applications according to assigned permissions.
-
----
-
-## Admin Features
-
-* Manage users.
-* Manage roles and permissions.
-* Manage license types.
-* Manage service types.
-* Manage test types.
-* Manage required documents.
-* Manage fees.
-* Manage appointment slots.
-* Manage fines.
-* Block or unblock licenses.
-* View reports.
-* View audit logs.
-* View application status histories.
-
----
-
-# System Actors
-
-| Actor                | Description                                                                                                                       |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Citizen              | Uses the mobile app to submit applications, upload documents, pay fees, book appointments, and track application status.          |
-| Employee             | Uses the admin dashboard to process applications, review documents, record test results, and issue licenses based on permissions. |
-| Admin                | Has full access to system settings, users, roles, reports, audit logs, and administrative operations.                             |
-| Payment Gateway      | Mock external payment provider used for development.                                                                              |
-| Notification Service | Internal service for storing and sending database notifications.                                                                  |
-| OTP Service          | Mock OTP service used for phone verification.                                                                                     |
-
----
-
-# Main Workflow
-
-The main workflow for issuing a new driving license is:
-
-1. Citizen registers and verifies phone number.
-2. Citizen completes profile.
-3. Citizen submits a new license application.
-4. Citizen uploads required documents.
-5. Employee reviews documents.
-6. Citizen pays required fees.
-7. Citizen books test appointments.
-8. Employee records test results.
-9. System enforces the test sequence:
-
-   * Vision Test
-   * Theory Test
-   * Practical Test
-10. System verifies all requirements.
-11. Employee issues the license.
-12. Citizen receives notification.
-
----
-
-# Tech Stack
-
-* Backend Framework: Laravel 11
-* Language: PHP 8.2+
-* Database: MySQL
-* Authentication: Laravel Sanctum
-* API Type: RESTful API
-* Validation: Laravel Form Requests
-* Authorization: Custom RBAC with middleware
-* Architecture: Modular architecture with service and repository layers
-* Testing: Laravel Feature Tests
-* File Storage: Laravel Storage
-* API Testing: Postman
-
----
-
-# Architecture
-
-The project follows a clean modular architecture.
-
-## Main Principles
-
-* Controllers receive requests and return responses only.
-* Services contain business logic.
-* Repositories handle database access.
-* Form Requests validate request data.
-* API Resources format responses.
-* Middleware protects routes based on role and permission.
-* Enums/constants define system statuses and types.
-* Audit logs record sensitive actions.
-* Important database operations use transactions.
-
----
-
-# Modules
-
-| Module        | Responsibility                                                                   |
-| ------------- | -------------------------------------------------------------------------------- |
-| Auth          | Registration, OTP verification, login, logout, profile, and password management. |
-| Users         | User management, roles, and permissions.                                         |
-| Applications  | License service requests and application lifecycle.                              |
-| Documents     | Document upload, review, approval, and rejection.                                |
-| Payments      | Mock payment processing and payment records.                                     |
-| Appointments  | Appointment slots, booking, rescheduling, and cancellation.                      |
-| Tests         | Test results, test sequence, and retake logic.                                   |
-| Licenses      | License issuance, renewal, replacement, blocking, and unblocking.                |
-| Settings      | License types, service types, test types, fees, and required documents.          |
-| Fines         | Fine creation, updating, and payment handling.                                   |
-| Notifications | Database notifications.                                                          |
-| AuditLogs     | Sensitive operation logging.                                                     |
-| Reports       | Admin reports and analytics.                                                     |
-| Chatbot       | Simple rule-based assistant endpoint.                                            |
-
----
-
-# Database Overview
-
-The main database tables include:
-
-* users
-* roles
-* permissions
-* permission_role
-* otps
-* license_types
-* service_types
-* test_types
-* required_documents
-* fees
-* license_applications
-* application_status_histories
-* application_documents
-* payments
-* appointment_slots
-* test_appointments
-* test_results
-* licenses
-* fines
-* notifications
-* audit_logs
-
----
-
-# Business Rules
-
-The system enforces these key rules:
-
-1. A citizen cannot submit a service request before completing their profile.
-2. A citizen cannot create duplicate active applications for the same license type and service type.
-3. Required documents must be uploaded before review.
-4. Uploaded documents are not automatically approved.
-5. Rejected documents require a rejection reason.
-6. Payment is required before booking tests.
-7. Duplicate successful payments are prevented.
-8. Tests must follow this order:
-
-   * Vision
-   * Theory
-   * Practical
-9. A citizen cannot skip tests.
-10. If a citizen fails a test, they can retake only the same failed test.
-11. No-show is different from failed.
-12. License issuance requires approved documents, completed payments, passed tests, and no active blocking fines.
-13. License numbers must be unique.
-14. Important actions must be recorded in audit logs.
-15. Important records must not be hard-deleted if they have dependencies.
-
----
-
-# Application Statuses
-
-| Status                 | Meaning                                                   |
-| ---------------------- | --------------------------------------------------------- |
-| draft                  | Application is created but not submitted for review.      |
-| documents_under_review | Required documents are waiting for employee review.       |
-| documents_rejected     | One or more documents were rejected.                      |
-| payment_pending        | Application is waiting for payment.                       |
-| payment_completed      | Required payment has been completed.                      |
-| appointment_pending    | Citizen can book required test appointment.               |
-| in_testing             | Application is in the testing stage.                      |
-| waiting_retest         | Citizen must retake a failed test.                        |
-| approved               | Application meets requirements and is ready for issuance. |
-| license_issued         | License has been issued.                                  |
-| rejected               | Application has been rejected.                            |
-| cancelled              | Application has been cancelled.                           |
-| administrative_review  | Application requires administrative review.               |
-
----
-
-# Authentication and Security
-
-The project uses **Laravel Sanctum** for API authentication.
-
-## Security Features
-
-* Token-based authentication.
-* Password hashing.
-* Role-based access control.
-* Permission-based middleware.
-* Profile completion middleware.
-* Citizen resource ownership checks.
-* Validation through Form Requests.
-* No sensitive payment data storage.
-* Audit logging for sensitive operations.
-
----
-
-# API Response Format
-
-All API responses follow a unified structure.
-
-## Success Response
-
-```json
-{
-  "success": true,
-  "message": "Success message",
-  "data": {}
-}
+<div align="center">
+
+🚦 SYRTAK | DLMS
+
+Digital License Management System
+
+A government-style digital driving-license platform built around workflow automation, security boundaries, auditability, and a confirmation-based AI assistant.
+
+Laravel
+PHP
+MySQL
+Sanctum
+Gemini
+Stripe
+Firebase
+Tests
+Architecture
+
+</div>
+
+────────
+
+Overview
+
+SYRTAK / DLMS is an end-to-end software engineering project for digitizing driving-license services and regulatory workflows.
+
+The backend is a Laravel modular monolith REST API that centralizes domain rules for citizen onboarding, profile approval, license applications, document review, payments, appointments, examinations, license issuance and lifecycle services, notifications, fines, audit logs, employee operations, and a controlled AI Agent.
+
+The system is designed around one principle:
+
+> **Clients request actions; the backend remains the final authority for identity, permissions, ownership, workflow state, and business rules.**
+
+SYRTAK is not a collection of disconnected CRUD screens. The main licensing process is implemented as a controlled workflow whose transitions are driven by domain services and verified through automated tests.
+
+────────
+
+What SYRTAK Includes
+
+|Surface                   |Responsibility                                                                                                                                               |
+|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**Citizen API**           |Registration, email OTP verification, profile, applications, documents, payments, appointments, tests, licenses, fines, notifications, localization, AI Agent|
+|**Employee Dashboard API**|Review queues, citizens, applications, payments, appointment slots, test operations, license operations, RBAC, reports, audit logs, settings and sessions    |
+|**Employee Web Dashboard**|Separate **Next.js 15** client consuming the Laravel API                                                                                                     |
+|**Citizen Mobile Client** |Flutter client maintained separately from this backend repository                                                                                            |
+|**AI Agent**              |Gemini-assisted conversational layer with deterministic workflow controls and confirmation before mutations                                                  |
+|**External Integrations** |Stripe, Firebase FCM, mail/OTP, queue workers and private file storage                                                                                       |
+
+────────
+
+Key Engineering Highlights
+
+• Workflow-centric domain model for the driving-license lifecycle
+• Custom RBAC with roles, direct permissions and separation of duties
+• Citizen ownership / IDOR protection on private resources
+• Service-layer business rules with selective repositories
+• Database transactions, locks, idempotency and uniqueness constraints
+• Private document handling
+• Mock + Stripe payment flows, webhook handling and reconciliation
+• Ordered driving tests: Vision → Theory → Practical
+• License issuance, renewal, lost/damaged replacement, block/unblock and public verification
+• Database notifications + Firebase FCM push pipeline
+• Hybrid Gemini AI Agent using proposal → confirmation → revalidation → domain execution
+• Arabic / English citizen-facing backend behavior
+• Audit trail for critical employee/admin operations
+• Docker / Compose packaging + queue worker
+• Automated feature, integration, security, authorization and reliability testing
+• k6 performance measurements with a fixed benchmark dataset
+
+────────
+
+Architecture
+
+```mermaid
+flowchart TB
+    C[Citizen Client<br/>Flutter - separate repo]
+    D[Employee Dashboard<br/>Next.js 15]
+    API[Laravel 12 Modular Monolith<br/>REST API]
+
+    DB[(MySQL / MariaDB)]
+    FS[(Private File Storage)]
+    Q[Database Queue<br/>Worker]
+    S[Stripe]
+    G[Gemini]
+    F[Firebase FCM]
+    M[Mail / OTP]
+
+    C -->|HTTPS JSON| API
+    D -->|HTTPS JSON| API
+
+    API --> DB
+    API --> FS
+    API --> Q
+    API --> S
+    API --> G
+    API --> M
+    Q --> F
 ```
 
----
-
-## Error Response
-
-```json
-{
-  "success": false,
-  "message": "Error message",
-  "errors": {}
-}
-```
-
----
-
-# Installation
-
-## 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd dlms-backend
-```
-
----
-
-## 2. Install Dependencies
-
-```bash
-composer install
-```
-
----
-
-## 3. Create Environment File
-
-```bash
-cp .env.example .env
-```
-
----
-
-## 4. Generate Application Key
-
-```bash
-php artisan key:generate
-```
-
----
-
-## 5. Install API and Sanctum
-
-```bash
-php artisan install:api
-```
-
----
-
-## 6. Configure Database
-
-Update `.env`:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=dlms_backend
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
----
-
-## 7. Run Migrations and Seeders
-
-```bash
-php artisan migrate:fresh --seed
-```
-
----
-
-## 8. Create Storage Link
-
-```bash
-php artisan storage:link
-```
-
----
-
-## 9. Start Development Server
-
-```bash
-php artisan serve
-```
-
-The API will be available at:
+Backend shape
 
 ```text
-http://127.0.0.1:8000/api
+HTTP Request
+    ↓
+Middleware / Authentication / Permission / Locale
+    ↓
+Controller
+    ↓
+Domain Service
+    ↓
+Selective Repository / Eloquent
+    ↓
+Database + Audit + Notifications + External Integrations
 ```
 
----
+The architecture is intentionally a modular monolith, not microservices. Domain modules are deployed as one Laravel application while keeping responsibilities separated inside the codebase.
 
-# Default Seeded Users
+────────
 
-## Admin
+Main Domain Modules
+
+The backend contains 18 domain/application modules under app/Modules/.
+
+|Module         |Responsibility                                                                                        |
+|---------------|------------------------------------------------------------------------------------------------------|
+|`Auth`         |Registration, email OTP, login/logout, password flows and citizen profile                             |
+|`Applications` |License service requests, eligibility, documents and application lifecycle                            |
+|`Appointments` |Appointment slots, booking, rescheduling, cancellation and capacity protection                        |
+|`Payments`     |Mock/Stripe payment lifecycle, webhook handling and reconciliation                                    |
+|`Licenses`     |Issuance, renewal, replacement, blocking/unblocking, printing and public verification                 |
+|`Dashboard`    |Employee dashboard APIs, citizens, applications, payments, slots, fees, licenses, reports and sessions|
+|`Admin`        |Profile/document review, test result recording, issuance, fines and administrative operations         |
+|`AIAgent`      |Gemini-assisted intent/workflow orchestration and confirmed actions                                   |
+|`Notifications`|In-app notification center and notification events                                                    |
+|`Devices`      |Citizen push-device registration                                                                      |
+|`Push`         |Push delivery pipeline                                                                                |
+|`Firebase`     |FCM integration                                                                                       |
+|`Fines`        |Citizen fine listing and administrative fine operations                                               |
+|`Reports`      |Administrative reporting                                                                              |
+|`Settings`     |Citizen preferences including locale-related settings                                                 |
+|`Content`      |FAQ, privacy/contact content and messages                                                             |
+|`Tests`        |Test-related application services                                                                     |
+|`AuditLogs`    |Audit-log API resources and access                                                                    |
+
+────────
+
+Actors & Access Model
+
+Citizen
+
+Citizens can:
+
+• register and verify their account using email OTP
+• complete and update their profile
+• submit supported driving-license service applications
+• upload and submit required documents
+• pay application obligations through mock or Stripe flows
+• book, reschedule and cancel eligible appointments
+• view test progression and results
+• view issued licenses and supported license lifecycle services
+• view fines
+• receive in-app and optional push notifications
+• use the AI Agent in Arabic or English
+
+Employee roles
+
+Employee capabilities are permission-driven rather than controlled by a single all-powerful employee role.
+
+Representative roles include:
+
+• Profile & Document Reviewer
+• Application Manager
+• Payment Employee
+• Test Employee
+• License Employee
+• Fines Employee
+• Reports Employee
+• Audit Employee
+• Settings Employee
+• Admin
+• Super Admin
+
+The project uses a custom RBAC implementation with role permissions and optional direct permissions.
+
+────────
+
+Driving-License Workflow
+
+New license
+
+```mermaid
+flowchart LR
+    A[Approved Citizen Profile]
+    B[Draft Application]
+    C[Upload Required Documents]
+    D[Documents Under Review]
+    E[Payment Pending]
+    F[Payment Completed]
+    G[Appointment / Testing]
+    H[Vision]
+    I[Theory]
+    J[Practical]
+    K[Approved]
+    L[License Issued]
+
+    A --> B --> C --> D --> E --> F --> G
+    G --> H --> I --> J --> K --> L
+```
+
+The test sequence for a new license is enforced as:
+
+1. Vision
+2. Theory
+3. Practical
+
+Failed/no-show outcomes are handled by the test workflow and may lead to retest or administrative review according to the current domain rules.
+
+Other service codes
+
+The implemented service catalog includes:
 
 ```text
-Phone: 0999999999
-Password: password
-Role: admin
+new_license
+renew_license
+lost_replacement
+damaged_replacement
+license_unblock
 ```
 
----
+Renewal and replacement flows are tied to an existing citizen-owned license. They do not reuse the full new-license test sequence.
 
-## Employee
+────────
+
+Application State Model
+
+The active workflow uses states including:
 
 ```text
-Phone: 0988888888
-Password: password
-Role: employee
+draft
+    ↓
+documents_under_review
+    ├── documents_rejected ──→ resubmit
+    ↓
+payment_pending
+    ↓
+payment_completed
+    ↓
+appointment_pending / approved
+    ↓
+in_testing
+    ├── waiting_retest
+    ├── administrative_review
+    ↓
+approved
+    ↓
+license_issued
 ```
 
----
+> `rejected` and `cancelled` exist as application enum values, but the current audited backend does not treat them as generally proven live production transitions.
 
-## Citizen
+The application repository records status history, but the project does not currently use one global central FSM matrix for every legal/illegal transition. Workflow legality is primarily enforced by the responsible domain services.
+
+────────
+
+Documents
+
+Document handling is state-aware and ownership-aware.
+
+The backend validates:
+
+• document applicability to the requested service
+• file size limits
+• allowed file types
+• MIME/type rules
+• application ownership
+• whether the current application/document state permits replacement or submission
+
+Citizen documents are stored on private storage and are not exposed through public filesystem URLs.
+
+Supported upload formats are based on the current document rules, including:
 
 ```text
-Phone: 0977777777
-Password: password
-Role: citizen
+PDF
+JPG / JPEG
+PNG
 ```
 
----
+Exact size limits may be further restricted by the required-document configuration for the selected service.
 
-# Testing
+────────
 
-Run all tests:
+Payments
+
+SYRTAK supports two payment paths:
+
+Mock provider
+
+Used for development and controlled testing.
+
+Stripe
+
+The real integration path includes:
+
+• Stripe Checkout/session creation
+• payment records and lifecycle state
+• webhook processing
+• provider-event uniqueness / idempotency protection
+• dashboard verification/reconciliation logic
+
+The system does not store raw card data.
+
+> Citizen fine checkout is not currently presented as a completed payment flow; citizens can view fines while fine administration is handled by authorized employees.
+
+────────
+
+Appointments & Tests
+
+The appointment subsystem supports:
+
+• available slot listing
+• booking
+• rescheduling
+• cancellation
+• capacity checks
+• state validation
+• stale-state protection
+
+Concurrency-sensitive booking logic uses database locking where appropriate.
+
+Test results are recorded by authorized employees and feed the application workflow.
+
+────────
+
+License Lifecycle
+
+Implemented license capabilities include:
+
+• issuance from an eligible application
+• citizen license listing/details
+• renewal
+• lost replacement
+• damaged replacement
+• employee block / unblock
+• print/export support
+• public license verification
+
+Public verification is intentionally separated from privileged administrative operations.
+
+────────
+
+AI Agent
+
+The original rule-based chatbot concept was replaced by a hybrid transactional AI Agent powered by Gemini.
+
+```mermaid
+sequenceDiagram
+    participant U as Citizen
+    participant A as AI Agent
+    participant G as Gemini
+    participant B as Laravel Backend
+    participant D as Domain Service
+
+    U->>A: Natural-language request
+    A->>B: Load owned context / workflow state
+    A->>G: Approved language/context prompt
+    G-->>A: Structured proposal / understanding
+    A-->>U: Proposed action / choices
+    U->>A: Confirm
+    A->>B: Revalidate ownership + current state
+    B->>D: Execute existing domain service
+    D-->>B: Result
+    B-->>A: Structured result
+    A-->>U: Localized response
+```
+
+Safety model
+
+The AI Agent:
+
+• is citizen-only
+• does not get direct database authority
+• does not decide employee permissions
+• cannot approve documents, record official test results, issue licenses or perform administrative actions
+• requires explicit confirmation before supported mutations
+• revalidates mutable state before execution
+• protects session/action/application ownership
+• rejects stale, foreign, replayed or invalid confirmation flows
+• executes through the same existing domain services as manual API flows
+• does not send uploaded document binary/content, private paths, tokens or secrets to Gemini
+• has deterministic fallback behavior for supported flows
+
+AI scope
+
+The Agent supports citizen-oriented queries and workflows across applications, documents, payments, appointments/tests, licenses and fines within its implemented executable scope.
+
+It is not:
+
+• an unsupervised autonomous agent
+• a replacement for backend business rules
+• a RAG/vector-database system
+• an employee/admin automation channel
+
+────────
+
+Localization
+
+Citizen-facing backend behavior supports:
+
+• Arabic
+• English
+• request locale resolution
+• persisted citizen preference
+• localized validation/service messages
+• bilingual AI Agent flows
+• language switching during supported AI sessions
+
+Internal machine codes, enum values and workflow identifiers remain language-neutral.
+
+The employee dashboard is currently treated as an Arabic RTL dashboard; this repository does not claim a fully bilingual dashboard UI.
+
+────────
+
+Notifications
+
+SYRTAK contains two notification layers:
+
+In-app notification center
+
+Notifications are persisted and can be listed/read by the citizen.
+
+Push notifications
+
+The push pipeline includes:
+
+```mermaid
+flowchart LR
+    A[Business Action]
+    B[Notification Stored]
+    C[Queue Job]
+    D[Queue Worker]
+    E[Firebase FCM]
+
+    A --> B --> C --> D --> E
+```
+
+Push delivery can be enabled/disabled through environment configuration without changing the core business transaction.
+
+────────
+
+Security
+
+Security is enforced primarily on the backend.
+
+Core controls include:
+
+• Laravel Sanctum bearer-token authentication
+• citizen/dashboard boundary middleware
+• custom RBAC and permission middleware
+• inactive-user checks
+• ownership scoping
+• profile-approval guards
+• private file storage
+• validation through request/domain rules
+• rate limits on representative sensitive routes
+• audit logging for critical operations
+• transactions and database constraints for sensitive state changes
+
+Measured security evidence
+
+Evidence snapshot:
+
+|Metric                          |Result      |
+|--------------------------------|-----------:|
+|Unauthenticated `401` scenarios |**26**      |
+|Unauthorized `403` scenarios    |**95**      |
+|Negative IDOR scenarios         |**21**      |
+|Critical mutation `403` coverage|**13 / 13** |
+|Critical mutation `401` coverage|**7 / 13**  |
+|Positive `429` rate-limit tests |**4 routes**|
+
+These are automated evidence counts for the audited scope; they are not a penetration-test certification or a claim of complete security.
+
+────────
+
+Reliability & Data Integrity
+
+The backend uses several layers of protection for sensitive workflows:
+
+• DB::transaction
+• pessimistic locking (lockForUpdate) where needed
+• optimistic conflict handling in selected domains
+• idempotency / duplicate-effect protection
+• unique database invariants
+• payment event uniqueness
+• stale-state revalidation
+• after-commit handling for selected side effects
+
+Evidence snapshot:
+
+|Metric                                  |Result                          |
+|----------------------------------------|-------------------------------:|
+|Idempotency-related methods inventoried |**36**                          |
+|Critical DB uniqueness invariants tested|**12 / 12**                     |
+|Critical auditable operations           |**36 / 36 implemented + tested**|
+
+Concurrency evidence is intentionally scoped; sequential PHPUnit tests are not presented as proof that the entire platform is globally race-free.
+
+────────
+
+Auditability
+
+Critical employee/admin operations are recorded through the audit infrastructure.
+
+Examples include:
+
+• employee/account administration
+• role and permission changes
+• citizen activation/deactivation
+• profile decisions
+• document decisions
+• payment verification
+• fine mutations
+• appointment-slot changes
+• test result recording
+• license issuance/block/unblock
+• fee/catalog administration
+
+Evidence inventory records 36/36 critical operations with audit implementation and automated verification.
+
+────────
+
+Performance Evidence
+
+Performance measurements were executed with Grafana k6 against a controlled local benchmark environment using a fixed dataset.
+
+Infrastructure baseline
+
+GET /api/ping
+
+|Metric        |Result       |
+|--------------|------------:|
+|Requests / 60s|10,203       |
+|Throughput    |170.044 req/s|
+|Median        |5.72 ms      |
+|p95           |6.63 ms      |
+|p99           |7.36 ms      |
+|HTTP errors   |0%           |
+
+Authenticated applications workload
+
+GET /api/dashboard/applications
+
+|Virtual Users|Requests|req/s|p95     |p99      |Failures|
+|------------:|-------:|----:|-------:|--------:|-------:|
+|10           |590     |9.64 |42.16 ms|54.67 ms |0%      |
+|25           |1,450   |23.92|55.97 ms|80.47 ms |0%      |
+|50           |2,944   |48.08|62.91 ms|109.07 ms|0%      |
+|100          |5,842   |95.36|65.76 ms|212.17 ms|0%      |
+
+> These are **controlled local paced measurements**, not a production-capacity or scalability guarantee.
+
+Unpaced saturation experiments were retained as environment diagnostics and are not used as capacity claims.
+
+────────
+
+Automated Testing
+
+The recorded final backend regression baseline is:
+
+```text
+Tests:       1058 passed
+Assertions:  6694
+Failures:    0
+Duration:    258.15 s
+```
+
+Run the backend suite with:
 
 ```bash
 php artisan test
 ```
 
----
+AI-focused regression:
 
-# Project Structure
+```bash
+php artisan test --filter=AIAgent
+```
+
+The backend test suite covers functional workflows, authorization, ownership, security negatives, payments, appointments, tests, license operations, AI Agent safety, localization, reliability and evidence hardening.
+
+> Automated Next.js dashboard test coverage is not claimed by this repository.
+
+────────
+
+Technology Stack
+
+|Layer                |Technology                            |
+|---------------------|--------------------------------------|
+|Backend              |Laravel **12.66.0**                   |
+|Runtime              |PHP **8.4.24**                        |
+|Dependency Manager   |Composer **2.10.2**                   |
+|API                  |REST / JSON                           |
+|Authentication       |Laravel Sanctum                       |
+|Database             |MySQL / MariaDB                       |
+|Test Database        |SQLite may be used by PHPUnit         |
+|Authorization        |Custom RBAC + direct permissions      |
+|Employee Web Client  |Next.js 15, React, TypeScript         |
+|Citizen Mobile Client|Flutter — separate repository         |
+|AI                   |Google Gemini                         |
+|Payments             |Stripe + Mock provider                |
+|Notifications        |Database notifications + Firebase FCM |
+|Queue                |Laravel database queue                |
+|Containerization     |Docker / Docker Compose               |
+|Process Supervision  |Supervisor                            |
+|Testing              |PHPUnit / Laravel Feature & Unit tests|
+|Performance          |Grafana k6                            |
+
+────────
+
+Repository Structure
 
 ```text
 app/
-  Enums/
-  Models/
-  Modules/
-    Auth/
-    Users/
-    Applications/
-    Documents/
-    Payments/
-    Appointments/
-    Tests/
-    Licenses/
-    Settings/
-    Reports/
-    Chatbot/
-    Notifications/
-    AuditLogs/
+├── Enums/
+├── Models/
+└── Modules/
+    ├── Admin/
+    ├── AIAgent/
+    ├── Applications/
+    ├── Appointments/
+    ├── AuditLogs/
+    ├── Auth/
+    ├── Content/
+    ├── Dashboard/
+    ├── Devices/
+    ├── Fines/
+    ├── Firebase/
+    ├── Licenses/
+    ├── Notifications/
+    ├── Payments/
+    ├── Push/
+    ├── Reports/
+    ├── Settings/
+    └── Tests/
 
+config/
 database/
-  migrations/
-  seeders/
+├── migrations/
+└── seeders/
 
 routes/
-  api.php
+├── api.php
+├── console.php
+└── web.php
 
 tests/
-  Feature/
+├── Feature/
+├── Unit/
+└── performance/
+
+docs/
+└── evidence/
 ```
 
----
+────────
 
-# Development Guidelines
+API Surface
 
-1. Do not put business logic inside controllers.
-2. Use services for business workflows.
-3. Use repositories for database queries.
-4. Use Form Requests for validation.
-5. Use API Resources for response formatting.
-6. Use middleware for role and permission protection.
-7. Use transactions for sensitive operations.
-8. Use enums/constants for statuses.
-9. Do not hard-delete important records with dependencies.
-10. Record sensitive operations in audit logs.
-11. Store notifications in the database.
-12. Keep the system modular and maintainable.
+This README intentionally lists API families rather than every route. Use Laravel route inspection and the maintained Postman collection for the exact contract.
 
----
+```bash
+php artisan route:list
+```
 
-# Mock Services
-
-## Mock OTP
-
-* Development OTP code: `123456`
-* OTP expires after 10 minutes.
-
----
-
-## Mock Payment Gateway
-
-* Used for development and testing.
-* Simulates payment success by default.
-* Stores provider reference.
-* Does not store card data.
-
----
-
-# Future Enhancements
-
-Possible future improvements:
-
-* Real payment gateway integration.
-* Real SMS gateway integration.
-* Push notifications.
-* Advanced chatbot integration.
-* PDF license generation.
-* QR code verification for licenses.
-* Advanced reporting dashboard.
-* Multi-branch traffic department support.
-* Advanced workflow configuration engine.
-* Integration with government identity systems.
-
----
-
-# License
-
-This project is developed for academic and educational purposes as part of a software engineering project.
-
----
-
-# Project Status
+Representative API families:
 
 ```text
-Planning and backend implementation preparation
+/api/auth/*
+/api/profile/*
+/api/applications/*
+/api/licenses/*
+/api/fines/*
+/api/notifications/*
+/api/devices/push-token
+/api/ai-agent/*
+/api/dashboard/*
+/api/admin/*
+/api/webhooks/stripe
 ```
 
-Recommended implementation phases:
+Public endpoints include catalog/content surfaces and license verification where configured.
 
-1. Database and models.
-2. Authentication and RBAC.
-3. Settings module.
-4. Applications and documents.
-5. Payments.
-6. Appointments and tests.
-7. Licenses and fines.
-8. Notifications, audit logs, reports.
-9. Testing and documentation.
+────────
+
+Installation
+
+Requirements
+
+• PHP 8.4+
+• Composer
+• MySQL / MariaDB
+• required PHP extensions for Laravel and the configured database
+• optional: Docker / Docker Compose
+
+1. Clone
+
+```bash
+git clone <repository-url>
+cd DLMS_Project
+```
+
+2. Install PHP dependencies
+
+```bash
+composer install
+```
+
+3. Configure the environment
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure at minimum:
+
+```env
+APP_ENV=local
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=dlms
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Then configure optional integration credentials according to .env.example for:
+
+• mail / OTP
+• Stripe
+• Gemini
+• Firebase FCM
+• queue/storage settings
+
+Never commit real secrets, access tokens or private keys.
+
+4. Create the database schema
+
+```bash
+php artisan migrate --seed
+```
+
+For a fully reset local development database:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+5. Start the API
+
+```bash
+php artisan serve
+```
+
+Default local URL:
+
+```text
+http://127.0.0.1:8000
+```
+
+6. Start the queue worker when testing queued push delivery
+
+```bash
+php artisan queue:work
+```
+
+────────
+
+Docker
+
+The repository includes Docker packaging for the backend runtime.
+
+Typical local workflow:
+
+```bash
+docker compose up -d --build
+docker compose ps
+```
+
+The deployment packaging includes the Laravel application, database/runtime configuration and a supervised queue worker according to the current Compose setup.
+
+────────
+
+Deployment
+
+The project has been demonstrated with separated web-client and backend deployment:
+
+|Component         |Platform                               |
+|------------------|---------------------------------------|
+|Employee Dashboard|Vercel                                 |
+|Laravel API       |Railway                                |
+|Backend packaging |Docker / Compose                       |
+|Background worker |Supervisor-managed Laravel queue worker|
+
+The backend exposes Laravel’s health-check path:
+
+```text
+/up
+```
+
+Deployment is currently treated as a controlled manual release. This repository does not claim an implemented CI/CD pipeline or a measured availability SLA.
+
+────────
+
+Postman & Integration Docs
+
+The repository contains maintained API/integration artifacts, including the citizen/Flutter Postman collection and project documentation.
+
+Use these together with:
+
+```bash
+php artisan route:list
+```
+
+when integrating a client, because route contracts and current backend behavior take precedence over older narrative documentation.
+
+────────
+
+Important Business Rules
+
+Representative domain rules include:
+
+1. A citizen must have an approved profile before using protected mutating citizen services.
+2. Duplicate conflicting active applications are blocked.
+3. Required documents must satisfy service-specific rules before submission.
+4. Documents are reviewed by authorized employees; rejected items can require correction/re-upload.
+5. Payment operations are state-aware and duplicate settled obligations are prevented.
+6. New-license testing follows Vision → Theory → Practical.
+7. Appointment booking respects eligibility, state and slot capacity.
+8. License issuance requires the application to satisfy the appropriate service workflow.
+9. Renewal/replacement operates on a citizen-owned eligible license.
+10. Citizen/private resources are ownership-scoped.
+11. Sensitive employee/admin mutations are permission-protected and auditable.
+12. AI mutations cannot bypass the same business rules used by normal API flows.
+
+────────
+
+Known Boundaries
+
+This README intentionally avoids claims that are not supported by the current implementation/evidence.
+
+|Topic                 |Current boundary                                                             |
+|----------------------|-----------------------------------------------------------------------------|
+|Architecture          |Modular monolith; **not microservices / event-driven / true AOP**            |
+|Application FSM       |No single global illegal-transition matrix                                   |
+|Security              |Strong automated evidence, but **no external penetration-test certification**|
+|Concurrency           |Scoped protection/tests; not a global race-free guarantee                    |
+|Performance           |Local paced benchmark; not production capacity                               |
+|Availability          |No measured 99.9% SLA                                                        |
+|AI                    |No RAG/vector database; no unsupervised mutation                             |
+|Dashboard localization|Arabic RTL dashboard; full bilingual dashboard not claimed                   |
+|Dashboard tests       |Automated frontend coverage not claimed                                      |
+|CI/CD                 |No evidenced CI/CD workflow in the audited repository                        |
+|Fine payment          |Citizen fine checkout is not claimed as complete                             |
+|Flutter               |Mobile client is maintained outside this backend repository                  |
+
+────────
+
+Project Status
+
+Backend: implemented, tested and deployable within the documented scope.
+
+Employee dashboard: implemented as a separate Next.js client.
+
+Citizen mobile: integrated through the API contract as a separate Flutter project.
+
+AI Agent: implemented as a controlled Gemini-assisted citizen workflow layer.
+
+Quality evidence: backend regression, security, reliability, auditability, localization and performance artifacts are maintained under the project documentation/evidence set.
+
+────────
+
+Academic Context
+
+SYRTAK is developed as a Software Engineering graduation project focused not only on building a working product, but also on:
+
+• requirements engineering
+• business-rule modeling
+• UML and system design
+• database design
+• API contracts
+• secure workflow implementation
+• automated verification
+• performance measurement
+• deployment
+• evidence-backed technical reporting
+
+────────
+
+License
+
+This repository is intended for academic and educational use unless a separate repository license states otherwise.
+
+────────
+
+<div align="center">
+
+SYRTAK
+
+Digital driving-license services — engineered as one controlled workflow.
+
+</div>
