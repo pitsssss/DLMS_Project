@@ -1,10 +1,11 @@
-<div align="center">
+🚦 SYRTAK | DLMS — Backend
 
-🚦 SYRTAK | DLMS
+Digital License Management System · Laravel REST API
 
-Digital License Management System
+The backend authority behind SYRTAK — a government-style digital driving-license platform built around controlled workflows, security boundaries, auditability, reliability, and a confirmation-based AI assistant.
 
-A government-style digital driving-license platform built around workflow automation, security boundaries, auditability, and a confirmation-based AI assistant.
+> **Repository scope:** this repository contains the **Laravel backend/API**.  
+> The **Next.js employee dashboard** and **Flutter citizen application** are separate clients that consume this API.
 
 Laravel
 PHP
@@ -24,7 +25,9 @@ Overview
 
 SYRTAK / DLMS is an end-to-end software engineering project for digitizing driving-license services and regulatory workflows.
 
-The backend is a Laravel modular monolith REST API that centralizes domain rules for citizen onboarding, profile approval, license applications, document review, payments, appointments, examinations, license issuance and lifecycle services, notifications, fines, audit logs, employee operations, and a controlled AI Agent.
+This repository contains the Laravel modular-monolith REST API that acts as SYRTAK’s trusted backend authority. It centralizes the domain rules for citizen onboarding, profile approval, license applications, document review, payments, appointments, examinations, license issuance and lifecycle services, fines, notifications, audit logs, employee operations, reporting, and the controlled AI Agent.
+
+The UI clients are intentionally outside this repository. The backend exposes citizen APIs to the Flutter application and permission-aware administrative APIs to the separate Next.js employee dashboard.
 
 The system is designed around one principle:
 
@@ -34,16 +37,56 @@ SYRTAK is not a collection of disconnected CRUD screens. The main licensing proc
 
 ────────
 
+Explore the Backend
+
+|🧭 Domain                |🔐 Trust                   |🤖 Intelligence                    |🧪 Evidence                |
+|------------------------|--------------------------|----------------------------------|--------------------------|
+|Applications & documents|Sanctum + RBAC            |Gemini-assisted Agent             |1058 passing backend tests|
+|Payments & appointments |Ownership + state guards  |Confirm before mutation           |Security negative testing |
+|Tests & licenses        |Audit + integrity controls|Revalidate before execute         |k6 performance evidence   |
+|Dashboard operations    |Private storage + limits  |Domain services stay authoritative|Reliability/audit evidence|
+
+────────
+
 What SYRTAK Includes
 
-|Surface                   |Responsibility                                                                                                                                               |
-|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|**Citizen API**           |Registration, email OTP verification, profile, applications, documents, payments, appointments, tests, licenses, fines, notifications, localization, AI Agent|
-|**Employee Dashboard API**|Review queues, citizens, applications, payments, appointment slots, test operations, license operations, RBAC, reports, audit logs, settings and sessions    |
-|**Employee Web Dashboard**|Separate **Next.js 15** client consuming the Laravel API                                                                                                     |
-|**Citizen Mobile Client** |Flutter client maintained separately from this backend repository                                                                                            |
-|**AI Agent**              |Gemini-assisted conversational layer with deterministic workflow controls and confirmation before mutations                                                  |
-|**External Integrations** |Stripe, Firebase FCM, mail/OTP, queue workers and private file storage                                                                                       |
+|Surface                       |Responsibility                                                                                                                                                                                                                                |
+|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**Citizen API**               |Registration, email OTP verification, profile, applications, documents, payments, appointments, tests, licenses, fines, notifications, localization, AI Agent                                                                                 |
+|**Employee Dashboard Backend**|Permission-aware REST APIs for operational queues, citizen/profile review, document decisions, applications, payments, appointment slots, test operations, license issuance/lifecycle, fines, RBAC, reports, audit logs, settings and sessions|
+|**Employee Web Dashboard**    |Separate **Next.js 15** repository/client; presentation lives there, while authorization and administrative business rules remain enforced here                                                                                               |
+|**Citizen Mobile Client**     |Flutter client maintained separately from this backend repository                                                                                                                                                                             |
+|**AI Agent**                  |Gemini-assisted conversational layer with deterministic workflow controls and confirmation before mutations                                                                                                                                   |
+|**External Integrations**     |Stripe, Firebase FCM, mail/OTP, queue workers and private file storage                                                                                                                                                                        |
+
+────────
+
+Repository Boundary
+
+```mermaid
+flowchart LR
+    M[Flutter Citizen App<br/>Separate Repository]
+    W[Next.js Employee Dashboard<br/>Separate Repository]
+
+    subgraph THIS["This Repository — Laravel Backend"]
+        API[REST API]
+        AUTH[Authentication + RBAC]
+        DOMAIN[Domain Services + Workflow Rules]
+        AI[AI Agent Orchestration]
+        AUDIT[Audit + Notifications]
+        DATA[(Database / Private Storage)]
+    end
+
+    M -->|Citizen API| API
+    W -->|Dashboard API| API
+    API --> AUTH
+    AUTH --> DOMAIN
+    DOMAIN --> AI
+    DOMAIN --> AUDIT
+    DOMAIN --> DATA
+```
+
+Important: the dashboard UI does not live in this repository. Its backend logic does: permissions, review decisions, application transitions, payment verification, test-result recording, license operations, reporting, auditability and other administrative rules are enforced by this Laravel API.
 
 ────────
 
@@ -180,6 +223,51 @@ Representative roles include:
 • Super Admin
 
 The project uses a custom RBAC implementation with role permissions and optional direct permissions.
+
+────────
+
+Employee Dashboard Backend
+
+The employee dashboard is a separate Next.js client, but its trusted operational logic is implemented in this backend.
+
+```mermaid
+flowchart TB
+    UI[Next.js Employee Dashboard]
+    MW[Sanctum + Dashboard Boundary + Permission Middleware]
+    API[Dashboard / Admin Controllers]
+    S[Domain Services]
+    DB[(Database)]
+    AL[Audit Log]
+    N[Notifications]
+
+    UI -->|REST request| MW
+    MW --> API
+    API --> S
+    S --> DB
+    S --> AL
+    S --> N
+```
+
+Representative backend capabilities exposed to the dashboard include:
+
+|Area                    |Backend responsibility                                              |
+|------------------------|--------------------------------------------------------------------|
+|**Operational overview**|Dashboard metrics, queues and actionable operational data           |
+|**Citizen profiles**    |Review/decision flows with permission and state enforcement         |
+|**Documents**           |Review queues, approve/reject decisions and rejection reasons       |
+|**Applications**        |Search, details, workflow/state-aware employee operations           |
+|**Payments**            |Payment inspection, verification and reconciliation operations      |
+|**Appointments**        |Slot administration and operational appointment management          |
+|**Tests**               |Authorized result recording and test workflow progression           |
+|**Licenses**            |Eligibility checks, issuance, block/unblock and lifecycle operations|
+|**Fines**               |Authorized fine administration                                      |
+|**RBAC**                |Employees, roles, permissions and direct permission controls        |
+|**Reports**             |Administrative reporting endpoints                                  |
+|**Audit**               |Readable evidence of critical administrative actions                |
+|**Settings**            |Catalog/configuration operations protected by permissions           |
+|**Sessions**            |Administrative session management where supported                   |
+
+The frontend can hide unavailable actions for usability, but the backend independently re-enforces authorization, ownership/state rules and workflow legality. A dashboard button is never treated as an authorization boundary.
 
 ────────
 
@@ -591,6 +679,25 @@ The backend test suite covers functional workflows, authorization, ownership, se
 
 ────────
 
+Evidence Snapshot
+
+The repository’s final report/evidence set records the following audited baseline:
+
+```text
+Backend regression : 1058 tests passed
+Assertions          : 6694
+Failures            : 0
+401 scenarios       : 26
+403 scenarios       : 95
+Negative IDOR       : 21
+Audit coverage      : 36 / 36 critical operations
+Paced 100-VU run    : 5842 requests · 0% failures · p95 65.76 ms
+```
+
+These figures describe the measured scope and environment only. They are not presented as production SLA, penetration-test certification, or global scalability guarantees.
+
+────────
+
 Technology Stack
 
 |Layer                |Technology                            |
@@ -868,15 +975,16 @@ This README intentionally avoids claims that are not supported by the current im
 
 Project Status
 
-Backend: implemented, tested and deployable within the documented scope.
-
-Employee dashboard: implemented as a separate Next.js client.
-
-Citizen mobile: integrated through the API contract as a separate Flutter project.
-
-AI Agent: implemented as a controlled Gemini-assisted citizen workflow layer.
-
-Quality evidence: backend regression, security, reliability, auditability, localization and performance artifacts are maintained under the project documentation/evidence set.
+|Component                                  |Status                                                          |
+|-------------------------------------------|----------------------------------------------------------------|
+|**Laravel backend in this repository**     |✅ Implemented, tested and deployable within the documented scope|
+|**Employee Dashboard backend APIs**        |✅ Implemented here                                              |
+|**Next.js employee dashboard UI**          |↗ Separate repository/client                                    |
+|**Citizen API**                            |✅ Implemented here                                              |
+|**Flutter citizen UI**                     |↗ Separate repository/client                                    |
+|**Gemini-assisted AI Agent backend**       |✅ Implemented with confirmation/revalidation controls           |
+|**Security / reliability / audit evidence**|✅ Maintained in the project evidence set                        |
+|**Performance evidence**                   |✅ Controlled k6 measurements recorded                           |
 
 ────────
 
