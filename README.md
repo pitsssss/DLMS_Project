@@ -1,6 +1,6 @@
 # Digital License Management System (DLMS)
 
-**DLMS** is a Laravel 11 RESTful API backend for a government-style digital driving license management platform.
+**DLMS** is a Laravel 12 RESTful API backend for a government-style digital driving license management platform.
 
 The system manages the full lifecycle of driving license services: citizen registration, profile completion, license applications, document upload and review, mock electronic payments, test appointment booking, test result recording, license issuance, license renewal, lost/damaged replacement, license unblocking, fines, notifications, audit logs, reports, and a simple chatbot assistant.
 
