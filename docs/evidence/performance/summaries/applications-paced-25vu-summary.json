@@ -1,0 +1,212 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 1451,
+            "rate": 23.94071406705639
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 36.99284472777388,
+            "min": 18.1738,
+            "med": 36.7796,
+            "p(95)": 56.0005,
+            "p(99)": 80.90795,
+            "max": 231.1453
+        },
+        "data_received": {
+            "count": 13969253,
+            "rate": 230485.10806572688
+        },
+        "paced_applications_transport_failed": {
+            "passes": 0,
+            "fails": 1450,
+            "thresholds": {
+                "rate==0": false
+            },
+            "value": 0
+        },
+        "paced_applications_requests": {
+            "rate": 23.92421460870556,
+            "count": 1450
+        },
+        "paced_applications_duration": {
+            "max": 93.9698,
+            "avg": 36.858946482758554,
+            "min": 18.1738,
+            "med": 36.777150000000006,
+            "p(95)": 55.97179,
+            "p(99)": 80.47854399999999
+        },
+        "http_req_duration": {
+            "avg": 36.99284472777388,
+            "min": 18.1738,
+            "med": 36.7796,
+            "p(95)": 56.0005,
+            "p(99)": 80.90795,
+            "max": 231.1453
+        },
+        "data_sent": {
+            "count": 285891,
+            "rate": 4717.046647377546
+        },
+        "vus": {
+            "value": 25,
+            "min": 25,
+            "max": 25
+        },
+        "http_req_tls_handshaking": {
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_connecting": {
+            "avg": 0.010580151619572712,
+            "min": 0,
+            "med": 0,
+            "p(95)": 0,
+            "p(99)": 0.51485,
+            "max": 1.4308
+        },
+        "http_req_receiving": {
+            "p(95)": 1.4647999999999999,
+            "p(99)": 2.0632,
+            "max": 3.694,
+            "avg": 0.6931535492763605,
+            "min": 0,
+            "med": 0.6386
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 1451,
+            "value": 0
+        },
+        "checks": {
+            "passes": 7252,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "vus_max": {
+            "value": 25,
+            "min": 25,
+            "max": 25
+        },
+        "paced_applications_failed": {
+            "passes": 0,
+            "fails": 1450,
+            "thresholds": {
+                "rate==0": false
+            },
+            "value": 0
+        },
+        "http_req_blocked": {
+            "avg": 0.012816953824948314,
+            "min": 0,
+            "med": 0,
+            "p(95)": 0,
+            "p(99)": 0.52905,
+            "max": 1.4308
+        },
+        "http_req_sending": {
+            "avg": 0.011120468642315645,
+            "min": 0,
+            "med": 0,
+            "p(95)": 0,
+            "p(99)": 0.5073000000000001,
+            "max": 1.6108
+        },
+        "iteration_duration": {
+            "p(95)": 1057.061965,
+            "p(99)": 1081.187909,
+            "max": 1094.32,
+            "avg": 1037.6394615172403,
+            "min": 1019.0806,
+            "med": 1037.70375
+        },
+        "iterations": {
+            "count": 1450,
+            "rate": 23.92421460870556
+        },
+        "http_req_waiting": {
+            "p(95)": 55.518600000000006,
+            "p(99)": 80.49074999999999,
+            "max": 230.106,
+            "avg": 36.288570709855264,
+            "min": 17.7291,
+            "med": 36.0047
+        }
+    },
+    "setup_data": {
+        "token": "14|H8frcU3vrQl5JiWEqNcVKfWttvIU46cOXW3Lgq0x7a5f70e6"
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "setup login status is 200": {
+                            "fails": 0,
+                            "name": "setup login status is 200",
+                            "path": "::setup::setup login status is 200",
+                            "id": "503a584e6a4bdaf6865666d845a66b58",
+                            "passes": 1
+                        },
+                        "setup login returns token": {
+                            "id": "d03feb663eaab49cacd219d7452bfc95",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "setup login returns token",
+                            "path": "::setup::setup login returns token"
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "applications transport succeeded": {
+                "name": "applications transport succeeded",
+                "path": "::applications transport succeeded",
+                "id": "d157b434621052d7a4ad5822b8b96d0a",
+                "passes": 1450,
+                "fails": 0
+            },
+            "applications status is 200": {
+                "path": "::applications status is 200",
+                "id": "31257ee668fa6cdda8a504236a7e2941",
+                "passes": 1450,
+                "fails": 0,
+                "name": "applications status is 200"
+            },
+            "applications success is true": {
+                "name": "applications success is true",
+                "path": "::applications success is true",
+                "id": "058f0cb1c5e3fc55d4ce9739e16b9f0e",
+                "passes": 1450,
+                "fails": 0
+            },
+            "applications has items": {
+                "path": "::applications has items",
+                "id": "65d30824ae3bcff2c284948ca57899d1",
+                "passes": 1450,
+                "fails": 0,
+                "name": "applications has items"
+            },
+            "applications has pagination": {
+                "name": "applications has pagination",
+                "path": "::applications has pagination",
+                "id": "81f94f9ca4b299cb354af906d05ed090",
+                "passes": 1450,
+                "fails": 0
+            }
+        }
+    }
+}
