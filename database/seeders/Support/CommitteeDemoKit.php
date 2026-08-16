@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\AppointmentStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\FineStatus;
+use App\Enums\LicenseStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\ProfileStatus;
 use App\Enums\TestResultStatus;
@@ -51,13 +52,74 @@ final class CommitteeDemoKit
 
     public const ISSUER_EMAIL = 'committee.issuer@syrtak.local';
 
+    /** Final practical waiting — record passed → approved. */
     public const APP_A = 'DEMO-COMMITTEE-A';
 
+    /** Vision waiting — record failed path. */
     public const APP_B = 'DEMO-COMMITTEE-B';
 
+    /** Vision waiting — record no_show path. */
     public const APP_C = 'DEMO-COMMITTEE-C';
 
+    /** New private — ready to issue. */
     public const APP_D = 'DEMO-COMMITTEE-D';
+
+    /** Theory waiting (vision already passed). */
+    public const APP_E = 'DEMO-COMMITTEE-E';
+
+    /** Waiting retest after 1 fail — previous_attempts_count = 1. */
+    public const APP_F = 'DEMO-COMMITTEE-F';
+
+    /** Waiting last attempt (2 prior fails) — next fail → administrative_review. */
+    public const APP_G = 'DEMO-COMMITTEE-G';
+
+    /** Completed + passed — filter status=completed. */
+    public const APP_H = 'DEMO-COMMITTEE-H';
+
+    /** Completed + failed result — filter status=completed. */
+    public const APP_I = 'DEMO-COMMITTEE-I';
+
+    /** Cancelled appointment — filter status=cancelled. */
+    public const APP_J = 'DEMO-COMMITTEE-J';
+
+    /** Appointment status=no_show — filter status=no_show. */
+    public const APP_K = 'DEMO-COMMITTEE-K';
+
+    /** Booked but app not recordable (approved) — can_record_result=false. */
+    public const APP_L = 'DEMO-COMMITTEE-L';
+
+    /** New public — ready to issue. */
+    public const APP_M = 'DEMO-COMMITTEE-M';
+
+    /** Renew — ready (related license). */
+    public const APP_N = 'DEMO-COMMITTEE-N';
+
+    public const APP_N_ORIG = 'DEMO-COMMITTEE-N-ORIG';
+
+    /** Lost replacement — ready. */
+    public const APP_O = 'DEMO-COMMITTEE-O';
+
+    public const APP_O_ORIG = 'DEMO-COMMITTEE-O-ORIG';
+
+    /** Damaged replacement — ready. */
+    public const APP_P = 'DEMO-COMMITTEE-P';
+
+    public const APP_P_ORIG = 'DEMO-COMMITTEE-P-ORIG';
+
+    /** Approved but unpaid fee — details blockers only. */
+    public const APP_Q = 'DEMO-COMMITTEE-Q';
+
+    /** Approved + unpaid fine — details blockers only. */
+    public const APP_R = 'DEMO-COMMITTEE-R';
+
+    /** Already issued — excluded from queue. */
+    public const APP_S = 'DEMO-COMMITTEE-S';
+
+    /** Approved missing docs — details blockers only. */
+    public const APP_T = 'DEMO-COMMITTEE-T';
+
+    /** New truck — ready to issue (license type variety). */
+    public const APP_U = 'DEMO-COMMITTEE-U';
 
     public function __construct(
         private readonly Seeder $seeder,
@@ -109,6 +171,8 @@ final class CommitteeDemoKit
         ];
     }
 
+    // ── Test-result queue scenarios ──────────────────────────────────────────
+
     public function seedScenarioA(User $examiner): LicenseApplication
     {
         $citizen = $this->upsertCitizen([
@@ -118,25 +182,14 @@ final class CommitteeDemoKit
             'national_id' => '09020000001',
         ]);
 
-        $application = $this->upsertNewLicenseApplication($citizen, self::APP_A, ApplicationStatus::InTesting);
-        $this->attachApprovedDocuments($application, $examiner);
-        $this->attachCompletedFee($application, $citizen);
-        $this->clearUnpaidFines($citizen);
+        $application = $this->upsertApplication($citizen, self::APP_A, ApplicationStatus::InTesting);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
 
         $this->completePassedTest($application, $citizen, $examiner, 'vision', now()->subDays(2));
         $this->completePassedTest($application, $citizen, $examiner, 'theory', now()->subDay());
         $this->bookWaitingAppointment($application, $citizen, 'practical');
 
-        $practical = $this->testType('practical');
-        $application->current_test_type_id = $practical->id;
-        $application->status = ApplicationStatus::InTesting;
-        $application->approved_at = null;
-        $application->issued_at = null;
-        $application->save();
-
-        $this->replaceStatusHistory($application, ApplicationStatus::InTesting, $examiner, 'Committee demo: waiting for practical result.');
-
-        return $application->fresh(['citizen', 'serviceType', 'licenseType', 'currentTestType']);
+        return $this->finalizeTestingApp($application, $examiner, 'practical', ApplicationStatus::InTesting, 'Committee demo: waiting for practical result.');
     }
 
     public function seedScenarioB(User $examiner): LicenseApplication
@@ -169,31 +222,366 @@ final class CommitteeDemoKit
         );
     }
 
-    public function seedScenarioD(User $examiner): LicenseApplication
+    public function seedScenarioE(User $examiner): LicenseApplication
     {
         $citizen = $this->upsertCitizen([
-            'email' => 'committee.scenario-d@syrtak.local',
-            'name' => 'مواطن تجريبي - جاهز للإصدار',
-            'phone' => '0912000004',
-            'national_id' => '09020000004',
+            'email' => 'committee.scenario-e@syrtak.local',
+            'name' => 'مواطن تجريبي - انتظار النظري',
+            'phone' => '0912000005',
+            'national_id' => '09020000005',
         ]);
 
-        $application = $this->upsertNewLicenseApplication($citizen, self::APP_D, ApplicationStatus::Approved);
-        $this->attachApprovedDocuments($application, $examiner);
-        $this->attachCompletedFee($application, $citizen);
-        $this->clearUnpaidFines($citizen);
+        $application = $this->upsertApplication($citizen, self::APP_E, ApplicationStatus::InTesting);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completePassedTest($application, $citizen, $examiner, 'vision', now()->subDays(2));
+        $this->bookWaitingAppointment($application, $citizen, 'theory');
 
+        return $this->finalizeTestingApp($application, $examiner, 'theory', ApplicationStatus::InTesting, 'Committee demo: waiting for theory result.');
+    }
+
+    public function seedScenarioF(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-f@syrtak.local',
+            'name' => 'مواطن تجريبي - إعادة اختبار بعد رسوب',
+            'phone' => '0912000006',
+            'national_id' => '09020000006',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_F, ApplicationStatus::WaitingRetest);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completeAttemptedTest($application, $citizen, $examiner, 'vision', TestResultStatus::Failed, 1, now()->subDays(5));
+        $this->bookWaitingAppointment($application, $citizen, 'vision');
+
+        return $this->finalizeTestingApp($application, $examiner, 'vision', ApplicationStatus::WaitingRetest, 'Committee demo: retest after one fail (attempt 2).');
+    }
+
+    public function seedScenarioG(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-g@syrtak.local',
+            'name' => 'مواطن تجريبي - المحاولة الأخيرة',
+            'phone' => '0912000007',
+            'national_id' => '09020000007',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_G, ApplicationStatus::WaitingRetest);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completeAttemptedTest($application, $citizen, $examiner, 'vision', TestResultStatus::Failed, 1, now()->subDays(10));
+        $this->completeAttemptedTest($application, $citizen, $examiner, 'vision', TestResultStatus::NoShow, 2, now()->subDays(5));
+        $this->bookWaitingAppointment($application, $citizen, 'vision');
+
+        return $this->finalizeTestingApp($application, $examiner, 'vision', ApplicationStatus::WaitingRetest, 'Committee demo: last attempt (attempt 3 / max).');
+    }
+
+    public function seedScenarioH(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-h@syrtak.local',
+            'name' => 'مواطن تجريبي - موعد مكتمل ناجح',
+            'phone' => '0912000008',
+            'national_id' => '09020000008',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_H, ApplicationStatus::InTesting);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
         $this->completePassedTest($application, $citizen, $examiner, 'vision', now()->subDays(3));
-        $this->completePassedTest($application, $citizen, $examiner, 'theory', now()->subDays(2));
-        $this->completePassedTest($application, $citizen, $examiner, 'practical', now()->subDay());
+        $this->bookWaitingAppointment($application, $citizen, 'theory');
+
+        return $this->finalizeTestingApp($application, $examiner, 'theory', ApplicationStatus::InTesting, 'Committee demo: completed passed history + waiting theory.');
+    }
+
+    public function seedScenarioI(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-i@syrtak.local',
+            'name' => 'مواطن تجريبي - موعد مكتمل راسب',
+            'phone' => '0912000009',
+            'national_id' => '09020000009',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_I, ApplicationStatus::WaitingRetest);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completeAttemptedTest($application, $citizen, $examiner, 'theory', TestResultStatus::Failed, 1, now()->subDays(2));
+        $this->bookWaitingAppointment($application, $citizen, 'theory');
+
+        return $this->finalizeTestingApp($application, $examiner, 'theory', ApplicationStatus::WaitingRetest, 'Committee demo: completed failed history + waiting retest.');
+    }
+
+    public function seedScenarioJ(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-j@syrtak.local',
+            'name' => 'مواطن تجريبي - موعد ملغى',
+            'phone' => '0912000010',
+            'national_id' => '09020000010',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_J, ApplicationStatus::InTesting);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->createCancelledAppointment($application, $citizen, 'vision', now()->subDays(1));
+        $this->bookWaitingAppointment($application, $citizen, 'vision');
+
+        return $this->finalizeTestingApp($application, $examiner, 'vision', ApplicationStatus::InTesting, 'Committee demo: cancelled appointment history.');
+    }
+
+    public function seedScenarioK(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-k@syrtak.local',
+            'name' => 'مواطن تجريبي - حالة غياب للموعد',
+            'phone' => '0912000011',
+            'national_id' => '09020000011',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_K, ApplicationStatus::WaitingRetest);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completeAttemptedTest($application, $citizen, $examiner, 'practical', TestResultStatus::NoShow, 1, now()->subDays(4), AppointmentStatus::NoShow);
+        $this->bookWaitingAppointment($application, $citizen, 'practical');
+
+        return $this->finalizeTestingApp($application, $examiner, 'practical', ApplicationStatus::WaitingRetest, 'Committee demo: appointment status=no_show history.');
+    }
+
+    public function seedScenarioL(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-l@syrtak.local',
+            'name' => 'مواطن تجريبي - محجوز غير قابل للتسجيل',
+            'phone' => '0912000012',
+            'national_id' => '09020000012',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_L, ApplicationStatus::Approved);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completePassedTest($application, $citizen, $examiner, 'vision', now()->subDays(5));
+        $this->completePassedTest($application, $citizen, $examiner, 'theory', now()->subDays(4));
+        $this->completePassedTest($application, $citizen, $examiner, 'practical', now()->subDays(3));
+        $this->bookWaitingAppointment($application, $citizen, 'vision');
 
         $application->current_test_type_id = null;
         $application->status = ApplicationStatus::Approved;
-        $application->approved_at = now()->subDay();
+        $application->approved_at = now()->subDays(2);
         $application->issued_at = null;
         $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, 'Committee demo: booked row but app approved → can_record_result=false.');
 
-        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, 'Committee demo: ready for license issuance.');
+        return $application->fresh(['citizen', 'serviceType', 'licenseType', 'currentTestType']);
+    }
+
+    // ── License issuance scenarios ───────────────────────────────────────────
+
+    public function seedScenarioD(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyNewLicense(
+            $examiner,
+            self::APP_D,
+            [
+                'email' => 'committee.scenario-d@syrtak.local',
+                'name' => 'مواطن تجريبي - جاهز للإصدار',
+                'phone' => '0912000004',
+                'national_id' => '09020000004',
+            ],
+            'private',
+            'Committee demo: ready for license issuance (private).'
+        );
+    }
+
+    public function seedScenarioM(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyNewLicense(
+            $examiner,
+            self::APP_M,
+            [
+                'email' => 'committee.scenario-m@syrtak.local',
+                'name' => 'مواطن تجريبي - إصدار رخصة عامة',
+                'phone' => '0912000013',
+                'national_id' => '09020000013',
+            ],
+            'public',
+            'Committee demo: ready for license issuance (public).'
+        );
+    }
+
+    public function seedScenarioU(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyNewLicense(
+            $examiner,
+            self::APP_U,
+            [
+                'email' => 'committee.scenario-u@syrtak.local',
+                'name' => 'مواطن تجريبي - إصدار رخصة شاحنة',
+                'phone' => '0912000021',
+                'national_id' => '09020000021',
+            ],
+            'truck',
+            'Committee demo: ready for license issuance (truck).'
+        );
+    }
+
+    public function seedScenarioN(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyFollowOn(
+            $examiner,
+            self::APP_N,
+            self::APP_N_ORIG,
+            'renew_license',
+            [
+                'email' => 'committee.scenario-n@syrtak.local',
+                'name' => 'مواطن تجريبي - تجديد رخصة',
+                'phone' => '0912000014',
+                'national_id' => '09020000014',
+            ],
+            'LIC-DEMO-COMMITTEE-N',
+            'Committee demo: renew ready to issue.'
+        );
+    }
+
+    public function seedScenarioO(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyFollowOn(
+            $examiner,
+            self::APP_O,
+            self::APP_O_ORIG,
+            'lost_replacement',
+            [
+                'email' => 'committee.scenario-o@syrtak.local',
+                'name' => 'مواطن تجريبي - بدل فاقد',
+                'phone' => '0912000015',
+                'national_id' => '09020000015',
+            ],
+            'LIC-DEMO-COMMITTEE-O',
+            'Committee demo: lost replacement ready to issue.'
+        );
+    }
+
+    public function seedScenarioP(User $examiner): LicenseApplication
+    {
+        return $this->seedReadyFollowOn(
+            $examiner,
+            self::APP_P,
+            self::APP_P_ORIG,
+            'damaged_replacement',
+            [
+                'email' => 'committee.scenario-p@syrtak.local',
+                'name' => 'مواطن تجريبي - بدل تالف',
+                'phone' => '0912000016',
+                'national_id' => '09020000016',
+            ],
+            'LIC-DEMO-COMMITTEE-P',
+            'Committee demo: damaged replacement ready to issue.'
+        );
+    }
+
+    public function seedScenarioQ(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-q@syrtak.local',
+            'name' => 'مواطن تجريبي - معتمد بلا دفع',
+            'phone' => '0912000017',
+            'national_id' => '09020000017',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_Q, ApplicationStatus::Approved);
+        $this->attachApprovedDocuments($application, $examiner);
+        $this->clearUnpaidFines($citizen);
+        $this->attachPendingFee($application, $citizen);
+        $this->completeAllRequiredTests($application, $citizen, $examiner);
+
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::Approved;
+        $application->approved_at = now()->subHours(6);
+        $application->issued_at = null;
+        $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, 'Committee demo: approved but unpaid (payment_required).');
+
+        return $application->fresh(['citizen', 'serviceType', 'licenseType']);
+    }
+
+    public function seedScenarioR(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-r@syrtak.local',
+            'name' => 'مواطن تجريبي - معتمد مع مخالفة',
+            'phone' => '0912000018',
+            'national_id' => '09020000018',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_R, ApplicationStatus::Approved);
+        $this->attachApprovedDocuments($application, $examiner);
+        $this->attachCompletedFee($application, $citizen);
+        $this->clearUnpaidFines($citizen);
+        $this->completeAllRequiredTests($application, $citizen, $examiner);
+        $this->createUnpaidFine($citizen, 'مخالفة تجريبية — تمنع الإصدار');
+
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::Approved;
+        $application->approved_at = now()->subHours(5);
+        $application->issued_at = null;
+        $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, 'Committee demo: approved with unpaid fine.');
+
+        return $application->fresh(['citizen', 'serviceType', 'licenseType']);
+    }
+
+    public function seedScenarioS(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-s@syrtak.local',
+            'name' => 'مواطن تجريبي - صادر مسبقاً',
+            'phone' => '0912000019',
+            'national_id' => '09020000019',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_S, ApplicationStatus::LicenseIssued);
+        $this->prepareIssuancePrereqs($application, $citizen, $examiner);
+        $this->completeAllRequiredTests($application, $citizen, $examiner);
+
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::LicenseIssued;
+        $application->approved_at = now()->subDays(3);
+        $application->issued_at = now()->subDay();
+        $application->save();
+
+        License::query()->updateOrCreate(
+            ['license_number' => 'LIC-DEMO-COMMITTEE-S'],
+            [
+                'citizen_id' => $citizen->id,
+                'license_type_id' => $application->license_type_id,
+                'application_id' => $application->id,
+                'status' => LicenseStatus::Active,
+                'issue_date' => now()->subDay()->toDateString(),
+                'expiry_date' => now()->addYears(5)->toDateString(),
+                'issued_by' => $examiner->id,
+                'deleted_at' => null,
+            ]
+        );
+
+        $this->replaceStatusHistory($application, ApplicationStatus::LicenseIssued, $examiner, 'Committee demo: already issued.');
+
+        return $application->fresh(['citizen', 'serviceType', 'licenseType', 'license']);
+    }
+
+    public function seedScenarioT(User $examiner): LicenseApplication
+    {
+        $citizen = $this->upsertCitizen([
+            'email' => 'committee.scenario-t@syrtak.local',
+            'name' => 'مواطن تجريبي - معتمد بلا وثائق كاملة',
+            'phone' => '0912000020',
+            'national_id' => '09020000020',
+        ]);
+
+        $application = $this->upsertApplication($citizen, self::APP_T, ApplicationStatus::Approved);
+        $this->attachCompletedFee($application, $citizen);
+        $this->clearUnpaidFines($citizen);
+        $this->completeAllRequiredTests($application, $citizen, $examiner);
+        $this->attachPartialDocuments($application, $examiner);
+
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::Approved;
+        $application->approved_at = now()->subHours(4);
+        $application->issued_at = null;
+        $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, 'Committee demo: approved missing documents.');
 
         return $application->fresh(['citizen', 'serviceType', 'licenseType']);
     }
@@ -238,22 +626,125 @@ final class CommitteeDemoKit
     private function seedWaitingFirstTest(User $examiner, string $applicationNumber, array $citizen, string $historyNote): LicenseApplication
     {
         $user = $this->upsertCitizen($citizen);
-        $application = $this->upsertNewLicenseApplication($user, $applicationNumber, ApplicationStatus::InTesting);
+        $application = $this->upsertApplication($user, $applicationNumber, ApplicationStatus::InTesting);
+        $this->prepareIssuancePrereqs($application, $user, $examiner);
+        $this->bookWaitingAppointment($application, $user, 'vision');
+
+        return $this->finalizeTestingApp($application, $examiner, 'vision', ApplicationStatus::InTesting, $historyNote);
+    }
+
+    /**
+     * @param  array{email: string, name: string, phone: string, national_id: string}  $citizen
+     */
+    private function seedReadyNewLicense(
+        User $examiner,
+        string $applicationNumber,
+        array $citizen,
+        string $licenseTypeCode,
+        string $historyNote,
+    ): LicenseApplication {
+        $user = $this->upsertCitizen($citizen);
+        $application = $this->upsertApplication($user, $applicationNumber, ApplicationStatus::Approved, 'new_license', $licenseTypeCode);
+        $this->prepareIssuancePrereqs($application, $user, $examiner);
+        $this->completeAllRequiredTests($application, $user, $examiner);
+
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::Approved;
+        $application->approved_at = now()->subDay();
+        $application->issued_at = null;
+        $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, $historyNote);
+
+        return $application->fresh(['citizen', 'serviceType', 'licenseType']);
+    }
+
+    /**
+     * @param  array{email: string, name: string, phone: string, national_id: string}  $citizen
+     */
+    private function seedReadyFollowOn(
+        User $examiner,
+        string $applicationNumber,
+        string $origApplicationNumber,
+        string $serviceCode,
+        array $citizen,
+        string $licenseNumber,
+        string $historyNote,
+    ): LicenseApplication {
+        $user = $this->upsertCitizen($citizen);
+        $orig = $this->upsertApplication($user, $origApplicationNumber, ApplicationStatus::LicenseIssued);
+        $orig->status = ApplicationStatus::LicenseIssued;
+        $orig->approved_at = now()->subYears(3);
+        $orig->issued_at = now()->subYears(3);
+        $orig->current_test_type_id = null;
+        $orig->save();
+
+        $related = License::query()->updateOrCreate(
+            ['license_number' => $licenseNumber],
+            [
+                'citizen_id' => $user->id,
+                'license_type_id' => $orig->license_type_id,
+                'application_id' => $orig->id,
+                'status' => LicenseStatus::Active,
+                'issue_date' => now()->subYears(3)->toDateString(),
+                'expiry_date' => now()->addDays(30)->toDateString(),
+                'issued_by' => $examiner->id,
+                'deleted_at' => null,
+            ]
+        );
+
+        $application = $this->upsertApplication(
+            $user,
+            $applicationNumber,
+            ApplicationStatus::Approved,
+            $serviceCode,
+            'private',
+            $related->id,
+        );
         $this->attachApprovedDocuments($application, $examiner);
         $this->attachCompletedFee($application, $user);
         $this->clearUnpaidFines($user);
-        $this->bookWaitingAppointment($application, $user, 'vision');
 
-        $vision = $this->testType('vision');
-        $application->current_test_type_id = $vision->id;
-        $application->status = ApplicationStatus::InTesting;
+        $application->current_test_type_id = null;
+        $application->status = ApplicationStatus::Approved;
+        $application->approved_at = now()->subHours(8);
+        $application->issued_at = null;
+        $application->related_license_id = $related->id;
+        $application->save();
+        $this->replaceStatusHistory($application, ApplicationStatus::Approved, $examiner, $historyNote);
+
+        return $application->fresh(['citizen', 'serviceType', 'licenseType', 'relatedLicense']);
+    }
+
+    private function finalizeTestingApp(
+        LicenseApplication $application,
+        User $examiner,
+        string $currentTestCode,
+        ApplicationStatus $status,
+        string $historyNote,
+    ): LicenseApplication {
+        $testType = $this->testType($currentTestCode);
+        $application->current_test_type_id = $testType->id;
+        $application->status = $status;
         $application->approved_at = null;
         $application->issued_at = null;
         $application->save();
-
-        $this->replaceStatusHistory($application, ApplicationStatus::InTesting, $examiner, $historyNote);
+        $this->replaceStatusHistory($application, $status, $examiner, $historyNote);
 
         return $application->fresh(['citizen', 'serviceType', 'licenseType', 'currentTestType']);
+    }
+
+    private function prepareIssuancePrereqs(LicenseApplication $application, User $citizen, User $examiner): void
+    {
+        $this->attachApprovedDocuments($application, $examiner);
+        $this->attachCompletedFee($application, $citizen);
+        $this->clearUnpaidFines($citizen);
+    }
+
+    private function completeAllRequiredTests(LicenseApplication $application, User $citizen, User $examiner): void
+    {
+        $this->completePassedTest($application, $citizen, $examiner, 'vision', now()->subDays(3));
+        $this->completePassedTest($application, $citizen, $examiner, 'theory', now()->subDays(2));
+        $this->completePassedTest($application, $citizen, $examiner, 'practical', now()->subDay());
     }
 
     private function upsertEmployee(string $email, string $name, string $phone, string $roleName): User
@@ -317,12 +808,18 @@ final class CommitteeDemoKit
         );
     }
 
-    private function upsertNewLicenseApplication(User $citizen, string $applicationNumber, ApplicationStatus $status): LicenseApplication
-    {
+    private function upsertApplication(
+        User $citizen,
+        string $applicationNumber,
+        ApplicationStatus $status,
+        string $serviceCode = 'new_license',
+        string $licenseTypeCode = 'private',
+        ?int $relatedLicenseId = null,
+    ): LicenseApplication {
         $this->resetCommitteeApplication($applicationNumber);
 
-        $licenseType = LicenseType::query()->where('code', 'private')->firstOrFail();
-        $serviceType = ServiceType::query()->where('code', 'new_license')->firstOrFail();
+        $licenseType = LicenseType::query()->where('code', $licenseTypeCode)->firstOrFail();
+        $serviceType = ServiceType::query()->where('code', $serviceCode)->firstOrFail();
         $submittedAt = now()->subDays(10);
 
         return LicenseApplication::query()->updateOrCreate(
@@ -331,7 +828,7 @@ final class CommitteeDemoKit
                 'citizen_id' => $citizen->id,
                 'license_type_id' => $licenseType->id,
                 'service_type_id' => $serviceType->id,
-                'related_license_id' => null,
+                'related_license_id' => $relatedLicenseId,
                 'status' => $status,
                 'current_test_type_id' => null,
                 'rejection_reason' => null,
@@ -359,6 +856,9 @@ final class CommitteeDemoKit
 
         $licenses = License::withTrashed()->where('application_id', $application->id)->get();
         foreach ($licenses as $license) {
+            LicenseApplication::query()
+                ->where('related_license_id', $license->id)
+                ->update(['related_license_id' => null]);
             LicenseStatusHistory::query()->where('license_id', $license->id)->delete();
             $license->forceDelete();
         }
@@ -373,6 +873,8 @@ final class CommitteeDemoKit
         $this->syncSlotBookedCounts($slotIds->all());
 
         ApplicationStatusHistory::query()->where('application_id', $application->id)->delete();
+        ApplicationDocument::withTrashed()->where('application_id', $application->id)->forceDelete();
+        Payment::withTrashed()->where('application_id', $application->id)->forceDelete();
 
         if ($application->trashed()) {
             $application->restore();
@@ -381,18 +883,7 @@ final class CommitteeDemoKit
 
     private function attachApprovedDocuments(LicenseApplication $application, User $reviewer): void
     {
-        $required = RequiredDocument::query()
-            ->where('is_active', true)
-            ->where('is_required', true)
-            ->where(function ($q) use ($application): void {
-                $q->whereNull('license_type_id')->orWhere('license_type_id', $application->license_type_id);
-            })
-            ->where(function ($q) use ($application): void {
-                $q->whereNull('service_type_id')->orWhere('service_type_id', $application->service_type_id);
-            })
-            ->get();
-
-        foreach ($required as $document) {
+        foreach ($this->requiredDocumentsFor($application) as $document) {
             $path = $this->putDemoFile($application, $document);
 
             ApplicationDocument::withTrashed()->updateOrCreate(
@@ -415,6 +906,53 @@ final class CommitteeDemoKit
                 ]
             );
         }
+    }
+
+    private function attachPartialDocuments(LicenseApplication $application, User $reviewer): void
+    {
+        $required = $this->requiredDocumentsFor($application);
+        $first = $required->first();
+        if ($first === null) {
+            return;
+        }
+
+        $path = $this->putDemoFile($application, $first);
+        ApplicationDocument::withTrashed()->updateOrCreate(
+            [
+                'application_id' => $application->id,
+                'required_document_id' => $first->id,
+            ],
+            [
+                'file_path' => $path,
+                'original_name' => $first->code.'.pdf',
+                'mime_type' => 'application/pdf',
+                'size' => Storage::disk('local')->size($path),
+                'status' => DocumentStatus::PendingReview,
+                'rejection_reason' => null,
+                'rejection_reason_code' => null,
+                'rejection_details' => null,
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+                'deleted_at' => null,
+            ]
+        );
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, RequiredDocument>
+     */
+    private function requiredDocumentsFor(LicenseApplication $application)
+    {
+        return RequiredDocument::query()
+            ->where('is_active', true)
+            ->where('is_required', true)
+            ->where(function ($q) use ($application): void {
+                $q->whereNull('license_type_id')->orWhere('license_type_id', $application->license_type_id);
+            })
+            ->where(function ($q) use ($application): void {
+                $q->whereNull('service_type_id')->orWhere('service_type_id', $application->service_type_id);
+            })
+            ->get();
     }
 
     private function attachCompletedFee(LicenseApplication $application, User $citizen): void
@@ -448,6 +986,37 @@ final class CommitteeDemoKit
         );
     }
 
+    private function attachPendingFee(LicenseApplication $application, User $citizen): void
+    {
+        $fee = app(ApplicationFeeResolver::class)->resolve($application);
+        $paymentNumber = $application->application_number.'-PAY';
+
+        Payment::withTrashed()->updateOrCreate(
+            ['payment_number' => $paymentNumber],
+            [
+                'user_id' => $citizen->id,
+                'application_id' => $application->id,
+                'fine_id' => null,
+                'fee_id' => $fee->id,
+                'payable_type' => Fee::class,
+                'payable_id' => $fee->id,
+                'amount' => $fee->amount,
+                'currency' => $fee->currency,
+                'status' => PaymentStatus::Pending,
+                'provider' => 'mock',
+                'provider_reference' => $application->application_number.'-FEE-PENDING',
+                'paid_at' => null,
+                'metadata' => ['source' => 'committee_demo'],
+                'failure_code' => null,
+                'failure_message' => null,
+                'failed_at' => null,
+                'settled_obligation_key' => null,
+                'active_obligation_key' => Payment::obligationKey($application->id, $fee->id),
+                'deleted_at' => null,
+            ]
+        );
+    }
+
     private function clearUnpaidFines(User $citizen): void
     {
         Fine::query()
@@ -457,6 +1026,18 @@ final class CommitteeDemoKit
             ->each(fn (Fine $fine) => $fine->delete());
     }
 
+    private function createUnpaidFine(User $citizen, string $reason): Fine
+    {
+        return Fine::query()->create([
+            'citizen_id' => $citizen->id,
+            'license_id' => null,
+            'amount' => 1500,
+            'reason' => $reason,
+            'status' => FineStatus::Unpaid,
+            'paid_at' => null,
+        ]);
+    }
+
     private function completePassedTest(
         LicenseApplication $application,
         User $citizen,
@@ -464,16 +1045,33 @@ final class CommitteeDemoKit
         string $testTypeCode,
         Carbon $when
     ): void {
+        $this->completeAttemptedTest($application, $citizen, $examiner, $testTypeCode, TestResultStatus::Passed, 1, $when);
+    }
+
+    private function completeAttemptedTest(
+        LicenseApplication $application,
+        User $citizen,
+        User $examiner,
+        string $testTypeCode,
+        TestResultStatus $result,
+        int $attemptNumber,
+        Carbon $when,
+        AppointmentStatus $appointmentStatus = AppointmentStatus::Completed,
+    ): void {
         $testType = $this->testType($testTypeCode);
         $slot = $this->slotFor($testType, preferPast: true);
         $scheduledAt = $this->scheduledAt($slot, $when);
+
+        $resolvedStatus = $result === TestResultStatus::NoShow
+            ? AppointmentStatus::NoShow
+            : $appointmentStatus;
 
         $appointment = TestAppointment::query()->create([
             'application_id' => $application->id,
             'citizen_id' => $citizen->id,
             'appointment_slot_id' => $slot->id,
             'test_type_id' => $testType->id,
-            'status' => AppointmentStatus::Completed,
+            'status' => $resolvedStatus,
             'scheduled_at' => $scheduledAt,
             'cancelled_at' => null,
             'cancellation_reason' => null,
@@ -483,11 +1081,33 @@ final class CommitteeDemoKit
             'application_id' => $application->id,
             'test_appointment_id' => $appointment->id,
             'test_type_id' => $testType->id,
-            'result' => TestResultStatus::Passed,
-            'attempt_number' => 1,
-            'notes' => 'نتيجة تجريبية للجنة — اجتياز '.$testTypeCode,
+            'result' => $result,
+            'attempt_number' => $attemptNumber,
+            'notes' => 'نتيجة تجريبية للجنة — '.$result->value.' '.$testTypeCode.' #'.$attemptNumber,
             'recorded_by' => $examiner->id,
             'recorded_at' => $scheduledAt->copy()->addHours(2),
+        ]);
+    }
+
+    private function createCancelledAppointment(
+        LicenseApplication $application,
+        User $citizen,
+        string $testTypeCode,
+        Carbon $when,
+    ): TestAppointment {
+        $testType = $this->testType($testTypeCode);
+        $slot = $this->slotFor($testType, preferPast: true);
+        $scheduledAt = $this->scheduledAt($slot, $when);
+
+        return TestAppointment::query()->create([
+            'application_id' => $application->id,
+            'citizen_id' => $citizen->id,
+            'appointment_slot_id' => $slot->id,
+            'test_type_id' => $testType->id,
+            'status' => AppointmentStatus::Cancelled,
+            'scheduled_at' => $scheduledAt,
+            'cancelled_at' => $scheduledAt->copy()->subHours(3),
+            'cancellation_reason' => 'إلغاء تجريبي للجنة — عرض فلتر الملغى',
         ]);
     }
 

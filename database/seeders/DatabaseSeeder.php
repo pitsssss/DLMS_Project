@@ -32,7 +32,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         if (app()->environment(['local', 'testing'])) {
-            $this->call([LostReplacementTestCitizenSeeder::class]);
+            $this->call([
+                LostReplacementTestCitizenSeeder::class,
+                CommitteeDemoSeeder::class,
+            ]);
         }
     }
 }
