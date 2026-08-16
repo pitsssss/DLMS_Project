@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Otp;
 use App\Models\User;
 use App\Modules\Auth\Services\OtpService;
+use App\Services\Mail\BrevoDeliveryException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Delivers one persisted email OTP via SMTP. The plaintext code is required
+ * Delivers one persisted email OTP via Brevo HTTPS. The plaintext code is required
  * because otps.code is stored as a one-way hash and cannot be recovered.
  *
  * The job payload is encrypted at rest (ShouldBeEncrypted). Never log otpCode.
@@ -62,7 +63,23 @@ class SendOtpEmailJob implements ShouldBeEncrypted, ShouldQueueAfterCommit
             return;
         }
 
-        $otps->deliverQueuedOtpEmail($this->email, $this->otpCode, $this->expiresMinutes);
+        try {
+            $otps->deliverQueuedOtpEmail(
+                $this->email,
+                $this->otpCode,
+                $this->expiresMinutes,
+                $this->otpId,
+                $this->purpose,
+            );
+        } catch (BrevoDeliveryException $e) {
+            if (! $e->retryable && $this->job) {
+                $this->fail($e);
+
+                return;
+            }
+
+            throw $e;
+        }
     }
 
     public function failed(?Throwable $exception): void

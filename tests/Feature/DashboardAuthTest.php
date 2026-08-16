@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Hash;
@@ -21,6 +19,7 @@ class DashboardAuthTest extends TestCase
         parent::setUp();
         $this->seedDashboardRbac();
         $this->withoutMiddleware([ThrottleRequests::class]);
+        $this->fakeSuccessfulBrevoTransactionalEmail();
     }
 
     public function test_super_admin_can_login(): void

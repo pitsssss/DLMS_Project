@@ -20,6 +20,7 @@ class PasswordResetFlowTest extends TestCase
         parent::setUp();
         $this->seed(RolesSeeder::class);
         $this->withoutMiddleware([ThrottleRequests::class]);
+        $this->fakeSuccessfulBrevoTransactionalEmail();
     }
 
     public function test_forgot_password_returns_generic_success_when_user_exists(): void

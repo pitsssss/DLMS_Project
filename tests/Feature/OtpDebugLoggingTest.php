@@ -30,6 +30,7 @@ class OtpDebugLoggingTest extends TestCase
             'otp.fixed_code' => '123456',
         ]);
         Mail::fake();
+        $this->fakeSuccessfulBrevoTransactionalEmail();
     }
 
     private function startCapturingLogs(): void

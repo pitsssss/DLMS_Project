@@ -42,6 +42,7 @@ class RateLimitEvidenceTest extends TestCase
             FeesSeeder::class,
         ]);
         Cache::flush();
+        $this->fakeSuccessfulBrevoTransactionalEmail();
     }
 
     protected function tearDown(): void

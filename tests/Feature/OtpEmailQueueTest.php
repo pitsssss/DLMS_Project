@@ -9,18 +9,23 @@ use App\Models\Otp;
 use App\Models\User;
 use App\Modules\Auth\Services\AuthService;
 use App\Modules\Auth\Services\OtpService;
+use App\Services\Mail\BrevoDeliveryException;
+use App\Services\Mail\BrevoErrorCategory;
+use App\Services\Mail\BrevoTransactionalEmailClient;
 use Database\Seeders\PermissionsSeeder;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Log\Events\MessageLogged;
-use Illuminate\Mail\PendingMail;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
@@ -47,6 +52,7 @@ class OtpEmailQueueTest extends TestCase
     {
         Queue::fake();
         Mail::fake();
+        Http::fake();
 
         $email = 'queue-register@example.com';
 
@@ -67,6 +73,7 @@ class OtpEmailQueueTest extends TestCase
         ]);
 
         Mail::assertNothingSent();
+        Http::assertNothingSent();
         Queue::assertPushedOn('mail', SendOtpEmailJob::class);
         Queue::assertPushed(SendOtpEmailJob::class, function (SendOtpEmailJob $job) use ($email): bool {
             $otp = Otp::query()->where('email', $email)->first();
@@ -84,17 +91,20 @@ class OtpEmailQueueTest extends TestCase
     {
         Queue::fake();
         Mail::fake();
+        Http::fake();
 
         $this->postJson('/api/auth/register', $this->registerPayload('fast-register@example.com'))
             ->assertCreated();
 
         Mail::assertNothingSent();
+        Http::assertNothingSent();
         Queue::assertPushed(SendOtpEmailJob::class);
     }
 
     public function test_otp_mail_job_sends_existing_bilingual_otp_mailable(): void
     {
         Mail::fake();
+        $this->fakeSuccessfulBrevoTransactionalEmail();
 
         $user = User::factory()->create([
             'name' => 'Lina',
@@ -120,20 +130,36 @@ class OtpEmailQueueTest extends TestCase
 
         $job->handle(app(OtpService::class));
 
-        Mail::assertSent(OtpMail::class, function (OtpMail $mail) use ($user): bool {
-            $html = $mail->render();
+        $expected = new OtpMail(
+            otpCode: '123456',
+            expiresMinutes: 10,
+            userName: 'Lina',
+        );
 
-            return $mail->hasTo($user->email)
-                && $mail->expiresMinutes === 10
-                && $mail->userName === 'Lina'
-                && str_contains($html, 'تأكيد البريد الإلكتروني')
-                && str_contains($html, 'Verify Your Email Address');
+        Mail::assertNothingSent();
+        Http::assertSent(function (Request $request) use ($user, $expected): bool {
+            $body = $request->data();
+
+            return $request->url() === BrevoTransactionalEmailClient::SEND_URL
+                && $request->method() === 'POST'
+                && $request->hasHeader('api-key')
+                && $request->hasHeader('Accept')
+                && data_get($body, 'sender.email') === config('services.brevo.sender_email')
+                && data_get($body, 'sender.name') === config('services.brevo.sender_name')
+                && data_get($body, 'to.0.email') === $user->email
+                && data_get($body, 'subject') === $expected->subjectLine()
+                && data_get($body, 'htmlContent') === $expected->render()
+                && data_get($body, 'textContent') === $expected->renderText()
+                && str_contains((string) data_get($body, 'htmlContent'), 'تأكيد البريد الإلكتروني')
+                && str_contains((string) data_get($body, 'htmlContent'), 'Verify Your Email Address');
         });
+        Http::assertSentCount(1);
     }
 
     public function test_rolled_back_registration_does_not_dispatch_otp_mail_job(): void
     {
         Mail::fake();
+        Http::fake();
 
         $queued = 0;
         Event::listen(JobQueued::class, function () use (&$queued): void {
@@ -149,13 +175,21 @@ class OtpEmailQueueTest extends TestCase
 
         $this->assertSame(0, $queued);
         Mail::assertNothingSent();
+        Http::assertNothingSent();
         $this->assertDatabaseMissing('users', ['email' => $email]);
         $this->assertDatabaseMissing('otps', ['email' => $email]);
     }
 
-    public function test_smtp_failure_in_job_does_not_roll_back_committed_registration(): void
+    public function test_provider_failure_in_job_does_not_roll_back_committed_registration(): void
     {
         Queue::fake();
+        Mail::fake();
+        Http::fake([
+            BrevoTransactionalEmailClient::SEND_URL => Http::response([
+                'code' => 'failure',
+                'message' => 'provider unavailable',
+            ], 500),
+        ]);
 
         $email = 'smtp-fail@example.com';
 
@@ -171,17 +205,16 @@ class OtpEmailQueueTest extends TestCase
 
         $this->assertInstanceOf(SendOtpEmailJob::class, $job);
 
-        $pending = Mockery::mock(PendingMail::class);
-        $pending->shouldReceive('send')->once()->andThrow(new RuntimeException('SMTP timeout'));
-        Mail::shouldReceive('to')->once()->andReturn($pending);
-
         try {
             $job->handle(app(OtpService::class));
-            $this->fail('Expected the mail job to throw on SMTP failure.');
-        } catch (RuntimeException $e) {
-            $this->assertSame('SMTP timeout', $e->getMessage());
+            $this->fail('Expected the mail job to throw on Brevo failure.');
+        } catch (BrevoDeliveryException $e) {
+            $this->assertTrue($e->retryable);
+            $this->assertSame(BrevoErrorCategory::Server, $e->category);
+            $this->assertStringNotContainsString((string) config('services.brevo.api_key'), $e->getMessage());
         }
 
+        Mail::assertNothingSent();
         $this->assertDatabaseHas('users', [
             'email' => $email,
             'is_active' => false,
@@ -212,13 +245,15 @@ class OtpEmailQueueTest extends TestCase
     public function test_register_otp_verification_still_succeeds_after_queued_delivery(): void
     {
         Mail::fake();
+        $this->fakeSuccessfulBrevoTransactionalEmail();
 
         $email = 'verify-queued@example.com';
 
         $this->postJson('/api/auth/register', $this->registerPayload($email))
             ->assertCreated();
 
-        Mail::assertSent(OtpMail::class);
+        Mail::assertNothingSent();
+        Http::assertSent(fn (Request $request): bool => $request->url() === BrevoTransactionalEmailClient::SEND_URL);
 
         $this->postJson('/api/auth/verify-otp', [
             'email' => $email,
@@ -235,6 +270,7 @@ class OtpEmailQueueTest extends TestCase
     {
         Queue::fake();
         Mail::fake();
+        Http::fake();
 
         $user = User::factory()->create(['email' => 'forgot-queue@example.com']);
 
@@ -244,6 +280,7 @@ class OtpEmailQueueTest extends TestCase
             ->assertJsonPath('message', __('messages.auth.forgot_sent'));
 
         Mail::assertNothingSent();
+        Http::assertNothingSent();
         Queue::assertPushedOn('mail', SendOtpEmailJob::class);
         Queue::assertPushed(SendOtpEmailJob::class, function (SendOtpEmailJob $job) use ($user): bool {
             return $job->email === $user->email
@@ -273,6 +310,7 @@ class OtpEmailQueueTest extends TestCase
     {
         Queue::fake();
         Mail::fake();
+        Http::fake();
 
         $employee = User::factory()->dashboardEmployee('settings_employee')->create([
             'email' => 'dash-forgot-queue@test.sy',
@@ -283,6 +321,7 @@ class OtpEmailQueueTest extends TestCase
             ->assertJsonPath('message', __('messages.dashboard.forgot_password_sent'));
 
         Mail::assertNothingSent();
+        Http::assertNothingSent();
         Queue::assertPushed(SendOtpEmailJob::class, function (SendOtpEmailJob $job) use ($employee): bool {
             return $job->email === $employee->email
                 && $job->purpose === OtpPurpose::DashboardForgotPassword->value;
@@ -292,6 +331,7 @@ class OtpEmailQueueTest extends TestCase
     public function test_stale_otp_job_does_not_send_mail(): void
     {
         Mail::fake();
+        Http::fake();
 
         $otp = Otp::query()->create([
             'email' => 'stale-otp@example.com',
@@ -314,6 +354,7 @@ class OtpEmailQueueTest extends TestCase
         $job->handle(app(OtpService::class));
 
         Mail::assertNothingSent();
+        Http::assertNothingSent();
     }
 
     public function test_failed_job_logs_safe_identifiers_only(): void
@@ -393,6 +434,140 @@ class OtpEmailQueueTest extends TestCase
         $this->assertSame(60, $job->timeout);
         $this->assertSame('mail', $job->queue);
         $this->assertArrayNotHasKey('otpCode', $job->__debugInfo());
+    }
+
+    public function test_provider_4xx_failure_does_not_retry_or_roll_back_otp(): void
+    {
+        Mail::fake();
+        Http::fake([
+            BrevoTransactionalEmailClient::SEND_URL => Http::response([
+                'code' => 'invalid_parameter',
+                'message' => 'invalid sender',
+            ], 400),
+        ]);
+
+        [$job, $email] = $this->makeQueuedRegisterJob('brevo-4xx@example.com');
+
+        try {
+            $job->handle(app(OtpService::class));
+            $this->fail('Expected a non-retryable Brevo validation failure.');
+        } catch (BrevoDeliveryException $e) {
+            $this->assertFalse($e->retryable);
+            $this->assertSame(BrevoErrorCategory::Validation, $e->category);
+            $this->assertSame(400, $e->httpStatus);
+        }
+
+        Mail::assertNothingSent();
+        $this->assertDatabaseHas('users', ['email' => $email, 'is_active' => false]);
+        $this->assertDatabaseHas('otps', ['email' => $email, 'purpose' => OtpPurpose::Register->value]);
+    }
+
+    public function test_provider_5xx_failure_is_retryable_and_does_not_roll_back_otp(): void
+    {
+        Mail::fake();
+        Http::fake([
+            BrevoTransactionalEmailClient::SEND_URL => Http::response(['message' => 'unavailable'], 503),
+        ]);
+
+        [$job, $email] = $this->makeQueuedRegisterJob('brevo-5xx@example.com');
+
+        try {
+            $job->handle(app(OtpService::class));
+            $this->fail('Expected a retryable Brevo server failure.');
+        } catch (BrevoDeliveryException $e) {
+            $this->assertTrue($e->retryable);
+            $this->assertSame(BrevoErrorCategory::Server, $e->category);
+            $this->assertSame(503, $e->httpStatus);
+        }
+
+        $this->assertSame(3, $job->tries);
+        $this->assertSame([30, 120, 300], $job->backoff);
+        Mail::assertNothingSent();
+        $this->assertDatabaseHas('users', ['email' => $email, 'is_active' => false]);
+        $this->assertDatabaseHas('otps', ['email' => $email, 'purpose' => OtpPurpose::Register->value]);
+    }
+
+    public function test_provider_timeout_does_not_roll_back_otp(): void
+    {
+        Mail::fake();
+        Http::fake(function () {
+            throw new ConnectionException('cURL error 28: Operation timed out after 15000 milliseconds');
+        });
+
+        [$job, $email] = $this->makeQueuedRegisterJob('brevo-timeout@example.com');
+
+        try {
+            $job->handle(app(OtpService::class));
+            $this->fail('Expected a retryable Brevo timeout.');
+        } catch (BrevoDeliveryException $e) {
+            $this->assertTrue($e->retryable);
+            $this->assertSame(BrevoErrorCategory::Timeout, $e->category);
+        }
+
+        Mail::assertNothingSent();
+        $this->assertDatabaseHas('users', ['email' => $email, 'is_active' => false]);
+        $this->assertDatabaseHas('otps', ['email' => $email, 'purpose' => OtpPurpose::Register->value]);
+    }
+
+    public function test_delivery_logs_and_errors_do_not_leak_api_key_or_otp(): void
+    {
+        $secret = 'test-secret-brevo-key-do-not-leak';
+        config(['services.brevo.api_key' => $secret]);
+
+        Mail::fake();
+        Http::fake([
+            BrevoTransactionalEmailClient::SEND_URL => Http::response([
+                'code' => 'unauthorized',
+                'message' => 'Key not found',
+            ], 401),
+        ]);
+
+        [$job] = $this->makeQueuedRegisterJob('brevo-leak@example.com');
+
+        $logged = [];
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logged): void {
+            $logged[] = [
+                'message' => $event->message,
+                'context' => $event->context,
+            ];
+        });
+
+        try {
+            $job->handle(app(OtpService::class));
+            $this->fail('Expected authentication failure.');
+        } catch (BrevoDeliveryException $e) {
+            $this->assertStringNotContainsString($secret, $e->getMessage());
+            $this->assertStringNotContainsString('123456', $e->getMessage());
+        }
+
+        $encoded = json_encode($logged, JSON_UNESCAPED_UNICODE);
+        $this->assertIsString($encoded);
+        $this->assertStringNotContainsString($secret, $encoded);
+        $this->assertStringNotContainsString('123456', $encoded);
+        $this->assertStringNotContainsString('htmlContent', $encoded);
+        $this->assertStringNotContainsString('api-key', $encoded);
+    }
+
+    /**
+     * @return array{0: SendOtpEmailJob, 1: string}
+     */
+    private function makeQueuedRegisterJob(string $email): array
+    {
+        Queue::fake();
+
+        $this->postJson('/api/auth/register', $this->registerPayload($email))
+            ->assertCreated();
+
+        $job = null;
+        Queue::assertPushed(SendOtpEmailJob::class, function (SendOtpEmailJob $pushed) use (&$job): bool {
+            $job = $pushed;
+
+            return true;
+        });
+
+        $this->assertInstanceOf(SendOtpEmailJob::class, $job);
+
+        return [$job, $email];
     }
 
     /**

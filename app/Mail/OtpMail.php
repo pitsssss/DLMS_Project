@@ -32,4 +32,23 @@ class OtpMail extends Mailable
             text: 'emails.otp-plain',
         );
     }
+
+    public function subjectLine(): string
+    {
+        return (string) $this->envelope()->subject;
+    }
+
+    public function renderText(): string
+    {
+        $text = $this->content()->text;
+        if (! is_string($text) || $text === '') {
+            return '';
+        }
+
+        return view($text, [
+            'otpCode' => $this->otpCode,
+            'expiresMinutes' => $this->expiresMinutes,
+            'userName' => $this->userName,
+        ])->render();
+    }
 }

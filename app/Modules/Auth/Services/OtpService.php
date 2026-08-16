@@ -8,14 +8,20 @@ use App\Jobs\SendOtpEmailJob;
 use App\Mail\OtpMail;
 use App\Models\Otp;
 use App\Models\User;
+use App\Services\Mail\BrevoDeliveryException;
+use App\Services\Mail\BrevoErrorCategory;
+use App\Services\Mail\BrevoTransactionalEmailClient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class OtpService
 {
+    public function __construct(
+        private readonly BrevoTransactionalEmailClient $brevo,
+    ) {}
+
     public function expiryMinutes(): int
     {
         return max(1, (int) config('otp.expires_minutes', 10));
@@ -66,7 +72,7 @@ class OtpService
 
     /**
      * Create a fresh email OTP and queue delivery of the plain code via mail.
-     * SMTP I/O runs on the worker. Queue dispatch failures surface as API 503.
+     * Brevo HTTPS I/O runs on the worker. Queue dispatch failures surface as API 503.
      */
     public function sendEmailOtp(string $email, OtpPurpose $purpose): void
     {
@@ -102,17 +108,77 @@ class OtpService
     }
 
     /**
-     * Compose and send the existing OTP mailable. Invoked by {@see SendOtpEmailJob}.
+     * Render the existing OTP mailable and deliver it through Brevo HTTPS.
+     * Invoked by {@see SendOtpEmailJob}. Does not use SMTP.
      */
-    public function deliverQueuedOtpEmail(string $email, string $plainCode, int $expiresMinutes): void
-    {
-        $displayName = User::query()->where('email', $email)->value('name');
+    public function deliverQueuedOtpEmail(
+        string $email,
+        string $plainCode,
+        int $expiresMinutes,
+        int $otpId,
+        string $purpose,
+    ): void {
+        $user = User::query()->where('email', $email)->first(['id', 'name']);
 
-        Mail::to($email)->send(new OtpMail(
+        $mailable = new OtpMail(
             otpCode: $plainCode,
             expiresMinutes: $expiresMinutes,
-            userName: $displayName,
-        ));
+            userName: $user?->name,
+        );
+
+        try {
+            $result = $this->brevo->send(
+                to: $email,
+                subject: $mailable->subjectLine(),
+                html: $mailable->render(),
+                text: $mailable->renderText(),
+            );
+        } catch (BrevoDeliveryException $e) {
+            Log::warning('otp.email_delivery_failed', [
+                'job' => SendOtpEmailJob::class,
+                'otp_id' => $otpId,
+                'user_id' => $user?->id,
+                'purpose' => $purpose,
+                'provider' => 'brevo',
+                'http_status' => $e->httpStatus,
+                'category' => $e->category->value,
+            ]);
+
+            throw $e;
+        }
+
+        if ($result->success) {
+            Log::info('otp.email_delivered', [
+                'job' => SendOtpEmailJob::class,
+                'otp_id' => $otpId,
+                'user_id' => $user?->id,
+                'purpose' => $purpose,
+                'provider' => 'brevo',
+                'http_status' => $result->httpStatus,
+                'message_id' => $result->messageId,
+            ]);
+
+            return;
+        }
+
+        Log::warning('otp.email_delivery_failed', [
+            'job' => SendOtpEmailJob::class,
+            'otp_id' => $otpId,
+            'user_id' => $user?->id,
+            'purpose' => $purpose,
+            'provider' => 'brevo',
+            'http_status' => $result->httpStatus,
+            'category' => $result->category?->value,
+            'transport_reason' => $result->transportReason,
+        ]);
+
+        throw new BrevoDeliveryException(
+            'Brevo transactional email delivery failed ('.($result->category?->value ?? 'unknown').').',
+            retryable: $result->retryable,
+            category: $result->category ?? BrevoErrorCategory::Unknown,
+            httpStatus: $result->httpStatus,
+            messageId: $result->messageId,
+        );
     }
 
     public function verifyEmailOtp(string $email, string $code, OtpPurpose $purpose): bool

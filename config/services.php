@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+        'sender_email' => env('BREVO_SENDER_EMAIL'),
+        'sender_name' => env('BREVO_SENDER_NAME', 'SYRTAK'),
+        'connect_timeout_seconds' => 5,
+        'timeout_seconds' => 15,
+    ],
+
 ];
