@@ -4,6 +4,7 @@ namespace App\Modules\Auth\Services;
 
 use App\Enums\OtpPurpose;
 use App\Exceptions\ApiException;
+use App\Jobs\SendOtpEmailJob;
 use App\Mail\OtpMail;
 use App\Models\Otp;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class OtpService
 {
@@ -63,7 +65,8 @@ class OtpService
     }
 
     /**
-     * Create a fresh email OTP and deliver the plain code via mail. Rolls back the OTP row if sending fails.
+     * Create a fresh email OTP and queue delivery of the plain code via mail.
+     * SMTP I/O runs on the worker. Queue dispatch failures surface as API 503.
      */
     public function sendEmailOtp(string $email, OtpPurpose $purpose): void
     {
@@ -78,19 +81,38 @@ class OtpService
         $otp = $this->storeEmailOtpRecord($email, $purpose, $plain);
 
         try {
-            $displayName = User::query()->where('email', $email)->value('name');
-
-            Mail::to($email)->send(new OtpMail(
+            SendOtpEmailJob::dispatch(
+                otpId: $otp->id,
+                email: $email,
+                purpose: $purpose->value,
                 otpCode: $plain,
                 expiresMinutes: $this->expiryMinutes(),
-                userName: $displayName,
-            ));
-        } catch (\Throwable $e) {
-            Log::error('Failed to send OTP email.', ['email' => $email, 'exception' => $e->getMessage()]);
+            );
+        } catch (Throwable $e) {
+            Log::error('otp.email_job_dispatch_failed', [
+                'otp_id' => $otp->id,
+                'purpose' => $purpose->value,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
             $otp->delete();
 
             throw new ApiException('messages.auth.otp_send_failed', 503);
         }
+    }
+
+    /**
+     * Compose and send the existing OTP mailable. Invoked by {@see SendOtpEmailJob}.
+     */
+    public function deliverQueuedOtpEmail(string $email, string $plainCode, int $expiresMinutes): void
+    {
+        $displayName = User::query()->where('email', $email)->value('name');
+
+        Mail::to($email)->send(new OtpMail(
+            otpCode: $plainCode,
+            expiresMinutes: $expiresMinutes,
+            userName: $displayName,
+        ));
     }
 
     public function verifyEmailOtp(string $email, string $code, OtpPurpose $purpose): bool

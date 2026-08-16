@@ -423,7 +423,7 @@ class PushProductionCertificationTest extends TestCase
 
         $this->assertStringContainsString('exec /usr/bin/supervisord', $entrypoint);
         $this->assertStringContainsString('[program:queue-push]', $supervisor);
-        $this->assertStringContainsString('queue:work --queue=push,default', $supervisor);
+        $this->assertStringContainsString('queue:work --queue=push,mail,default', $supervisor);
         $this->assertStringContainsString('--timeout=60', $supervisor);
         $this->assertStringContainsString('autostart=true', $supervisor);
         $this->assertStringContainsString('autorestart=true', $supervisor);
