@@ -59,7 +59,7 @@ class CitizenUserSeeder extends Seeder
             [
                 'email' => 'elinef12it@gmail.com',
                 'phone' => '0936502002',
-                'name' => 'فاطمة سمر العطار',
+                'name' => 'ايلين نضال فرمند',
                 'national_id' => '02020034567',
                 'password' => 'password',
                 'birth_date' => '1998-11-05',

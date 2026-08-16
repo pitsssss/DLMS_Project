@@ -36,6 +36,11 @@ class RequiredDocumentsSeeder extends Seeder
             ['name' => 'صورة الرخصة التالفة أو إثبات التلف', 'code' => 'damaged_license_proof'],
             ['name' => 'صورة شخصية حديثة', 'code' => 'recent_personal_photo'],
         ], $extensions);
+
+        $this->seedForService('license_unblock', [
+            ['name' => 'صورة عن الهوية الشخصية', 'code' => 'national_id_copy'],
+            ['name' => 'إشعار تسوية الغرامات أو ما يثبت انتفاء المانع', 'code' => 'fine_clearance'],
+        ], $extensions);
     }
 
     /**

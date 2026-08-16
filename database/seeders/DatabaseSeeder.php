@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             EmployeeUserSeeder::class,
             CitizenUserSeeder::class,
-            LicenseApplicationSeeder::class,
+            FullLifecycleSeeder::class,
             DashboardDocumentReviewDemoSeeder::class,
             DemoLicenseServiceTestingSeeder::class,
             DashboardCitizenLicensesFinesDemoSeeder::class,
