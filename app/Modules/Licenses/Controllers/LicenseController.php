@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Modules\Licenses\Requests\ReplacementLicenseRequest;
 use App\Modules\Applications\Services\LicenseServiceEligibilityService;
 use App\Modules\Licenses\Resources\LicenseResource;
+use App\Modules\Licenses\Services\LicensePrintService;
 use App\Modules\Licenses\Services\LicenseService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class LicenseController extends Controller
 {
@@ -43,6 +45,22 @@ class LicenseController extends Controller
             new LicenseResource($model),
             'messages.licenses.retrieved'
         );
+    }
+
+    public function download(
+        Request $request,
+        int $license,
+        LicenseService $licenses,
+        LicensePrintService $printer
+    ): Response {
+        $model = $licenses->showForCitizen($request->user(), $license);
+        $result = $printer->downloadPdf($request->user(), $model);
+
+        return response($result['binary'], 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$result['filename'].'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function renew(Request $request, int $license, LicenseService $licenses)

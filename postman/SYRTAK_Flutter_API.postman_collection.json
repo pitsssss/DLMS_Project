@@ -5293,6 +5293,60 @@
           ]
         },
         {
+          "name": "Download License PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/pdf",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{app_language}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/licenses/{{license_id}}/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "licenses",
+                "{{license_id}}",
+                "download"
+              ]
+            },
+            "description": "Purpose:\nCitizen-authenticated PDF download of the official SYRTAK ID-1 license credential (front + back).\n\nAuth:\n- Sanctum bearer token\n- citizen boundary\n- ownership: license.citizen_id must match the authenticated citizen (foreign id returns the same not-found as GET /licenses/{id})\n\nResponse:\n- 200 application/pdf attachment (SYRTAK-License-{number}.pdf)\n- 401 unauthenticated\n- 404 not owned / missing\n\nFlutter usage:\nSave the binary PDF. Do not treat this as a cacheable public document URL.\nQR payload remains the public verification frontend URL + token."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PDF download succeeds', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test('Content-Type is PDF', function () {",
+                  "  const ct = pm.response.headers.get('Content-Type') || '';",
+                  "  pm.expect(ct).to.include('application/pdf');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Verify License (Public)",
           "request": {
             "method": "GET",

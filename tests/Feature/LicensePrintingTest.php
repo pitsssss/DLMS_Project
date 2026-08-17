@@ -169,6 +169,11 @@ class LicensePrintingTest extends TestCase
             parse_url((string) $details['verification']['url'], PHP_URL_PATH)
         );
         $this->assertStringNotContainsString($license->license_number, (string) $details['verification']['url']);
+        $this->assertGreaterThan(2000, strlen($response->getContent()));
+        $this->assertArrayHasKey('is_valid', $details['digital_license']);
+        $this->assertTrue($details['digital_license']['is_valid']);
+        $this->assertArrayHasKey('labels', $details['digital_license']);
+        $this->assertArrayHasKey('has_portrait', $details['digital_license']);
     }
 
     public function test_qr_url_uses_configured_public_verification_url_and_appends_token(): void

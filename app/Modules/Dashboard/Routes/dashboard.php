@@ -224,6 +224,8 @@ Route::prefix('dashboard')
             Route::get('/licenses/{license}', [DashboardIssuedLicenseController::class, 'show'])->whereNumber('license');
             Route::get('/licenses/{license}/history', [DashboardIssuedLicenseController::class, 'history'])->whereNumber('license');
             Route::get('/licenses/{license}/audit-logs', [DashboardIssuedLicenseController::class, 'auditLogs'])->whereNumber('license');
+            Route::get('/licenses/{license}/portrait', [DashboardIssuedLicenseController::class, 'portrait'])
+                ->whereNumber('license');
             Route::post('/licenses/{license}/print', [DashboardIssuedLicenseController::class, 'print'])
                 ->whereNumber('license')
                 ->middleware('throttle:30,1');

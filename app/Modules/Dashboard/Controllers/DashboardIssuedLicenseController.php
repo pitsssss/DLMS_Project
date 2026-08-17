@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Modules\Dashboard\Requests\BlockDashboardLicenseRequest;
 use App\Modules\Dashboard\Requests\ListDashboardLicensesRequest;
 use App\Modules\Dashboard\Services\DashboardIssuedLicenseService;
+use App\Exceptions\ApiException;
 use App\Modules\Licenses\Services\LicensePrintService;
 use App\Modules\Licenses\Services\LicenseService;
+use App\Modules\Licenses\Support\LicensePortraitResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class DashboardIssuedLicenseController extends Controller
@@ -124,6 +127,28 @@ class DashboardIssuedLicenseController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$result['filename'].'"',
             'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function portrait(
+        int $license,
+        DashboardIssuedLicenseService $issued,
+        LicensePortraitResolver $portraits
+    ): BinaryFileResponse {
+        $model = $issued->getLicense($license);
+        $resolved = $portraits->resolve($model);
+
+        if ($resolved === null) {
+            throw new ApiException('messages.licenses.portrait_unavailable', 404);
+        }
+
+        $filename = preg_replace('/[^\w.\-\p{L}\p{N} ]+/u', '_', $resolved['filename']) ?: 'portrait';
+
+        return response()->file($resolved['path'], [
+            'Content-Type' => $resolved['mime'],
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
         ]);
     }
 

@@ -148,6 +148,10 @@ Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): voi
 
     Route::get('/licenses/{license}', [LicenseController::class, 'show'])->whereNumber('license');
 
+    Route::post('/licenses/{license}/download', [LicenseController::class, 'download'])
+        ->whereNumber('license')
+        ->middleware('throttle:15,1');
+
     Route::get('/fines', [FineController::class, 'index']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);

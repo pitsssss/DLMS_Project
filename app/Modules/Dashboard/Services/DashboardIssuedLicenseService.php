@@ -565,6 +565,7 @@ class DashboardIssuedLicenseService
             'license.unblocked' => Msg::get('licenses.actions.unblocked'),
             'license.expired' => Msg::get('licenses.actions.expired'),
             'license.printed' => Msg::get('licenses.actions.printed'),
+            'license.downloaded' => Msg::get('licenses.actions.downloaded'),
             default => EmployeeMessageTranslator::get('employee.audit.actions.'.str_replace('license.', '', $action)),
         };
     }
