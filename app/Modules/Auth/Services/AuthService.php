@@ -80,9 +80,9 @@ class AuthService
 
     public function verifyForgotPasswordOtp(string $email, string $code): array
     {
-        return DB::transaction(function () use ($email, $code) {
-            $this->otps->verifyEmailOtp($email, $code, OtpPurpose::ForgotPassword);
+        $this->otps->verifyEmailOtp($email, $code, OtpPurpose::ForgotPassword);
 
+        return DB::transaction(function () use ($email) {
             $user = $this->users->findByEmail($email);
             if (! $user) {
                 throw new ApiException('messages.auth.user_not_found', 404);

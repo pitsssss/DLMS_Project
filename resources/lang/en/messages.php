@@ -53,6 +53,7 @@ return [
         'otp_invalid' => 'The verification code is invalid or has expired.',
         'otp_expired' => 'The verification code has expired. Please request a new one.',
         'otp_wrong' => 'The verification code is incorrect.',
+        'otp_attempts_exceeded' => 'Too many incorrect verification attempts. Request a new verification code.',
     ],
 
     'profile' => [

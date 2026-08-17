@@ -12,6 +12,7 @@ use App\Services\Mail\BrevoDeliveryException;
 use App\Services\Mail\BrevoErrorCategory;
 use App\Services\Mail\BrevoTransactionalEmailClient;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -25,6 +26,11 @@ class OtpService
     public function expiryMinutes(): int
     {
         return max(1, (int) config('otp.expires_minutes', 10));
+    }
+
+    public function maxAttempts(): int
+    {
+        return max(1, (int) config('otp.max_attempts', 5));
     }
 
     public function generateCode(): string
@@ -183,29 +189,55 @@ class OtpService
 
     public function verifyEmailOtp(string $email, string $code, OtpPurpose $purpose): bool
     {
-        $otp = Otp::query()
-            ->where('email', $email)
-            ->where('purpose', $purpose)
-            ->whereNull('verified_at')
-            ->latest('id')
-            ->first();
+        $outcome = DB::transaction(function () use ($email, $code, $purpose): string {
+            $otp = Otp::query()
+                ->where('email', $email)
+                ->where('purpose', $purpose)
+                ->whereNull('verified_at')
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
 
-        if (! $otp) {
-            throw new ApiException('messages.auth.otp_invalid', 422);
-        }
+            if ($otp === null) {
+                return 'invalid';
+            }
 
-        if ($otp->expires_at->isPast()) {
-            throw new ApiException('messages.auth.otp_expired', 422);
-        }
+            if ($otp->invalidated_at !== null) {
+                return 'attempts_exceeded';
+            }
 
-        if (! Hash::check($code, $otp->code)) {
-            throw new ApiException('messages.auth.otp_wrong', 422);
-        }
+            if ($otp->expires_at->isPast()) {
+                return 'expired';
+            }
 
-        $otp->verified_at = Carbon::now();
-        $otp->save();
+            if (! Hash::check($code, $otp->code)) {
+                $otp->failed_attempts = (int) $otp->failed_attempts + 1;
 
-        return true;
+                if ($otp->failed_attempts >= $this->maxAttempts()) {
+                    $otp->invalidated_at = Carbon::now();
+                    $otp->save();
+
+                    return 'attempts_exceeded';
+                }
+
+                $otp->save();
+
+                return 'wrong';
+            }
+
+            $otp->verified_at = Carbon::now();
+            $otp->save();
+
+            return 'success';
+        });
+
+        return match ($outcome) {
+            'success' => true,
+            'wrong' => throw new ApiException('messages.auth.otp_wrong', 422),
+            'attempts_exceeded' => throw new ApiException('messages.auth.otp_attempts_exceeded', 422),
+            'expired' => throw new ApiException('messages.auth.otp_expired', 422),
+            default => throw new ApiException('messages.auth.otp_invalid', 422),
+        };
     }
 
     /**

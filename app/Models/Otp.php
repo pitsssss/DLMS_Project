@@ -14,6 +14,8 @@ class Otp extends Model
         'purpose',
         'expires_at',
         'verified_at',
+        'failed_attempts',
+        'invalidated_at',
     ];
 
     protected function casts(): array
@@ -22,6 +24,8 @@ class Otp extends Model
             'purpose' => OtpPurpose::class,
             'expires_at' => 'datetime',
             'verified_at' => 'datetime',
+            'failed_attempts' => 'integer',
+            'invalidated_at' => 'datetime',
         ];
     }
 }

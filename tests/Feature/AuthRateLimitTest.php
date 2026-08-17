@@ -11,6 +11,7 @@ use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\InteractsWithDashboard;
 use Tests\TestCase;
 
@@ -211,7 +212,7 @@ class AuthRateLimitTest extends TestCase
         $user = $this->citizenUser('otp-verify@example.com');
         app(OtpService::class)->sendEmailOtp($user->email, OtpPurpose::Register);
 
-        for ($i = 0; $i < AuthRateLimiter::REGISTRATION_OTP_PER_EMAIL; $i++) {
+        for ($i = 0; $i < AuthRateLimiter::REGISTRATION_OTP_PER_EMAIL - 1; $i++) {
             $this->postJson('/api/auth/verify-otp', [
                 'email' => $user->email,
                 'code' => '000000',
@@ -354,7 +355,7 @@ class AuthRateLimitTest extends TestCase
         }
     }
 
-    private function assertTooManyRequests(\Illuminate\Testing\TestResponse $response): void
+    private function assertTooManyRequests(TestResponse $response): void
     {
         $response->assertStatus(429)
             ->assertJsonPath('success', false)

@@ -101,9 +101,9 @@ class DashboardAuthService
      */
     public function verifyForgotPasswordOtp(string $email, string $code): array
     {
-        return DB::transaction(function () use ($email, $code) {
-            $this->otps->verifyEmailOtp($email, $code, OtpPurpose::DashboardForgotPassword);
+        $this->otps->verifyEmailOtp($email, $code, OtpPurpose::DashboardForgotPassword);
 
+        return DB::transaction(function () use ($email) {
             $user = $this->users->findByEmail($email);
             if ($user === null || ! $user->isDashboardUser() || $user->isCitizen()) {
                 throw new ApiException('messages.dashboard.invalid_credentials', 422);
