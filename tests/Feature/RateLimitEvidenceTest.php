@@ -123,6 +123,86 @@ class RateLimitEvidenceTest extends TestCase
             ->assertStatus(429);
     }
 
+    public function test_citizen_login_returns_429_after_configured_limit(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'rate-login@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ])->assertStatus(401);
+        }
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
+    }
+
+    public function test_dashboard_login_returns_429_after_configured_limit(): void
+    {
+        $employee = User::factory()->dashboardEmployee('fines_employee')->create([
+            'email' => 'rate-dash-login@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/dashboard/auth/login', [
+                'email' => $employee->email,
+                'password' => 'wrong-password',
+            ])->assertStatus(401);
+        }
+
+        $this->postJson('/api/dashboard/auth/login', [
+            'email' => $employee->email,
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
+    }
+
+    public function test_citizen_register_returns_429_after_configured_limit(): void
+    {
+        $payload = [
+            'name' => 'Rate Limit',
+            'email' => 'rate-register@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ];
+
+        $this->postJson('/api/auth/register', $payload)->assertCreated();
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->postJson('/api/auth/register', $payload)->assertStatus(422);
+        }
+
+        $this->postJson('/api/auth/register', $payload)->assertStatus(429);
+    }
+
+    public function test_registration_otp_verify_returns_429_after_configured_limit(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'rate-otp@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/auth/verify-otp', [
+                'email' => $user->email,
+                'code' => '000000',
+                'purpose' => 'register',
+            ])->assertStatus(422);
+        }
+
+        $this->postJson('/api/auth/verify-otp', [
+            'email' => $user->email,
+            'code' => '000000',
+            'purpose' => 'register',
+        ])->assertStatus(429);
+    }
+
     private function citizenInPaymentPending(): array
     {
         $citizen = User::factory()->withApprovedProfile()->create([

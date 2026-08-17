@@ -267,6 +267,7 @@ class DashboardDocumentReviewService
             ApplicationStatus::Approved,
             ApplicationStatus::AdministrativeReview,
             ApplicationStatus::LicenseIssued,
+            ApplicationStatus::Completed,
         ];
     }
 

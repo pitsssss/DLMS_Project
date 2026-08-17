@@ -3,8 +3,11 @@
 namespace App\Modules\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Applications\Services\ApplicationUnblockService;
+use App\Modules\Dashboard\Requests\RejectDashboardApplicationRequest;
 use App\Modules\Dashboard\Resources\DashboardApplicationResource;
 use App\Modules\Dashboard\Services\DashboardApplicationService;
+use App\Modules\Licenses\Resources\LicenseResource;
 use Illuminate\Http\Request;
 use App\Modules\Dashboard\Resources\DashboardApplicationDetailsResource;
 class DashboardApplicationController extends Controller
@@ -41,6 +44,36 @@ class DashboardApplicationController extends Controller
         return $this->employeeSuccessResponse(
             (new DashboardApplicationDetailsResource($application))->resolve(),
             'employee.applications.details_retrieved'
+        );
+    }
+
+    public function unblockLicense(
+        Request $request,
+        int $application,
+        ApplicationUnblockService $unblockService,
+    ) {
+        $result = $unblockService->unblockFromApplication($request->user(), $application);
+
+        return $this->employeeSuccessResponse([
+            'application' => (new DashboardApplicationResource($result['application']))->resolve(),
+            'license' => (new LicenseResource($result['license']))->resolve(),
+        ], 'messages.applications.unblock_completed');
+    }
+
+    public function reject(
+        RejectDashboardApplicationRequest $request,
+        int $application,
+        ApplicationUnblockService $unblockService,
+    ) {
+        $model = $unblockService->rejectApprovedUnblockApplication(
+            $request->user(),
+            $application,
+            $request->validated('reason')
+        );
+
+        return $this->employeeSuccessResponse(
+            (new DashboardApplicationResource($model))->resolve(),
+            'messages.applications.rejected'
         );
     }
 }

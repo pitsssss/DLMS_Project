@@ -109,6 +109,13 @@ class AgentApplicationStatusMap
                 'allowed_mutating_actions' => ['create_application'],
                 'blocked_actions' => ['start_payment', 'book_appointment'],
             ],
+            ApplicationStatus::Completed => [
+                'label_ar' => 'مكتمل',
+                'next_step_ar' => 'تم إكمال طلب فك الحظر — يمكنك مراجعة حالة الرخصة',
+                'allowed_read_actions' => ['get_application_status', 'get_application_next_step', 'get_licenses', 'get_license_details'],
+                'allowed_mutating_actions' => [],
+                'blocked_actions' => ['start_payment', 'book_appointment', 'create_application'],
+            ],
         };
     }
 

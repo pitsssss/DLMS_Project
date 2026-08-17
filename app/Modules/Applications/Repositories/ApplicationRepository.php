@@ -125,7 +125,8 @@ class ApplicationRepository
                 $application->submitted_at ??= now();
             }
 
-            if ($newStatus === ApplicationStatus::DocumentsRejected && $applicationRejectionReason !== null) {
+            if (in_array($newStatus, [ApplicationStatus::DocumentsRejected, ApplicationStatus::Rejected], true)
+                && $applicationRejectionReason !== null) {
                 $application->rejection_reason = $applicationRejectionReason;
             }
 

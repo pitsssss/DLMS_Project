@@ -2934,6 +2934,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3040,6 +3041,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3146,6 +3148,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3252,6 +3255,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3358,6 +3362,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3403,7 +3408,7 @@
                 "applications"
               ]
             },
-            "description": "Purpose:\nUnblock application workflow. related_license_id required.\n\nFlutter usage:\nUnblock request via application.",
+            "description": "Purpose:\nCanonical license unblock application. related_license_id required (blocked license owned by citizen).\n\nFlutter usage:\nStart unblock flow when can_request_unblock=true.\n\nStores:\nunblock_application_id, application_id, related_license_id\n\nNext:\nGet Required Documents → Upload → Submit → Employee review → Payment → Employee unblock-license",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"service_type_code\": \"license_unblock\",\n  \"related_license_id\": \"{{related_license_id}}\"\n}",
@@ -3464,6 +3469,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3557,6 +3563,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -3938,6 +3945,7 @@
                   "const app = data.id ? data : (Array.isArray(data.items) && data.items[0] ? data.items[0] : null);",
                   "if (app) {",
                   "  setEnv('application_id', app.id);",
+                  "  setEnv('unblock_application_id', app.id);",
                   "  if (app.application_number) setEnv('application_number', app.application_number);",
                   "  if (app.related_license && app.related_license.id) setEnv('related_license_id', app.related_license.id);",
                   "}",
@@ -5557,7 +5565,7 @@
           ]
         },
         {
-          "name": "Request Unblock (Ack Only)",
+          "name": "DEPRECATED — Request Unblock (Legacy Ack Only)",
           "request": {
             "method": "POST",
             "header": [
@@ -5589,7 +5597,7 @@
                 "unblock-request"
               ]
             },
-            "description": "Purpose:\nAcknowledges unblock request only — does NOT unblock. Staff must unblock.\n\nFlutter usage:\nUnblock request CTA.\n\nPrerequisite:\nActual unblock: 90 - Dashboard → Licenses → Unblock License"
+            "description": "DEPRECATED / LEGACY — Do NOT use in Flutter.\n\nThis endpoint only acknowledges intent; it does NOT create an application or unblock the license.\n\nCanonical citizen flow:\nPOST /api/applications with service_type_code=license_unblock and related_license_id.\n\nSee folder: License Unblock (Application Flow) and docs/flutter/LICENSE_UNBLOCK_FLOW.md"
           },
           "response": [],
           "event": [
@@ -13622,6 +13630,102 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Unblock License From Application (Dashboard)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{employee_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/dashboard/applications/{{unblock_application_id}}/unblock-license",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "dashboard",
+                    "applications",
+                    "{{unblock_application_id}}",
+                    "unblock-license"
+                  ]
+                },
+                "description": "Purpose:\nFinal employee action for approved license_unblock applications.\n\nRequires:\n- manage_licenses permission\n- application status = approved\n- related license still blocked\n- no unpaid citizen fines\n- fee paid + documents approved\n\nResult:\n- license blocked → active|expired\n- application approved → completed\n\nCanonical flow step 10. Direct POST /dashboard/licenses/{id}/unblock remains for staff bypass."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is successful', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                      "});",
+                      "pm.test('Response is JSON', function () {",
+                      "  pm.response.to.be.json;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Reject Approved Unblock Application (Dashboard)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{employee_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/dashboard/applications/{{unblock_application_id}}/reject",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "dashboard",
+                    "applications",
+                    "{{unblock_application_id}}",
+                    "reject"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Insufficient supporting evidence for unblock request\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Purpose:\nReject an approved license_unblock application before final unblock.\n\nRequires manage_licenses + reason (3-1000 chars).\nLicense remains blocked."
+              },
+              "response": []
             },
             {
               "name": "Unblock License (Dashboard)",

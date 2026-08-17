@@ -171,6 +171,7 @@ class AgentApplicationActionPolicy
             ApplicationStatus::Approved => 'wait for the license to be issued by the relevant employee',
             ApplicationStatus::AdministrativeReview => 'wait for the administrative decision',
             ApplicationStatus::LicenseIssued => 'view the license details',
+            ApplicationStatus::Completed => 'view the license details — unblock request completed',
             ApplicationStatus::Rejected => 'review the rejection reason',
             ApplicationStatus::Cancelled => 'you can create a new application if you want',
         };

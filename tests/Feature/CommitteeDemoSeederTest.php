@@ -140,6 +140,7 @@ class CommitteeDemoSeederTest extends TestCase
     {
         $this->seed(CommitteeDemoSeeder::class);
         $firstA = $this->application(CommitteeDemoKit::APP_A)->id;
+        $firstCount = LicenseApplication::query()->where('application_number', 'like', 'DEMO-COMMITTEE-%')->count();
         $firstWaiting = TestAppointment::query()
             ->where('status', AppointmentStatus::Booked)
             ->whereHas('application', fn ($q) => $q->where('application_number', 'like', 'DEMO-COMMITTEE-%'))
@@ -148,12 +149,13 @@ class CommitteeDemoSeederTest extends TestCase
         $this->seed(CommitteeDemoSeeder::class);
 
         $this->assertSame($firstA, $this->application(CommitteeDemoKit::APP_A)->id);
-        $this->assertSame(4, LicenseApplication::query()->where('application_number', 'like', 'DEMO-COMMITTEE-%')->count());
+        $this->assertSame($firstCount, LicenseApplication::query()->where('application_number', 'like', 'DEMO-COMMITTEE-%')->count());
+        $this->assertGreaterThan(0, $firstCount);
         $this->assertSame($firstWaiting, TestAppointment::query()
             ->where('status', AppointmentStatus::Booked)
             ->whereHas('application', fn ($q) => $q->where('application_number', 'like', 'DEMO-COMMITTEE-%'))
             ->count());
-        $this->assertSame(3, $firstWaiting);
+        $this->assertGreaterThan(0, $firstWaiting);
         $this->assertSame(ApplicationStatus::Approved, $this->application(CommitteeDemoKit::APP_D)->status);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Modules\AIAgent\Services\AgentLocaleContext;
+use App\Support\RateLimiting\AuthRateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         app()->setLocale(config('app.locale', 'ar'));
+        AuthRateLimiter::register();
     }
 }

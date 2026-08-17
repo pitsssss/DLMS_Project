@@ -151,7 +151,7 @@ class FullLifecycleSeeder extends Seeder
             ApplicationStatus::DocumentsUnderReview,
             ApplicationStatus::PaymentPending,
             ApplicationStatus::Approved,
-            ApplicationStatus::LicenseIssued,
+            ApplicationStatus::Completed,
             ApplicationStatus::Rejected,
             ApplicationStatus::Cancelled,
         ];

@@ -2,8 +2,10 @@
 
 namespace App\Modules\Applications\Services;
 
+use App\Enums\FineStatus;
 use App\Enums\LicenseStatus;
 use App\Enums\ServiceCode;
+use App\Models\Fine;
 use App\Models\License;
 use App\Models\User;
 
@@ -16,6 +18,10 @@ class LicenseServiceEligibilityService
     {
         if ((int) $license->citizen_id !== (int) $citizen->id) {
             return ['allowed' => false, 'message' => 'messages.licenses.eligibility.not_owned'];
+        }
+
+        if ($service === ServiceCode::LicenseUnblock) {
+            return $this->checkUnblock($citizen, $license);
         }
 
         if ($license->status === LicenseStatus::Blocked) {
@@ -36,13 +42,12 @@ class LicenseServiceEligibilityService
                 $license,
                 'messages.licenses.eligibility.cannot_request_damaged_replacement'
             ),
-            ServiceCode::LicenseUnblock => $this->checkUnblock($license),
             default => ['allowed' => false, 'message' => 'messages.licenses.eligibility.unsupported_service'],
         };
     }
 
     /**
-     * @return array{can_renew: bool, can_request_lost_replacement: bool, can_request_damaged_replacement: bool}
+     * @return array{can_renew: bool, can_request_lost_replacement: bool, can_request_damaged_replacement: bool, can_request_unblock: bool}
      */
     public function flagsForCitizen(User $citizen, License $license): array
     {
@@ -50,6 +55,7 @@ class LicenseServiceEligibilityService
             'can_renew' => $this->check($citizen, $license, ServiceCode::RenewLicense)['allowed'],
             'can_request_lost_replacement' => $this->check($citizen, $license, ServiceCode::LostReplacement)['allowed'],
             'can_request_damaged_replacement' => $this->check($citizen, $license, ServiceCode::DamagedReplacement)['allowed'],
+            'can_request_unblock' => $this->check($citizen, $license, ServiceCode::LicenseUnblock)['allowed'],
         ];
     }
 
@@ -91,13 +97,25 @@ class LicenseServiceEligibilityService
     /**
      * @return array{allowed: bool, message: ?string}
      */
-    private function checkUnblock(License $license): array
+    private function checkUnblock(User $citizen, License $license): array
     {
         if ($license->status !== LicenseStatus::Blocked) {
             return ['allowed' => false, 'message' => 'messages.licenses.only_blocked_unblock'];
         }
 
+        if ($this->citizenHasUnpaidFines($citizen->id)) {
+            return ['allowed' => false, 'message' => 'messages.licenses.fines_before_unblock'];
+        }
+
         return ['allowed' => true, 'message' => null];
+    }
+
+    private function citizenHasUnpaidFines(int $citizenId): bool
+    {
+        return Fine::query()
+            ->where('citizen_id', $citizenId)
+            ->where('status', FineStatus::Unpaid)
+            ->exists();
     }
 
     private function citizenHasNewerActiveLicense(License $license): bool

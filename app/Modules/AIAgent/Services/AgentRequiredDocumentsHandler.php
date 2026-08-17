@@ -144,6 +144,7 @@ class AgentRequiredDocumentsHandler
             ApplicationStatus::Approved,
             ApplicationStatus::AdministrativeReview,
             ApplicationStatus::LicenseIssued,
+            ApplicationStatus::Completed,
             ApplicationStatus::Rejected,
             ApplicationStatus::Cancelled,
         ], true);

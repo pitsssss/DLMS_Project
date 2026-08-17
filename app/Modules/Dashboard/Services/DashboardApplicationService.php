@@ -65,6 +65,7 @@ class DashboardApplicationService
                 'licenseType',
                 'serviceType',
                 'currentTestType',
+                'relatedLicense',
             ])
             ->where('application_number', $applicationNumber)
             ->firstOrFail();

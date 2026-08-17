@@ -1,10 +1,12 @@
 <?php
 
 use App\Exceptions\ApiException;
+use App\Support\RequestLocaleResolver;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -94,6 +96,27 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            $resolver = app(RequestLocaleResolver::class);
+            $locale = $resolver->resolve($request);
+            $previous = app()->getLocale();
+            app()->setLocale($locale);
+
+            try {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('messages.http.too_many_requests'),
+                    'errors' => (object) [],
+                ], 429)->withHeaders($e->getHeaders());
+            } finally {
+                app()->setLocale($previous);
+            }
+        });
+
         $exceptions->render(function (\Throwable $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
@@ -105,6 +128,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $e instanceof AuthenticationException
                 || $e instanceof AccessDeniedHttpException
                 || $e instanceof NotFoundHttpException
+                || $e instanceof ThrottleRequestsException
             ) {
                 return null;
             }

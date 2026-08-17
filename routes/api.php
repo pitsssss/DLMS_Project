@@ -39,9 +39,12 @@ Route::middleware('locale')->group(function (): void {
         ]);
     });
 
-    Route::post('/auth/register', [RegisterController::class, 'register']);
-    Route::post('/auth/verify-otp', [RegisterController::class, 'verifyOtp']);
-    Route::post('/auth/login', [LoginController::class, 'login']);
+    Route::post('/auth/register', [RegisterController::class, 'register'])
+        ->middleware('throttle:citizen-register');
+    Route::post('/auth/verify-otp', [RegisterController::class, 'verifyOtp'])
+        ->middleware('throttle:registration-otp-verify');
+    Route::post('/auth/login', [LoginController::class, 'login'])
+        ->middleware('throttle:citizen-login');
 
     Route::middleware('throttle:5,1')->group(function (): void {
         Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot']);
@@ -138,7 +141,7 @@ Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): voi
             ->middleware('throttle:10,1');
         Route::post('/licenses/{license}/unblock-request', [LicenseController::class, 'unblockRequest'])
             ->whereNumber('license')
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:10,1'); // DEPRECATED: use POST /applications with service_type_code=license_unblock
     });
 
     Route::get('/licenses', [LicenseController::class, 'index']);

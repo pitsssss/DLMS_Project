@@ -37,6 +37,7 @@ class EmployeeMessageTranslator
                 'rejected'               => 'مرفوض',
                 'cancelled'              => 'ملغي',
                 'administrative_review'  => 'مراجعة إدارية',
+                'completed'              => 'مكتمل',
                 default                  => $code,
             };
         }

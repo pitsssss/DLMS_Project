@@ -53,6 +53,13 @@ class DashboardApplicationDetailsResource extends JsonResource
                     ? $this->testTypeLabel($application->currentTestType->code)
                     : null,
 
+                'related_license' => $application->relatedLicense ? [
+                    'id' => $application->relatedLicense->id,
+                    'license_number' => $application->relatedLicense->license_number,
+                    'status' => $application->relatedLicense->status->value,
+                    'block_reason' => $application->relatedLicense->block_reason,
+                ] : null,
+
                 'rejection_reason' => $application->rejection_reason,
                 'approved_at' => $this->formatDate($application->approved_at),
                 'issued_at' => $this->formatDate($application->issued_at),
@@ -115,6 +122,7 @@ class DashboardApplicationDetailsResource extends JsonResource
             'rejected' => 3,
 
             'license_issued' => 4,
+            'completed' => 4,
 
             default => 0,
         };
@@ -161,7 +169,7 @@ class DashboardApplicationDetailsResource extends JsonResource
         ];
 
         foreach ($steps as $index => &$step) {
-            if ($status === 'license_issued') {
+            if ($status === 'license_issued' || $status === 'completed') {
                 $step['state'] = 'completed';
                 continue;
             }

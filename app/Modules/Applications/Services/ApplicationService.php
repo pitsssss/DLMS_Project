@@ -310,6 +310,7 @@ class ApplicationService
             ServiceCode::RenewLicense => 'application.renewal_created',
             ServiceCode::LostReplacement => 'application.lost_replacement_created',
             ServiceCode::DamagedReplacement => 'application.damaged_replacement_created',
+            ServiceCode::LicenseUnblock => 'application.unblock_created',
             default => 'application.created',
         };
 

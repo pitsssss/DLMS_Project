@@ -46,6 +46,7 @@ class LicenseResource extends JsonResource
             'can_renew' => $this->when(isset($this->can_renew), (bool) $this->can_renew),
             'can_request_lost_replacement' => $this->when(isset($this->can_request_lost_replacement), (bool) $this->can_request_lost_replacement),
             'can_request_damaged_replacement' => $this->when(isset($this->can_request_damaged_replacement), (bool) $this->can_request_damaged_replacement),
+            'can_request_unblock' => $this->when(isset($this->can_request_unblock), (bool) $this->can_request_unblock),
         ];
     }
 }

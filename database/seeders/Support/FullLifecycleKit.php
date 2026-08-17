@@ -540,6 +540,17 @@ final class FullLifecycleKit
             return;
         }
 
+        if ($status === ApplicationStatus::Completed) {
+            $completedAt = $approvedAt->copy()->addHours(10);
+            $application->approved_at = $approvedAt;
+            $this->recordHistory($application, ApplicationStatus::Approved, ApplicationStatus::Completed, $issuer, $completedAt, 'تم فك حظر الرخصة وإكمال الطلب.');
+            $this->notifyStatus($application, NotificationType::ApplicationCompleted, $completedAt);
+            $this->finalizeApplication($application, ApplicationStatus::Completed, $completedAt);
+            $this->issueFromApplication($application, $citizen, $relatedLicense, $issuer, $completedAt, $spec);
+
+            return;
+        }
+
         $this->finalizeApplication($application, $status, $approvedAt);
     }
 

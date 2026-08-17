@@ -24,6 +24,7 @@ enum NotificationType: string
     case ApplicationAdministrativeReview = 'application.administrative_review';
     case ApplicationRejected = 'application.rejected';
     case ApplicationCancelled = 'application.cancelled';
+    case ApplicationCompleted = 'application.completed';
 
     /**
      * Legacy type retained for historical rows only.
@@ -77,6 +78,7 @@ enum NotificationType: string
             self::ApplicationAdministrativeReview => 'messages.notifications.admin_review_title',
             self::ApplicationRejected => 'messages.notifications.application_rejected_title',
             self::ApplicationCancelled => 'messages.notifications.application_cancelled_title',
+            self::ApplicationCompleted => 'messages.notifications.application_completed_title',
             self::ApplicationLicenseIssued, self::LicenseIssued => 'messages.notifications.license_issued_title',
             self::DocumentApproved => 'messages.notifications.document_approved_title',
             self::DocumentRejected => 'messages.notifications.document_rejected_title',
@@ -113,6 +115,7 @@ enum NotificationType: string
             self::ApplicationAdministrativeReview => 'messages.notifications.admin_review_body',
             self::ApplicationRejected => 'messages.notifications.application_rejected_body',
             self::ApplicationCancelled => 'messages.notifications.application_cancelled_body',
+            self::ApplicationCompleted => 'messages.notifications.application_completed_body',
             self::ApplicationLicenseIssued, self::LicenseIssued => 'messages.notifications.license_issued_body',
             self::DocumentApproved => 'messages.notifications.document_approved_body',
             self::DocumentRejected => 'messages.notifications.document_rejected_body',
@@ -151,6 +154,7 @@ enum NotificationType: string
             self::ApplicationAdministrativeReview,
             self::ApplicationRejected,
             self::ApplicationCancelled,
+            self::ApplicationCompleted,
             self::ApplicationLicenseIssued => ['application_id', 'application_number', 'status'],
             self::DocumentApproved => ['application_id', 'document_id'],
             self::DocumentRejected => [
@@ -205,6 +209,7 @@ enum NotificationType: string
             ApplicationStatus::AdministrativeReview => self::ApplicationAdministrativeReview,
             ApplicationStatus::Rejected => self::ApplicationRejected,
             ApplicationStatus::Cancelled => self::ApplicationCancelled,
+            ApplicationStatus::Completed => self::ApplicationCompleted,
             // LicenseIssued: emit license.issued only (via LicenseService).
             ApplicationStatus::LicenseIssued => null,
             default => null,

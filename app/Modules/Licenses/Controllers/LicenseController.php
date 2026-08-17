@@ -19,6 +19,7 @@ class LicenseController extends Controller
             $license->can_renew = $flags['can_renew'];
             $license->can_request_lost_replacement = $flags['can_request_lost_replacement'];
             $license->can_request_damaged_replacement = $flags['can_request_damaged_replacement'];
+            $license->can_request_unblock = $flags['can_request_unblock'];
 
             return $license;
         });
@@ -29,9 +30,14 @@ class LicenseController extends Controller
         );
     }
 
-    public function show(Request $request, int $license, LicenseService $licenses)
+    public function show(Request $request, int $license, LicenseService $licenses, LicenseServiceEligibilityService $eligibility)
     {
         $model = $licenses->showForCitizen($request->user(), $license);
+        $flags = $eligibility->flagsForCitizen($request->user(), $model);
+        $model->can_renew = $flags['can_renew'];
+        $model->can_request_lost_replacement = $flags['can_request_lost_replacement'];
+        $model->can_request_damaged_replacement = $flags['can_request_damaged_replacement'];
+        $model->can_request_unblock = $flags['can_request_unblock'];
 
         return $this->successResponse(
             new LicenseResource($model),
@@ -66,6 +72,11 @@ class LicenseController extends Controller
         );
     }
 
+    /**
+     * @deprecated Use POST /api/applications with service_type_code=license_unblock instead.
+     *             This endpoint only acknowledges intent; it does not create an application
+     *             or perform license unblocking.
+     */
     public function unblockRequest(Request $request, int $license, LicenseService $licenses)
     {
         $data = $licenses->requestUnblock($request->user(), $license);

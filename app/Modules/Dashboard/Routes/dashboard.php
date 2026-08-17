@@ -22,7 +22,8 @@ use App\Modules\Dashboard\Controllers\DashboardServiceTypeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('dashboard/auth')->group(function (): void {
-    Route::post('/login', [DashboardAuthController::class, 'login']);
+    Route::post('/login', [DashboardAuthController::class, 'login'])
+        ->middleware('throttle:dashboard-login');
 
     Route::middleware('throttle:5,1')->group(function (): void {
         Route::post('/forgot-password', [DashboardAuthController::class, 'forgotPassword']);
@@ -204,6 +205,15 @@ Route::prefix('dashboard')
             // Lookup application details by application number (not internal id). The table shows application_number.
             Route::get('/applications/{application_number}', [DashboardApplicationController::class, 'show'])
                 ->where('application_number', '[A-Za-z0-9_\-]+');
+        });
+
+        Route::middleware('permission:manage_licenses')->group(function (): void {
+            Route::post('/applications/{application}/unblock-license', [DashboardApplicationController::class, 'unblockLicense'])
+                ->whereNumber('application')
+                ->middleware('throttle:30,1');
+            Route::post('/applications/{application}/reject', [DashboardApplicationController::class, 'reject'])
+                ->whereNumber('application')
+                ->middleware('throttle:30,1');
         });
 
         // Issued licenses management

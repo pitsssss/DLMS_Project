@@ -31,6 +31,7 @@ class ApplicationStatusLabelMapper
             ApplicationStatus::LicenseIssued->value => 'تم إصدار الرخصة',
             ApplicationStatus::Rejected->value => 'مرفوض',
             ApplicationStatus::Cancelled->value => 'ملغى',
+            ApplicationStatus::Completed->value => 'مكتمل',
             default => $value !== '' ? $value : 'غير معروف',
         };
     }
@@ -53,6 +54,7 @@ class ApplicationStatusLabelMapper
             ApplicationStatus::LicenseIssued->value => 'License issued',
             ApplicationStatus::Rejected->value => 'Rejected',
             ApplicationStatus::Cancelled->value => 'Cancelled',
+            ApplicationStatus::Completed->value => 'Completed',
             default => $value !== '' ? $value : 'Unknown',
         };
     }
