@@ -8,6 +8,7 @@ use App\Models\ApplicationDocument;
 use App\Models\AuditLog;
 use App\Models\TestResult;
 use App\Models\User;
+use App\Modules\Dashboard\Support\Reports\ReportContract;
 use App\Modules\Dashboard\Support\Reports\ReportPeriodResolver;
 use App\Modules\Dashboard\Support\Reports\ReportResponse;
 use App\Support\BusinessClock;
@@ -44,8 +45,11 @@ class DashboardReportEmployeesService
         if (! empty($filters['employee_id'])) {
             $employeeQuery->whereKey((int) $filters['employee_id']);
         }
+        if (! empty($filters['role'])) {
+            $employeeQuery->whereHas('role', fn ($q) => $q->where('name', $filters['role']));
+        }
 
-        $employees = $employeeQuery->with('role:id,name')->get(['id', 'name', 'role_id']);
+        $employees = $employeeQuery->with('role:id,name,display_name')->get(['id', 'name', 'role_id']);
         $employeeIds = $employees->pluck('id')->all();
 
         $documentCounts = $this->documentReviewCounts($context, $employeeIds);
@@ -71,9 +75,16 @@ class DashboardReportEmployeesService
 
             $row = [
                 'employee' => ['id' => $id, 'name' => $employee->name],
-                'role' => $employee->role?->name,
+                'name' => $employee->name,
+                'role' => $employee->role
+                    ? [
+                        'name' => $employee->role->name,
+                        'display_name' => $employee->role->display_name ?: $employee->role->name,
+                    ]
+                    : null,
                 'total_actions' => $totalActions,
                 'document_reviews_completed' => $docs,
+                'document_reviews' => $docs,
                 'test_results_recorded' => $tests,
                 'licenses_issued' => $canUseAudit ? $licenses : null,
                 'application_actions' => $canUseAudit ? $appActions : null,
@@ -93,17 +104,60 @@ class DashboardReportEmployeesService
         $offset = ($page - 1) * $perPage;
         $pagedRows = array_slice($rows, $offset, $perPage);
 
+        $roleBreakdown = [];
+        foreach ($employees as $employee) {
+            $roleKey = $employee->role?->name ?: 'unassigned';
+            $roleLabel = $employee->role?->display_name ?: ($employee->role?->name ?: 'unassigned');
+            $roleBreakdown[$roleKey] ??= ['key' => $roleKey, 'label' => $roleLabel, 'count' => 0];
+            $roleBreakdown[$roleKey]['count']++;
+        }
+
+        $workload = [
+            ['key' => 'document_reviews', 'label' => 'document_reviews', 'count' => (int) array_sum(array_map(fn ($id) => (int) ($documentCounts[$id] ?? 0), $employeeIds))],
+            ['key' => 'test_results', 'label' => 'test_results', 'count' => (int) array_sum(array_map(fn ($id) => (int) ($testCounts[$id] ?? 0), $employeeIds))],
+        ];
+        $totalActions = array_sum(array_map(fn ($row) => (int) ($row['total_actions'] ?? 0), $rows));
+
+        $rankingItems = array_map(
+            fn ($r) => [
+                'key' => (string) $r['employee_id'],
+                'label' => $r['name'],
+                'count' => (int) $r['total_actions'],
+                'employee_id' => $r['employee_id'],
+                'name' => $r['name'],
+                'total_actions' => $r['total_actions'],
+            ],
+            array_slice($ranking, 0, 12)
+        );
+
         return ReportResponse::build($context, [
             'summary' => [
                 'employees_in_report' => $total,
+                'total_employees' => $total,
+                'active_employees' => $total,
+                'total_actions' => $totalActions,
                 'total_document_reviews' => array_sum(array_map(fn ($id) => (int) ($documentCounts[$id] ?? 0), $employeeIds)),
                 'total_test_results' => array_sum(array_map(fn ($id) => (int) ($testCounts[$id] ?? 0), $employeeIds)),
                 'audit_metrics_included' => $canUseAudit,
             ],
-            'series' => [
-                ['key' => 'ranking', 'items' => array_slice($ranking, 0, 10)],
-            ],
-            'breakdowns' => [],
+            'series' => ReportContract::namedSeries([
+                'ranking' => array_map(
+                    fn ($r) => [
+                        'bucket' => (string) $r['employee_id'],
+                        'label' => $r['name'],
+                        'count' => (int) $r['total_actions'],
+                    ],
+                    array_slice($ranking, 0, 10)
+                ),
+            ]),
+            'breakdowns' => ReportContract::aliasBreakdowns([
+                'ranking' => ReportContract::breakdownItems($rankingItems, 'key', 'label'),
+                'workload' => ReportContract::breakdownItems($workload, 'key', 'label'),
+                'role' => ReportContract::breakdownItems(array_values($roleBreakdown), 'key', 'label'),
+                'category' => ReportContract::breakdownItems($workload, 'key', 'label'),
+            ]),
+            'ranking' => $rankingItems,
+            'audit_metrics_available' => $canUseAudit,
             'rows' => $pagedRows,
             'pagination' => [
                 'current_page' => $page,

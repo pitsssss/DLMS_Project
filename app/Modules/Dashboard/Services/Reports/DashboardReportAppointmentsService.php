@@ -4,10 +4,12 @@ namespace App\Modules\Dashboard\Services\Reports;
 
 use App\Enums\AppointmentStatus;
 use App\Models\TestAppointment;
+use App\Modules\Dashboard\Support\Reports\ReportContract;
 use App\Modules\Dashboard\Support\Reports\ReportPeriodResolver;
 use App\Modules\Dashboard\Support\Reports\ReportResponse;
 use App\Modules\Dashboard\Support\Reports\ReportSeriesBuilder;
 use App\Support\BusinessClock;
+use App\Support\Msg;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -67,10 +69,15 @@ class DashboardReportAppointmentsService
             ->select('status', DB::raw('COUNT(*) as aggregate_count'))
             ->groupBy('status')
             ->get()
-            ->map(fn ($row) => [
-                'status' => $row->status instanceof AppointmentStatus ? $row->status->value : (string) $row->status,
-                'count' => (int) $row->aggregate_count,
-            ])
+            ->map(function ($row) {
+                $status = $row->status instanceof AppointmentStatus ? $row->status->value : (string) $row->status;
+
+                return [
+                    'status' => $status,
+                    'label' => Msg::get('appointments.statuses.'.$status),
+                    'count' => (int) $row->aggregate_count,
+                ];
+            })
             ->values()
             ->all();
 
@@ -97,6 +104,7 @@ class DashboardReportAppointmentsService
             ->get()
             ->map(fn ($row) => [
                 'location' => (string) $row->location,
+                'label' => (string) $row->location,
                 'count' => (int) $row->aggregate_count,
             ])
             ->values()
@@ -124,7 +132,10 @@ class DashboardReportAppointmentsService
                     ? ['code' => $appointment->testType->code, 'name' => $appointment->testType->name]
                     : null,
                 'scheduled_at' => $appointment->scheduled_at?->toIso8601String(),
-                'status' => $appointment->status->value,
+                'status' => [
+                    'value' => $appointment->status->value,
+                    'label' => Msg::get('appointments.statuses.'.$appointment->status->value),
+                ],
                 'test_result' => $appointment->testResult?->result?->value,
             ];
         })->values()->all();
@@ -140,16 +151,16 @@ class DashboardReportAppointmentsService
                 'utilization_rate' => $utilization['rate'],
                 'utilization_note' => $utilization['note'],
             ],
-            'series' => [
-                ['key' => 'scheduled', 'items' => ReportSeriesBuilder::fill($context, $scheduledRows, 'count')],
-                ['key' => 'completed', 'items' => ReportSeriesBuilder::fill($context, $completedRows, 'count')],
-                ['key' => 'no_show', 'items' => ReportSeriesBuilder::fill($context, $noShowRows, 'count')],
-            ],
-            'breakdowns' => [
-                'by_status' => $byStatus,
-                'by_test_type' => $byTestType,
-                'by_location' => $byLocation,
-            ],
+            'series' => ReportContract::namedSeries([
+                'scheduled' => ReportSeriesBuilder::fill($context, $scheduledRows, 'count'),
+                'completed' => ReportSeriesBuilder::fill($context, $completedRows, 'count'),
+                'no_show' => ReportSeriesBuilder::fill($context, $noShowRows, 'count'),
+            ]),
+            'breakdowns' => ReportContract::aliasBreakdowns([
+                'status' => ReportContract::breakdownItems($byStatus, 'status'),
+                'test_type' => ReportContract::breakdownItems($byTestType, 'code', 'name'),
+                'location' => ReportContract::breakdownItems($byLocation, 'location'),
+            ]),
             'rows' => $rows,
             'pagination' => [
                 'current_page' => $paginator->currentPage(),

@@ -5,11 +5,14 @@ namespace App\Modules\Dashboard\Services\Reports;
 use App\Enums\LicenseStatus;
 use App\Enums\ServiceCode;
 use App\Models\License;
+use App\Modules\Dashboard\Support\Reports\ReportContract;
 use App\Modules\Dashboard\Support\Reports\ReportPeriodResolver;
 use App\Modules\Dashboard\Support\Reports\ReportResponse;
 use App\Modules\Dashboard\Support\Reports\ReportSeriesBuilder;
 use App\Modules\Licenses\Services\LicenseIssuanceEligibilityService;
+use App\Modules\Licenses\Support\LicenseEffectiveStatus;
 use App\Support\BusinessClock;
+use App\Support\Msg;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -85,10 +88,15 @@ class DashboardReportLicensesService
             ->select('status', DB::raw('COUNT(*) as aggregate_count'))
             ->groupBy('status')
             ->get()
-            ->map(fn ($row) => [
-                'status' => $row->status instanceof LicenseStatus ? $row->status->value : (string) $row->status,
-                'count' => (int) $row->aggregate_count,
-            ])
+            ->map(function ($row) {
+                $status = $row->status instanceof LicenseStatus ? $row->status->value : (string) $row->status;
+
+                return [
+                    'status' => $status,
+                    'label' => Msg::get('licenses.statuses.'.$status),
+                    'count' => (int) $row->aggregate_count,
+                ];
+            })
             ->values()
             ->all();
 
@@ -119,7 +127,7 @@ class DashboardReportLicensesService
             ->paginate($perPage);
 
         $rows = collect($paginator->items())->map(function (License $license) {
-            $effective = \App\Modules\Licenses\Support\LicenseEffectiveStatus::resolve($license);
+            $effective = LicenseEffectiveStatus::resolve($license);
 
             return [
                 'license_number' => $license->license_number,
@@ -129,10 +137,15 @@ class DashboardReportLicensesService
                 'license_type' => $license->licenseType
                     ? ['code' => $license->licenseType->code, 'name' => $license->licenseType->name]
                     : null,
-                'status' => $effective->value,
-                'status_label' => \App\Support\Msg::get('licenses.statuses.'.$effective->value),
+                'status' => [
+                    'value' => $effective->value,
+                    'label' => Msg::get('licenses.statuses.'.$effective->value),
+                ],
+                'status_label' => Msg::get('licenses.statuses.'.$effective->value),
                 'issue_date' => $license->issue_date?->toDateString(),
                 'expiry_date' => $license->expiry_date?->toDateString(),
+                'issued_at' => $license->issue_date?->toDateString(),
+                'expires_at' => $license->expiry_date?->toDateString(),
                 'service_type' => $license->application?->serviceType
                     ? ['code' => $license->application->serviceType->code, 'name' => $license->application->serviceType->name]
                     : null,
@@ -146,18 +159,20 @@ class DashboardReportLicensesService
                 'active' => $active,
                 'expired' => $expired,
                 'suspended_or_blocked' => $suspended,
+                'suspended' => $suspended,
+                'blocked' => $suspended,
                 'renewed' => $renewed,
                 'replacement' => $replacement,
                 'ready_for_issuance' => $readyForIssuance,
             ],
-            'series' => [
-                ['key' => 'issued', 'items' => ReportSeriesBuilder::fill($context, $issuedRows, 'count')],
-            ],
-            'breakdowns' => [
-                'by_license_type' => $byType,
-                'by_status' => $byStatus,
-                'by_service_type' => $byService,
-            ],
+            'series' => ReportContract::namedSeries([
+                'issued' => ReportSeriesBuilder::fill($context, $issuedRows, 'count'),
+            ]),
+            'breakdowns' => ReportContract::aliasBreakdowns([
+                'license_type' => ReportContract::breakdownItems($byType, 'code', 'name'),
+                'status' => ReportContract::breakdownItems($byStatus, 'status'),
+                'service_type' => ReportContract::breakdownItems($byService, 'code', 'name'),
+            ]),
             'rows' => $rows,
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
@@ -180,6 +195,9 @@ class DashboardReportLicensesService
 
         if (! empty($filters['license_type_code'])) {
             $query->whereHas('licenseType', fn (Builder $q) => $q->where('code', $filters['license_type_code']));
+        }
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
         if (! empty($filters['service_type_code'])) {
             $query->whereHas('application.serviceType', fn (Builder $q) => $q->where('code', $filters['service_type_code']));

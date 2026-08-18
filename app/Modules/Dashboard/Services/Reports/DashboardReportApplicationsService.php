@@ -4,6 +4,7 @@ namespace App\Modules\Dashboard\Services\Reports;
 
 use App\Enums\ApplicationStatus;
 use App\Models\LicenseApplication;
+use App\Modules\Dashboard\Support\Reports\ReportContract;
 use App\Modules\Dashboard\Support\Reports\ReportPeriodResolver;
 use App\Modules\Dashboard\Support\Reports\ReportResponse;
 use App\Modules\Dashboard\Support\Reports\ReportSeriesBuilder;
@@ -119,6 +120,7 @@ class DashboardReportApplicationsService
             return [
                 'application_number' => $app->application_number,
                 'citizen' => ['id' => $app->citizen_id, 'name' => $app->citizen?->name],
+                'citizen_name' => $app->citizen?->name,
                 'service_type' => $app->serviceType ? ['code' => $app->serviceType->code, 'name' => $app->serviceType->name] : null,
                 'license_type' => $app->licenseType ? ['code' => $app->licenseType->code, 'name' => $app->licenseType->name] : null,
                 'status' => ['value' => $app->status->value, 'label' => EmployeeMessageTranslator::get('messages.employee.statuses.'.$app->status->value)],
@@ -127,30 +129,38 @@ class DashboardReportApplicationsService
                 'rejected_at' => $app->status === ApplicationStatus::Rejected ? $app->updated_at?->toIso8601String() : null,
                 'issued_at' => $app->issued_at?->toIso8601String(),
                 'processing_duration_hours' => $durationHours,
+                'processing_duration' => $durationHours,
+                'processing_hours' => $durationHours,
             ];
         })->values()->all();
 
+        $avgHours = $avgSeconds !== null ? round(((float) $avgSeconds) / 3600, 2) : null;
+
         return ReportResponse::build($context, [
             'summary' => [
+                'total' => $submitted,
                 'submitted' => $submitted,
                 'approved' => $approved,
                 'rejected' => $rejected,
                 'cancelled' => $cancelled,
                 'license_issued' => $issued,
                 'pending_in_progress' => $pending,
+                'pending' => $pending,
+                'in_progress' => $pending,
                 'approval_rate' => ReportResponse::rate($approved, $decided),
                 'rejection_rate' => ReportResponse::rate($rejected, $decided),
-                'average_processing_hours' => $avgSeconds !== null ? round(((float) $avgSeconds) / 3600, 2) : null,
+                'average_processing_hours' => $avgHours,
+                'average_processing_time' => $avgHours,
             ],
-            'series' => [
-                ['key' => 'created', 'items' => ReportSeriesBuilder::fill($context, $createdRows, 'count')],
-                ['key' => 'completed', 'items' => ReportSeriesBuilder::fill($context, $completedRows, 'count')],
-            ],
-            'breakdowns' => [
-                'by_status' => $statusBreakdown,
-                'by_service_type' => $serviceBreakdown,
-                'by_license_type' => $licenseBreakdown,
-            ],
+            'series' => ReportContract::namedSeries([
+                'created' => ReportSeriesBuilder::fill($context, $createdRows, 'count'),
+                'completed' => ReportSeriesBuilder::fill($context, $completedRows, 'count'),
+            ]),
+            'breakdowns' => ReportContract::aliasBreakdowns([
+                'status' => ReportContract::breakdownItems($statusBreakdown, 'status'),
+                'service_type' => ReportContract::breakdownItems($serviceBreakdown, 'code', 'name'),
+                'license_type' => ReportContract::breakdownItems($licenseBreakdown, 'code', 'name'),
+            ]),
             'rows' => $rows,
             'pagination' => [
                 'current_page' => $paginator->currentPage(),

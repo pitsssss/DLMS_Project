@@ -126,6 +126,7 @@ final class ReportPeriodResolver
             'application_status', 'service_type_code', 'license_type_code',
             'test_type_code', 'test_result', 'appointment_status',
             'payment_status', 'currency', 'employee_id', 'document_status', 'fine_status',
+            'violation_type', 'status', 'role',
             'page', 'per_page',
         ];
 

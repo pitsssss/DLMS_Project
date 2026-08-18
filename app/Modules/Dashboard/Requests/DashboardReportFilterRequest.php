@@ -2,10 +2,11 @@
 
 namespace App\Modules\Dashboard\Requests;
 
-use App\Enums\AppointmentStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\AppointmentStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\FineStatus;
+use App\Enums\LicenseStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\TestResultStatus;
 use Illuminate\Foundation\Http\FormRequest;
@@ -39,6 +40,9 @@ class DashboardReportFilterRequest extends FormRequest
             'employee_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
             'document_status' => ['sometimes', 'nullable', 'string', Rule::in(array_column(DocumentStatus::cases(), 'value'))],
             'fine_status' => ['sometimes', 'nullable', 'string', Rule::in(array_column(FineStatus::cases(), 'value'))],
+            'violation_type' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'status' => ['sometimes', 'nullable', 'string', Rule::in(array_column(LicenseStatus::cases(), 'value'))],
+            'role' => ['sometimes', 'nullable', 'string', 'max:64'],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ];

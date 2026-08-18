@@ -4,10 +4,12 @@ namespace App\Modules\Dashboard\Services\Reports;
 
 use App\Enums\TestResultStatus;
 use App\Models\TestResult;
+use App\Modules\Dashboard\Support\Reports\ReportContract;
 use App\Modules\Dashboard\Support\Reports\ReportPeriodResolver;
 use App\Modules\Dashboard\Support\Reports\ReportResponse;
 use App\Modules\Dashboard\Support\Reports\ReportSeriesBuilder;
 use App\Support\BusinessClock;
+use App\Support\Msg;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -78,10 +80,15 @@ class DashboardReportTestsService
             ->select('result', DB::raw('COUNT(*) as aggregate_count'))
             ->groupBy('result')
             ->get()
-            ->map(fn ($row) => [
-                'result' => $row->result instanceof TestResultStatus ? $row->result->value : (string) $row->result,
-                'count' => (int) $row->aggregate_count,
-            ])
+            ->map(function ($row) {
+                $result = $row->result instanceof TestResultStatus ? $row->result->value : (string) $row->result;
+
+                return [
+                    'result' => $result,
+                    'label' => Msg::get('tests.statuses.'.$result),
+                    'count' => (int) $row->aggregate_count,
+                ];
+            })
             ->values()
             ->all();
 
@@ -92,6 +99,7 @@ class DashboardReportTestsService
             ->get()
             ->map(fn ($row) => [
                 'attempt_number' => (int) $row->attempt_number,
+                'label' => (string) $row->attempt_number,
                 'count' => (int) $row->aggregate_count,
             ])
             ->values()
@@ -118,7 +126,10 @@ class DashboardReportTestsService
                     ? ['code' => $result->testType->code, 'name' => $result->testType->name]
                     : null,
                 'attempt_number' => (int) $result->attempt_number,
-                'result' => $result->result->value,
+                'result' => [
+                    'value' => $result->result->value,
+                    'label' => Msg::get('tests.statuses.'.$result->result->value),
+                ],
                 'examiner' => $result->recordedBy
                     ? ['id' => $result->recordedBy->id, 'name' => $result->recordedBy->name]
                     : null,
@@ -128,10 +139,13 @@ class DashboardReportTestsService
 
         return ReportResponse::build($context, [
             'summary' => [
+                'total' => $total,
+                'recorded' => $total,
                 'total_recorded' => $total,
                 'passed' => $passed,
                 'failed' => $failed,
                 'no_show' => $noShow,
+                'awaiting' => $pending,
                 'awaiting_result' => $pending,
                 'pass_rate' => ReportResponse::rate($passed, $total),
                 'failure_rate' => ReportResponse::rate($failed, $total),
@@ -139,16 +153,16 @@ class DashboardReportTestsService
                 'retests' => $retests,
                 'average_attempts_before_passing' => $avgAttempts !== null ? round((float) $avgAttempts, 2) : null,
             ],
-            'series' => [
-                ['key' => 'passed', 'items' => ReportSeriesBuilder::fill($context, $passedRows, 'count')],
-                ['key' => 'failed', 'items' => ReportSeriesBuilder::fill($context, $failedRows, 'count')],
-                ['key' => 'no_show', 'items' => ReportSeriesBuilder::fill($context, $noShowRows, 'count')],
-            ],
-            'breakdowns' => [
-                'by_test_type' => $byType,
-                'by_result' => $byResult,
-                'by_attempt_number' => $byAttempt,
-            ],
+            'series' => ReportContract::namedSeries([
+                'passed' => ReportSeriesBuilder::fill($context, $passedRows, 'count'),
+                'failed' => ReportSeriesBuilder::fill($context, $failedRows, 'count'),
+                'no_show' => ReportSeriesBuilder::fill($context, $noShowRows, 'count'),
+            ]),
+            'breakdowns' => ReportContract::aliasBreakdowns([
+                'test_type' => ReportContract::breakdownItems($byType, 'code', 'name'),
+                'result' => ReportContract::breakdownItems($byResult, 'result'),
+                'attempt_number' => ReportContract::breakdownItems($byAttempt, 'attempt_number'),
+            ]),
             'rows' => $rows,
             'pagination' => [
                 'current_page' => $paginator->currentPage(),

@@ -2,14 +2,15 @@
 
 namespace App\Modules\Dashboard\Services\Reports;
 
-use App\Enums\AppointmentStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\AppointmentStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\FineStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\TestResultStatus;
 use App\Enums\UserType;
 use App\Models\LicenseType;
+use App\Models\Role;
 use App\Models\ServiceType;
 use App\Models\TestType;
 use App\Models\User;
@@ -46,6 +47,8 @@ class DashboardReportOptionsService
         $options = [
             'periods' => $periods,
             'grouping' => $grouping,
+            'group_by' => $grouping,
+            'visibility' => $visibility,
         ];
 
         if ($visibility['applications']) {
@@ -106,7 +109,16 @@ class DashboardReportOptionsService
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name'])
-                ->map(fn (User $u) => ['value' => $u->id, 'label' => $u->name])
+                ->map(fn (User $u) => ['value' => (string) $u->id, 'label' => $u->name])
+                ->values()
+                ->all();
+            $options['roles'] = Role::query()
+                ->orderBy('display_name')
+                ->get(['name', 'display_name'])
+                ->map(fn (Role $role) => [
+                    'value' => $role->name,
+                    'label' => $role->display_name ?: $role->name,
+                ])
                 ->values()
                 ->all();
         }
