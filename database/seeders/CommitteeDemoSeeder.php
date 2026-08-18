@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
  * - Test results queue: GET /api/dashboard/test-appointments
  * - License issuance queue: GET /api/dashboard/license-issuance/applications
  *
- * Local / testing only.
+ * Local / testing, or DEMO_SEEDING_ENABLED=true.
  *
  *   php artisan db:seed --class=CommitteeDemoSeeder
  */

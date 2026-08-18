@@ -30,11 +30,25 @@ class CitizenFinePaymentDemoSeederTest extends TestCase
     public function test_seeder_refuses_production(): void
     {
         $this->app['env'] = 'production';
+        config(['dlms.demo_seeding_enabled' => false]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('local or testing');
+        $this->expectExceptionMessage('DEMO_SEEDING_ENABLED=true');
 
         (new CitizenFinePaymentDemoSeeder)->run();
+    }
+
+    public function test_seeder_allows_production_when_demo_seeding_enabled(): void
+    {
+        $this->app['env'] = 'production';
+        config(['dlms.demo_seeding_enabled' => true]);
+
+        $this->artisan('db:seed', ['--class' => CitizenFinePaymentDemoSeeder::class, '--force' => true])
+            ->assertSuccessful();
+
+        $this->assertTrue(
+            User::query()->where('email', CitizenFinePaymentDemoKit::HAPPY_EMAIL)->exists()
+        );
     }
 
     public function test_seeder_creates_required_fine_and_payment_states(): void

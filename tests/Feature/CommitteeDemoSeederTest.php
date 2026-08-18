@@ -32,9 +32,10 @@ class CommitteeDemoSeederTest extends TestCase
     public function test_committee_demo_seeder_refuses_production(): void
     {
         $this->app['env'] = 'production';
+        config(['dlms.demo_seeding_enabled' => false]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('local or testing');
+        $this->expectExceptionMessage('DEMO_SEEDING_ENABLED=true');
 
         (new CommitteeDemoSeeder())->run();
     }

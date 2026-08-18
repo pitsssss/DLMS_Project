@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoSeeding;
 use Illuminate\Database\Seeder;
 
 /**
  * Canonical entry point for `php artisan db:seed` / `migrate:fresh --seed`.
  *
- * Production / staging: catalogs + bootstrap super-admin only.
- * Local / testing: also runs DevelopmentDemoSeeder (FullLifecycle, Fine Payment, …).
+ * Always: catalogs + bootstrap super-admin.
+ * Demo kits: local/testing, OR explicit DEMO_SEEDING_ENABLED=true (hosted demo/QA).
  *
- * Demo financial data (FLOW-*, PAY-CFP-*, committee fixtures, demo passwords)
- * must never seed automatically when APP_ENV=production.
+ * Real production must keep DEMO_SEEDING_ENABLED=false.
  *
  * See docs/DEVELOPMENT_DATABASE_SEEDING.md
  */
@@ -34,8 +34,8 @@ class DatabaseSeeder extends Seeder
             SuperAdminUserSeeder::class,
         ]);
 
-        // 2) Development / QA demo kits — local & testing only
-        if (app()->environment(['local', 'testing'])) {
+        // 2) Development / hosted-demo kits (never URL-based)
+        if (DemoSeeding::isAllowed()) {
             $this->call(DevelopmentDemoSeeder::class);
         }
     }

@@ -128,9 +128,9 @@ final class CommitteeDemoKit
 
     public function guardEnvironment(): void
     {
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoSeeding::isAllowed()) {
             throw new RuntimeException(
-                'Committee demo seeders may only run in the local or testing environment.'
+                DemoSeeding::refusalMessage('Committee demo seeders')
             );
         }
     }

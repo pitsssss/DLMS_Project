@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
 /**
- * Deterministic local/testing fixtures for Citizen Fine Payment + My Payments demos.
+ * Deterministic local/testing (or DEMO_SEEDING_ENABLED) fixtures for Citizen Fine Payment + My Payments demos.
  * Does not call Stripe, send mail/push, or emit lifecycle side effects.
  */
 final class CitizenFinePaymentDemoKit
@@ -72,9 +72,9 @@ final class CitizenFinePaymentDemoKit
 
     public function guardEnvironment(): void
     {
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoSeeding::isAllowed()) {
             throw new RuntimeException(
-                'Citizen Fine Payment demo seeder may only run in the local or testing environment.'
+                DemoSeeding::refusalMessage('Citizen Fine Payment demo seeder')
             );
         }
     }

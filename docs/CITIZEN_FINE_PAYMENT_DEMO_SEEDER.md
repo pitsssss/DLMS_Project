@@ -21,9 +21,9 @@ No real Stripe API calls. No mail/FCM from this seeder.
 php artisan migrate:fresh --seed
 ```
 
-When `APP_ENV` is `local` or `testing`, `DatabaseSeeder` → `DevelopmentDemoSeeder` → `CitizenFinePaymentDemoSeeder`.
+When `APP_ENV` is `local` or `testing`, **or** `DEMO_SEEDING_ENABLED=true`, `DatabaseSeeder` → `DevelopmentDemoSeeder` → `CitizenFinePaymentDemoSeeder`.
 
-See [`DEVELOPMENT_DATABASE_SEEDING.md`](DEVELOPMENT_DATABASE_SEEDING.md).
+See [`DEVELOPMENT_DATABASE_SEEDING.md`](DEVELOPMENT_DATABASE_SEEDING.md) (Hosted Demo / QA Server).
 
 ### Standalone
 
@@ -158,10 +158,11 @@ Development demo password only. Never use these accounts/passwords in production
 
 ## 13. Safety / production warning
 
-- Seeder **throws** outside `local` / `testing`
-- Not wired into production `DatabaseSeeder`
+- Seeder **throws** unless `local` / `testing` **or** `DEMO_SEEDING_ENABLED=true`
+- Not wired into production `DatabaseSeeder` path unless the flag is explicitly enabled
 - Fake Stripe session ids only (`cs_test_seed_*`)
 - No secrets committed
+- Never enable the flag on a real production database
 
 ## 14. Files changed
 

@@ -6,7 +6,9 @@ use Database\Seeders\Support\CitizenFinePaymentDemoKit;
 use Illuminate\Database\Seeder;
 
 /**
- * Deterministic Fine Payment + My Payments demo kit (local / testing only).
+ * Deterministic Fine Payment + My Payments demo kit.
+ *
+ * Allowed in local/testing, or when DEMO_SEEDING_ENABLED=true.
  *
  *   php artisan db:seed --class=CitizenFinePaymentDemoSeeder
  *

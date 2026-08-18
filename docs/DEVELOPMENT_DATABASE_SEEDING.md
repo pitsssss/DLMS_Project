@@ -18,7 +18,7 @@ See also: Fine Payment fixtures in [`CITIZEN_FINE_PAYMENT_DEMO_SEEDER.md`](CITIZ
 ```text
 DatabaseSeeder
 ├── Production-safe catalogs + SuperAdmin bootstrap (all environments)
-└── if APP_ENV = local | testing
+└── if local|testing OR DEMO_SEEDING_ENABLED=true
        └── DevelopmentDemoSeeder
               ├── DashboardEmployees / Admin / Employee / Citizen users
               ├── FullLifecycleSeeder          (FLOW-* lifecycle coverage)
@@ -29,6 +29,8 @@ DatabaseSeeder
               ├── CommitteeDemoSeeder          (committee queue demos)
               └── CitizenFinePaymentDemoSeeder (PAY-CFP-*, [CFP-*])
 ```
+
+Gate: `Database\Seeders\Support\DemoSeeding` — environment **or** explicit flag. **Never** driven by `APP_URL`.
 
 ---
 
@@ -48,7 +50,9 @@ DatabaseSeeder
 10. `AppointmentSlotsSeeder`
 11. `SuperAdminUserSeeder`
 
-### Local / testing only (`DevelopmentDemoSeeder`)
+### Demo dataset (`DevelopmentDemoSeeder`)
+
+Runs when `APP_ENV` is `local` / `testing`, **or** `DEMO_SEEDING_ENABLED=true`:
 
 12. `DashboardEmployeesSeeder`
 13. `AdminUserSeeder`
@@ -64,7 +68,7 @@ DatabaseSeeder
 
 ---
 
-## What gets seeded (local/testing)
+## What gets seeded (demo path)
 
 | Area | Source |
 |------|--------|
@@ -86,23 +90,61 @@ DatabaseSeeder
 
 ---
 
-## Production behavior
+## Production behavior (real production)
 
-When `APP_ENV=production`:
+```env
+APP_ENV=production
+DEMO_SEEDING_ENABLED=false
+```
 
 - Only catalog + `SuperAdminUserSeeder` run
 - **No** FLOW-*, PAY-CFP-*, committee demos, demo citizens, fake Stripe session ids
-- `CitizenFinePaymentDemoSeeder` also refuses production if invoked directly
+- Standalone `CitizenFinePaymentDemoSeeder` / `CommitteeDemoSeeder` also refuse unless the flag is true
 
-Do **not** run `migrate:fresh` against production.
+Do **not** run `migrate:fresh` against a real production database.
+
+---
+
+## Hosted Demo / QA Server
+
+Use a production-style deploy **without** changing `APP_ENV` to `local`, and **without** URL-based seeding logic.
+
+### Required variables
+
+```env
+APP_ENV=production
+DEMO_SEEDING_ENABLED=true
+```
+
+### Seed command
+
+```bash
+php artisan migrate:fresh --seed --force
+```
+
+That runs catalogs + SuperAdmin **and** the full `DevelopmentDemoSeeder` graph (FullLifecycle, dashboard demos, Committee, Citizen Fine Payment).
+
+### Warnings
+
+> **Never enable `DEMO_SEEDING_ENABLED` on a real production database.**  
+> **`migrate:fresh` permanently deletes all existing database data.**
+
+Keep real production as:
+
+```env
+APP_ENV=production
+DEMO_SEEDING_ENABLED=false
+```
+
+Config key: `config('dlms.demo_seeding_enabled')` ← `.env` `DEMO_SEEDING_ENABLED` (default `false`).
 
 ---
 
 ## CommitteeDemoKit decision
 
-**Included** in local/testing `DevelopmentDemoSeeder`.
+**Included** in `DevelopmentDemoSeeder`.
 
-Rationale: it was already part of the previous local-only `DatabaseSeeder` branch and supports daily dashboard QA for test-results / license-issuance queues. It remains environment-guarded (local/testing only).
+Rationale: supports daily dashboard QA for test-results / license-issuance queues. Guarded by the same `DemoSeeding` gate as Fine Payment demos.
 
 ---
 
@@ -114,7 +156,9 @@ Still supported without a full reset:
 php artisan db:seed --class=CitizenFinePaymentDemoSeeder
 ```
 
-`ensureCatalog()` remains so this works on an empty-enough local DB. Catalog upserts are idempotent (no duplicate Fees/Roles).
+Requires `local` / `testing`, **or** `DEMO_SEEDING_ENABLED=true`.
+
+`ensureCatalog()` remains so this works on an empty-enough DB. Catalog upserts are idempotent (no duplicate Fees/Roles).
 
 Targeted purge uses only:
 
@@ -131,23 +175,16 @@ It does **not** delete FullLifecycle `FLOW-*` data.
 | Mode | Expectation |
 |------|-------------|
 | `migrate:fresh --seed` | Always clean success |
-| Re-run `db:seed` on local | Catalogs upsert safely; CFP kit is deterministic; some older demos assume relatively fresh data — prefer `migrate:fresh --seed` for a clean slate |
+| Re-run `db:seed` on demo/local | Catalogs upsert safely; CFP kit is deterministic; some older demos assume relatively fresh data — prefer `migrate:fresh --seed` for a clean slate |
 
 ---
 
-## Safety
+## Safety / external side effects
 
-- No Stripe / mail / FCM from Fine Payment demo kit
+Demo seeders remain fixture-only even when `DEMO_SEEDING_ENABLED=true` under `APP_ENV=production`:
+
+- No live Stripe Checkout / webhook calls from demo kits
+- No mail / FCM / SMS from Fine Payment or Committee demo kits
 - FullLifecycle uses DB fixtures (mock payment metadata), not live Stripe
-- Confirm `APP_ENV` and `DB_DATABASE` before any `migrate:fresh`
 
-### Step 8 smoke (verified)
-
-```text
-APP_ENV=testing
-DB_DATABASE=dlms_testing
-php artisan migrate:fresh --seed --force → exit 0
-FLOW apps present; CFP citizens/fines/payments present
-```
-
-Full suite after Step 8: **1245 passed / 8160 assertions** (baseline before: 1243 / 8131).
+Confirm `APP_ENV`, `DEMO_SEEDING_ENABLED`, and `DB_DATABASE` before any `migrate:fresh`.

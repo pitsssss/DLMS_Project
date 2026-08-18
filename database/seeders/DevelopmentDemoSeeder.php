@@ -2,13 +2,14 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoSeeding;
 use Illuminate\Database\Seeder;
 
 /**
- * Local / testing development & demo dataset aggregator.
+ * Development & hosted-demo dataset aggregator.
  *
- * Invoked from DatabaseSeeder when APP_ENV is local or testing.
- * Never call this in production.
+ * Invoked from DatabaseSeeder when DemoSeeding::isAllowed()
+ * (local/testing, or DEMO_SEEDING_ENABLED=true).
  *
  * Includes FullLifecycle (FLOW-*), dashboard demos, CommitteeDemo,
  * and Citizen Fine Payment (CFP / PAY-CFP-*) fixtures.
@@ -19,8 +20,8 @@ class DevelopmentDemoSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing'])) {
-            $this->command?->warn('DevelopmentDemoSeeder skipped (not local/testing).');
+        if (! DemoSeeding::isAllowed()) {
+            $this->command?->warn('DevelopmentDemoSeeder skipped (demo seeding not allowed).');
 
             return;
         }
