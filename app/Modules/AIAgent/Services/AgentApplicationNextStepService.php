@@ -77,6 +77,43 @@ class AgentApplicationNextStepService
         return $message;
     }
 
+    public function nextStepMessageForApplication(LicenseApplication $application, string $language = 'ar'): string
+    {
+        $application->loadMissing('serviceType');
+        $status = $application->status instanceof ApplicationStatus
+            ? $application->status
+            : ApplicationStatus::tryFrom((string) $application->status) ?? ApplicationStatus::Draft;
+
+        if (ServiceWorkflow::usesUnblockWorkflow($application->serviceType?->code)) {
+            if ($status === ApplicationStatus::Approved) {
+                return AgentTranslator::message('ai_agent.application_next_step.license_unblock.approved', [], $language);
+            }
+
+            if ($status === ApplicationStatus::Completed) {
+                return AgentTranslator::message('ai_agent.application_next_step.license_unblock.completed', [], $language);
+            }
+        }
+
+        $replace = [];
+        if ($status === ApplicationStatus::Rejected) {
+            $reason = trim((string) ($application->rejection_reason ?? ''));
+            if ($reason !== '') {
+                return AgentTranslator::message('ai_agent.application_next_step.rejected_with_reason', [
+                    'reason' => $reason,
+                ], $language);
+            }
+        }
+
+        $key = 'ai_agent.application_next_step.'.$status->value;
+        $message = AgentTranslator::message($key, $replace, $language);
+
+        if (str_starts_with($message, 'messages.')) {
+            return AgentTranslator::message('ai_agent.application_next_step.unknown', [], $language);
+        }
+
+        return $message;
+    }
+
     /**
      * @return array{reply: string, next_step_key: string, next_step_message: string, suggested_action: string|null, status: string, status_label_ar: string, status_label_en?: string}
      */
@@ -90,7 +127,7 @@ class AgentApplicationNextStepService
         $statusLabel = $language === 'en'
             ? ApplicationStatusLabelMapper::labelEn($status)
             : ApplicationStatusLabelMapper::labelAr($status);
-        $message = $this->nextStepMessageForStatus($key, $language);
+        $message = $this->nextStepMessageForApplication($application, $language);
 
         if ($language === 'en') {
             return [
@@ -224,7 +261,7 @@ class AgentApplicationNextStepService
             return match ($status) {
                 ApplicationStatus::Draft, ApplicationStatus::DocumentsRejected => 'get_required_documents',
                 ApplicationStatus::PaymentPending => 'start_payment',
-                ApplicationStatus::LicenseIssued => 'get_licenses',
+                ApplicationStatus::LicenseIssued, ApplicationStatus::Completed => 'get_licenses',
                 default => null,
             };
         }
@@ -235,7 +272,7 @@ class AgentApplicationNextStepService
             ApplicationStatus::PaymentPending => 'start_payment',
             ApplicationStatus::PaymentCompleted, ApplicationStatus::AppointmentPending => 'get_available_tests',
             ApplicationStatus::WaitingRetest => 'get_appointment_slots',
-            ApplicationStatus::LicenseIssued => 'get_licenses',
+            ApplicationStatus::LicenseIssued, ApplicationStatus::Completed => 'get_licenses',
             default => null,
         };
     }

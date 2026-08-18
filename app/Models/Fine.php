@@ -16,6 +16,7 @@ class Fine extends Model
         'citizen_id',
         'license_id',
         'amount',
+        'currency',
         'reason',
         'status',
         'paid_at',

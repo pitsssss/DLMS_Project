@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Models\LicenseApplication;
 use App\Models\User;
 use App\Modules\AIAgent\Enums\AgentIntent;
+use App\Modules\AIAgent\Models\AIAgentSession;
 use App\Modules\AIAgent\Support\AgentTranslator;
 use App\Modules\AIAgent\Support\ApplicationStatusLabelMapper;
 use App\Modules\AIAgent\Support\LicenseTypeSlotExtractor;
@@ -22,11 +23,16 @@ class AgentApplicationStatusHandler
      *
      * @return array<string, mixed>
      */
-    public function buildPayload(User $citizen, string $language = 'ar'): array
+    public function buildPayload(User $citizen, AIAgentSession $session, string $language = 'ar'): array
     {
         $applications = $this->activeApplications($citizen);
 
         if ($applications->isEmpty()) {
+            $fallback = $this->nextStepService->resolveTargetApplication($citizen, $session);
+            if ($fallback instanceof LicenseApplication) {
+                return $this->buildPayloadForApplication($citizen, $fallback, $language);
+            }
+
             return $this->basePayload($language, [
                 'reply' => AgentTranslator::message('ai_agent.no_active_applications', [], $language),
                 'proposed_action' => null,

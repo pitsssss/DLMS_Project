@@ -232,7 +232,9 @@ class LicenseFlowTest extends TestCase
             'citizen_id' => $citizen->id,
             'amount' => 10000,
             'reason' => 'Late document submission',
-        ])->json('data.id');
+        ])->assertCreated()
+            ->assertJsonPath('data.currency', 'USD')
+            ->json('data.id');
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'fine.created',
@@ -243,7 +245,8 @@ class LicenseFlowTest extends TestCase
         $this->putJson("/api/admin/fines/{$fineId}", [
             'status' => FineStatus::Paid->value,
         ])->assertOk()
-            ->assertJsonPath('data.status', FineStatus::Paid->value);
+            ->assertJsonPath('data.status', FineStatus::Paid->value)
+            ->assertJsonPath('data.currency', 'USD');
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'fine.updated',
@@ -255,7 +258,8 @@ class LicenseFlowTest extends TestCase
 
         $this->getJson('/api/fines')
             ->assertOk()
-            ->assertJsonPath('data.0.status', FineStatus::Paid->value);
+            ->assertJsonPath('data.0.status', FineStatus::Paid->value)
+            ->assertJsonPath('data.0.currency', 'USD');
     }
 
     public function test_employee_can_block_and_unblock_license(): void

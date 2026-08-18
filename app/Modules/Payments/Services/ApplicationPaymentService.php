@@ -67,98 +67,122 @@ class ApplicationPaymentService
     {
         $provider = $this->providerManager->isStripe() ? 'stripe' : 'mock';
 
-        /** @var array{payment: Payment, created: bool} $prepared */
-        $prepared = DB::transaction(function () use ($citizen, $applicationId, $metadata, $provider) {
-            $application = LicenseApplication::query()
-                ->whereKey($applicationId)
-                ->where('citizen_id', $citizen->id)
-                ->lockForUpdate()
-                ->first();
+        $prepared = null;
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            /** @var array{action: string, payment: Payment} $prepared */
+            $prepared = DB::transaction(function () use ($citizen, $applicationId, $metadata, $provider) {
+                $application = LicenseApplication::query()
+                    ->whereKey($applicationId)
+                    ->where('citizen_id', $citizen->id)
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($application === null) {
-                throw new ApiException('messages.applications.not_found', 404);
-            }
+                if ($application === null) {
+                    throw new ApiException('messages.applications.not_found', 404);
+                }
 
-            if ($application->status !== ApplicationStatus::PaymentPending) {
-                throw new ApiException('messages.payments.not_awaiting_payment', 422);
-            }
+                if ($application->status !== ApplicationStatus::PaymentPending) {
+                    throw new ApiException('messages.payments.not_awaiting_payment', 422);
+                }
 
-            $fee = $this->resolveApplicationFee($application);
-            $obligationKey = Payment::obligationKey($application->id, $fee->id);
+                $fee = $this->resolveApplicationFee($application);
+                $obligationKey = Payment::obligationKey($application->id, $fee->id);
 
-            $existingCompleted = Payment::query()
-                ->where(function ($q) use ($obligationKey, $application, $fee): void {
-                    $q->where('settled_obligation_key', $obligationKey)
-                        ->orWhere(function ($inner) use ($application, $fee): void {
-                            $inner->where('application_id', $application->id)
-                                ->where('fee_id', $fee->id)
-                                ->whereNull('fine_id')
-                                ->where('status', PaymentStatus::Completed);
-                        });
-                })
-                ->lockForUpdate()
-                ->exists();
+                $existingCompleted = Payment::query()
+                    ->where(function ($q) use ($obligationKey, $application, $fee): void {
+                        $q->where('settled_obligation_key', $obligationKey)
+                            ->orWhere(function ($inner) use ($application, $fee): void {
+                                $inner->where('application_id', $application->id)
+                                    ->where('fee_id', $fee->id)
+                                    ->whereNull('fine_id')
+                                    ->where('status', PaymentStatus::Completed);
+                            });
+                    })
+                    ->lockForUpdate()
+                    ->exists();
 
-            if ($existingCompleted) {
-                throw new ApiException('messages.payments.already_completed', 422);
-            }
+                if ($existingCompleted) {
+                    throw new ApiException('messages.payments.already_completed', 422);
+                }
 
-            $existingActive = Payment::query()
-                ->where('active_obligation_key', $obligationKey)
-                ->lockForUpdate()
-                ->first();
+                $existingActive = Payment::query()
+                    ->where('active_obligation_key', $obligationKey)
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($existingActive !== null) {
-                return ['payment' => $existingActive->load('fee'), 'created' => false];
-            }
+                if ($existingActive !== null) {
+                    if ((string) $existingActive->provider === $provider) {
+                        return ['action' => 'reuse', 'payment' => $existingActive->load('fee')];
+                    }
 
-            $payment = Payment::query()->create([
-                'payment_number' => $this->generateUniquePaymentNumber(),
-                'user_id' => $citizen->id,
-                'application_id' => $application->id,
-                'fine_id' => null,
-                'fee_id' => $fee->id,
-                'payable_type' => null,
-                'payable_id' => null,
-                'amount' => Money::format((string) $fee->amount),
-                'currency' => strtoupper((string) $fee->currency),
-                'status' => PaymentStatus::Pending,
-                'provider' => $provider,
-                'provider_reference' => null,
-                'paid_at' => null,
-                'metadata' => $metadata,
-                'active_obligation_key' => $obligationKey,
-                'settled_obligation_key' => null,
-            ]);
+                    return ['action' => 'retire', 'payment' => $existingActive];
+                }
 
-            $this->auditLogs->log(
-                $citizen,
-                'payment.created',
-                'payment',
-                $payment->id,
-                null,
-                [
-                    'status' => PaymentStatus::Pending->value,
-                    'amount' => Money::format((string) $payment->amount),
-                    'currency' => $payment->currency,
-                    'provider' => $provider,
-                    'payment_number' => $payment->payment_number,
+                $payment = Payment::query()->create([
+                    'payment_number' => $this->generateUniquePaymentNumber(),
+                    'user_id' => $citizen->id,
                     'application_id' => $application->id,
-                    'source' => 'citizen',
-                ]
-            );
+                    'fine_id' => null,
+                    'fee_id' => $fee->id,
+                    'payable_type' => null,
+                    'payable_id' => null,
+                    'amount' => Money::format((string) $fee->amount),
+                    'currency' => strtoupper((string) $fee->currency),
+                    'status' => PaymentStatus::Pending,
+                    'provider' => $provider,
+                    'provider_reference' => null,
+                    'paid_at' => null,
+                    'metadata' => $metadata,
+                    'active_obligation_key' => $obligationKey,
+                    'settled_obligation_key' => null,
+                ]);
 
-            return ['payment' => $payment->load('fee'), 'created' => true];
-        });
+                $this->auditLogs->log(
+                    $citizen,
+                    'payment.created',
+                    'payment',
+                    $payment->id,
+                    null,
+                    [
+                        'status' => PaymentStatus::Pending->value,
+                        'amount' => Money::format((string) $payment->amount),
+                        'currency' => $payment->currency,
+                        'provider' => $provider,
+                        'payment_number' => $payment->payment_number,
+                        'application_id' => $application->id,
+                        'source' => 'citizen',
+                    ]
+                );
+
+                return ['action' => 'created', 'payment' => $payment->load('fee')];
+            });
+
+            if ($prepared['action'] === 'retire') {
+                $this->lifecycle->retireActiveIfProviderMismatch(
+                    $prepared['payment'],
+                    $provider,
+                    $citizen,
+                    'citizen'
+                );
+                continue;
+            }
+
+            break;
+        }
+
+        if ($prepared === null || $prepared['action'] === 'retire') {
+            throw new ApiException('messages.payments.provider_unavailable', 503);
+        }
 
         $payment = $prepared['payment'];
+        $created = $prepared['action'] === 'created';
 
         if ($provider !== 'stripe') {
             return ['payment' => $payment];
         }
 
         // Reuse existing Stripe checkout when still valid.
-        if (! $prepared['created'] && $payment->provider === 'stripe') {
+        if (! $created && $payment->provider === 'stripe') {
             $checkoutUrl = $payment->metadata['checkout_url'] ?? null;
             if (is_string($checkoutUrl) && $checkoutUrl !== '' && $payment->provider_reference) {
                 return [
@@ -167,6 +191,10 @@ class ApplicationPaymentService
                     'publishable_key' => (string) config('payment.stripe.publishable_key'),
                 ];
             }
+        }
+
+        if ($payment->provider !== 'stripe') {
+            throw new ApiException('messages.payments.provider_unavailable', 503);
         }
 
         $this->assertStripeCurrencyCompatible($payment);
@@ -367,11 +395,12 @@ class ApplicationPaymentService
 
     public function findStripePaymentBySessionId(string $sessionId): ?Payment
     {
-        return Payment::query()
+        $payment = Payment::query()
             ->where('provider', 'stripe')
             ->where('provider_reference', $sessionId)
-            ->whereNull('fine_id')
             ->first();
+
+        return $payment !== null && $payment->isSupportedPayable() ? $payment : null;
     }
 
     public function findStripePaymentBySessionMetadata(?object $metadata): ?Payment
@@ -385,11 +414,12 @@ class ApplicationPaymentService
             return null;
         }
 
-        return Payment::query()
+        $payment = Payment::query()
             ->whereKey((int) $paymentId)
             ->where('provider', 'stripe')
-            ->whereNull('fine_id')
             ->first();
+
+        return $payment !== null && $payment->isSupportedPayable() ? $payment : null;
     }
 
     public function markStripePaymentFailed(Payment $payment, array $mergeMetadata, PaymentFailureCode $code = PaymentFailureCode::AsyncPaymentFailed): void

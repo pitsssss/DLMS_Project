@@ -14,6 +14,8 @@ use App\Modules\Appointments\Controllers\ApplicationAppointmentController;
 use App\Modules\Appointments\Controllers\AppointmentController;
 use App\Modules\Appointments\Controllers\AppointmentSlotController;
 use App\Modules\Payments\Controllers\ApplicationPaymentController;
+use App\Modules\Payments\Controllers\CitizenPaymentController;
+use App\Modules\Payments\Controllers\FinePaymentController;
 use App\Modules\Payments\Controllers\StripeWebhookController;
 use App\Modules\Tests\Controllers\ApplicationTestResultController;
 use App\Modules\Fines\Controllers\FineController;
@@ -153,6 +155,23 @@ Route::middleware(['auth:sanctum', 'locale', 'citizen'])->group(function (): voi
         ->middleware('throttle:15,1');
 
     Route::get('/fines', [FineController::class, 'index']);
+    Route::get('/fines/{fine}', [FineController::class, 'show'])->whereNumber('fine');
+    Route::get('/fines/{fine}/payments/{payment}/status', [FinePaymentController::class, 'status'])
+        ->whereNumber('fine')
+        ->whereNumber('payment');
+
+    Route::get('/payments', [CitizenPaymentController::class, 'index']);
+    Route::get('/payments/{payment}', [CitizenPaymentController::class, 'show'])->whereNumber('payment');
+
+    Route::middleware('profile.approved')->group(function (): void {
+        Route::post('/fines/{fine}/payments', [FinePaymentController::class, 'store'])
+            ->whereNumber('fine')
+            ->middleware('throttle:15,1');
+        Route::post('/fines/{fine}/payments/{payment}/confirm', [FinePaymentController::class, 'confirm'])
+            ->whereNumber('fine')
+            ->whereNumber('payment')
+            ->middleware('throttle:15,1');
+    });
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

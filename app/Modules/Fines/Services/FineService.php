@@ -40,6 +40,21 @@ class FineService
         return $this->fines->listForCitizen($citizen);
     }
 
+    public function findOwnedByCitizen(User $citizen, int $fineId): Fine
+    {
+        $fine = Fine::query()
+            ->whereKey($fineId)
+            ->where('citizen_id', $citizen->id)
+            ->with('license')
+            ->first();
+
+        if ($fine === null) {
+            throw new ApiException('messages.fines.not_found', 404);
+        }
+
+        return $fine;
+    }
+
     public function create(User $actor, int $citizenId, float $amount, string $reason, ?int $licenseId = null): Fine
     {
         if ($amount <= 0) {
@@ -58,10 +73,13 @@ class FineService
             }
         }
 
+        $currency = $this->canonicalFineCurrency();
+
         $fine = Fine::query()->create([
             'citizen_id' => $citizenId,
             'license_id' => $licenseId,
             'amount' => $amount,
+            'currency' => $currency,
             'reason' => $reason,
             'status' => FineStatus::Unpaid,
             'paid_at' => null,
@@ -73,7 +91,12 @@ class FineService
             'fine',
             $fine->id,
             null,
-            ['amount' => $amount, 'citizen_id' => $citizenId, 'status' => FineStatus::Unpaid->value]
+            [
+                'amount' => $amount,
+                'currency' => $currency,
+                'citizen_id' => $citizenId,
+                'status' => FineStatus::Unpaid->value,
+            ]
         );
 
         $this->notifications->notify(
@@ -95,6 +118,9 @@ class FineService
             if ($fine === null) {
                 throw new ApiException('messages.fines.not_found', 404);
             }
+
+            // Currency is immutable after creation.
+            unset($data['currency']);
 
             if (isset($data['amount'])) {
                 if ((float) $data['amount'] <= 0) {
@@ -157,5 +183,10 @@ class FineService
 
             return $fine->fresh(['citizen', 'license']);
         });
+    }
+
+    private function canonicalFineCurrency(): string
+    {
+        return strtoupper((string) config('payment.fine_currency', 'USD'));
     }
 }

@@ -14,7 +14,7 @@ class ReconcilePendingPaymentsCommand extends Command
                             {--minutes= : Stale threshold in minutes}
                             {--limit= : Max payments to process}';
 
-    protected $description = 'Reconcile stale pending/under_verification Stripe application payments';
+    protected $description = 'Reconcile stale pending/under_verification Stripe application and fine payments';
 
     public function handle(PaymentReconciliationService $reconciliation): int
     {
@@ -22,10 +22,16 @@ class ReconcilePendingPaymentsCommand extends Command
         $limit = (int) ($this->option('limit') ?: config('payment.reconciliation.batch_size', 50));
 
         $query = Payment::query()
-            ->whereNull('fine_id')
             ->where('provider', 'stripe')
             ->whereIn('status', [PaymentStatus::Pending, PaymentStatus::UnderVerification])
             ->whereNotNull('provider_reference')
+            ->where(function ($q): void {
+                $q->where(function ($app): void {
+                    $app->whereNull('fine_id')->whereNotNull('application_id');
+                })->orWhere(function ($fine): void {
+                    $fine->whereNotNull('fine_id')->whereNull('application_id');
+                });
+            })
             ->where('created_at', '<=', now()->subMinutes($minutes))
             ->orderBy('id')
             ->limit($limit);

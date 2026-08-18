@@ -96,9 +96,9 @@ class AgentLicenseOptionService
 
         $ordered = $licenses->values();
         $map = [
-            'الاول' => 0, 'الأول' => 0, 'اول' => 0, 'first' => 0, '1' => 0,
-            'الثاني' => 1, 'تاني' => 1, 'second' => 1, '2' => 1,
-            'الثالث' => 2, 'تالت' => 2, 'third' => 2, '3' => 2,
+            'الاول' => 0, 'الأول' => 0, 'الاولى' => 0, 'الأولى' => 0, 'اول' => 0, 'first' => 0, '1' => 0,
+            'الثاني' => 1, 'الثانية' => 1, 'تاني' => 1, 'second' => 1, '2' => 1,
+            'الثالث' => 2, 'الثالثة' => 2, 'تالت' => 2, 'third' => 2, '3' => 2,
         ];
         foreach ($map as $phrase => $index) {
             if ($normalized === mb_strtolower($phrase) && $index < $ordered->count()) {

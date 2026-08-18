@@ -87,8 +87,8 @@ class AgentIntentDetector
             'confidence' => 0.45,
             'language' => $language,
             'reply' => $language === 'ar'
-                ? 'أنا مساعد خدمات رخص القيادة. يمكنني مساعدتك في طلب رخصة جديدة، متابعة الطلب، المستندات، الدفع، المواعيد، النتائج، الرخص، والمخالفات. كيف يمكنني مساعدتك؟'
-                : 'I assist with driving license services only. I can help with new applications, status, documents, payments, appointments, results, licenses, and fines. How can I help?',
+                ? 'أنا مساعد خدمات رخص القيادة. يمكنني مساعدتك في طلب رخصة جديدة، طلب فك حظر الرخصة، متابعة الطلب، المستندات، الدفع، المواعيد، النتائج، الرخص، والمخالفات. كيف يمكنني مساعدتك؟'
+                : 'I assist with driving license services only. I can help with new applications, license unblock requests, status, documents, payments, appointments, results, licenses, and fines. How can I help?',
             'missing_slots' => [],
             'proposed_action' => null,
             'requires_confirmation' => false,

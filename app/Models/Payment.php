@@ -77,9 +77,37 @@ class Payment extends Model
         return "application:{$applicationId}:fee:{$feeId}";
     }
 
+    public static function fineObligationKey(int $fineId): string
+    {
+        return "fine:{$fineId}";
+    }
+
     public function isApplicationPayment(): bool
     {
         return $this->fine_id === null && $this->application_id !== null;
+    }
+
+    public function isFinePayment(): bool
+    {
+        return $this->fine_id !== null && $this->application_id === null;
+    }
+
+    public function isSupportedPayable(): bool
+    {
+        return $this->isApplicationPayment() || $this->isFinePayment();
+    }
+
+    public function obligationKeyValue(): ?string
+    {
+        if ($this->isApplicationPayment() && $this->fee_id !== null) {
+            return self::obligationKey((int) $this->application_id, (int) $this->fee_id);
+        }
+
+        if ($this->isFinePayment()) {
+            return self::fineObligationKey((int) $this->fine_id);
+        }
+
+        return null;
     }
 
     public function isTerminalCompleted(): bool

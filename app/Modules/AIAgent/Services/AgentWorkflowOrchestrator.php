@@ -61,7 +61,7 @@ class AgentWorkflowOrchestrator
         return match ($intent) {
             AgentIntent::AdminActionDenied => $this->adminDeniedResponse($language),
             AgentIntent::OutOfScope => $this->outOfScopeResponse($language),
-            AgentIntent::GetApplicationStatus => $this->applicationStatusHandler->buildPayload($citizen, $language),
+            AgentIntent::GetApplicationStatus => $this->applicationStatusHandler->buildPayload($citizen, $session, $language),
             AgentIntent::GetApplicationNextStep => $this->applicationNextStepService->buildPayload($citizen, $session, $language),
             AgentIntent::GetRequiredDocuments => $this->requiredDocumentsHandler->buildPayload($citizen, $session, $language),
             AgentIntent::SubmitDocumentsForReview => $this->submitDocumentsForReviewPayload($context, $language),
@@ -78,6 +78,7 @@ class AgentWorkflowOrchestrator
             AgentIntent::CreateRenewLicenseApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::RenewLicense, $language),
             AgentIntent::CreateLostReplacementApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::LostReplacement, $language),
             AgentIntent::CreateDamagedReplacementApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::DamagedReplacement, $language),
+            AgentIntent::CreateLicenseUnblockApplication => $this->otherLicenseServicesHandler->buildPayload($citizen, ServiceCode::LicenseUnblock, $language),
             default => null,
         };
     }
@@ -303,8 +304,8 @@ class AgentWorkflowOrchestrator
         return $this->responseBuilder->basePayload(AgentIntent::GeneralHelp, $language, [
             'confidence' => 0.45,
             'reply' => $language === 'ar'
-                ? 'أنا مساعد خدمات رخص القيادة. يمكنني مساعدتك في طلب رخصة جديدة، متابعة الطلب، المستندات، الدفع، المواعيد، النتائج، الرخص، والمخالفات. كيف يمكنني مساعدتك؟'
-                : 'I assist with driving license services only.',
+                ? 'أنا مساعد خدمات رخص القيادة. يمكنني مساعدتك في طلب رخصة جديدة، طلب فك حظر الرخصة، متابعة الطلب، المستندات، الدفع، المواعيد، النتائج، الرخص، والمخالفات. كيف يمكنني مساعدتك؟'
+                : 'I assist with driving license services only. I can help with new applications, license unblock requests, status, documents, payments, appointments, results, licenses, and fines. How can I help?',
             'execute_immediately' => false,
         ]);
     }

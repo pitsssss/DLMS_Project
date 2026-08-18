@@ -159,6 +159,54 @@ class PaymentStripeTest extends TestCase
         $this->assertStringContainsString('checkout.stripe.test', $checkoutUrl);
     }
 
+    public function test_does_not_reuse_pending_mock_payment_when_configured_provider_is_stripe(): void
+    {
+        $this->mockStripeGatewayForCreate();
+        [$citizen, $application] = $this->stripeCitizenApplication();
+        Sanctum::actingAs($citizen);
+
+        $fee = Fee::query()->where('code', 'application_fee')->firstOrFail();
+        $obligationKey = Payment::obligationKey($application->id, $fee->id);
+
+        $mockPending = Payment::query()->create([
+            'payment_number' => 'PAY-APP-MOCK-'.uniqid(),
+            'user_id' => $citizen->id,
+            'application_id' => $application->id,
+            'fine_id' => null,
+            'fee_id' => $fee->id,
+            'payable_type' => null,
+            'payable_id' => null,
+            'amount' => Money::format((string) $fee->amount),
+            'currency' => strtoupper((string) $fee->currency),
+            'status' => PaymentStatus::Pending,
+            'provider' => 'mock',
+            'provider_reference' => null,
+            'paid_at' => null,
+            'metadata' => ['source' => 'cross_provider_regression'],
+            'active_obligation_key' => $obligationKey,
+            'settled_obligation_key' => null,
+        ]);
+
+        $newId = (int) $this->postJson("/api/applications/{$application->id}/payments", [])
+            ->assertOk()
+            ->json('data.payment.id');
+
+        $this->assertNotSame($mockPending->id, $newId);
+        $this->assertDatabaseHas('payments', [
+            'id' => $mockPending->id,
+            'provider' => 'mock',
+            'status' => PaymentStatus::Failed->value,
+            'failure_code' => 'provider_mismatch',
+            'active_obligation_key' => null,
+        ]);
+        $this->assertNull($mockPending->fresh()->provider_reference);
+
+        $newPayment = Payment::query()->findOrFail($newId);
+        $this->assertSame('stripe', $newPayment->provider);
+        $this->assertSame('cs_test_'.$newId, $newPayment->provider_reference);
+        $this->assertSame($obligationKey, $newPayment->active_obligation_key);
+    }
+
     public function test_stripe_manual_confirm_is_disabled(): void
     {
         $this->mockStripeGatewayForCreate();

@@ -8,6 +8,7 @@ enum AgentIntent: string
     case CreateRenewLicenseApplication = 'create_renew_license_application';
     case CreateLostReplacementApplication = 'create_lost_replacement_application';
     case CreateDamagedReplacementApplication = 'create_damaged_replacement_application';
+    case CreateLicenseUnblockApplication = 'create_license_unblock_application';
     case GetApplicationStatus = 'get_application_status';
     case GetApplicationNextStep = 'get_application_next_step';
     case GetRequiredDocuments = 'get_required_documents';

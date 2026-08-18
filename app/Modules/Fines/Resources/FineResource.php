@@ -2,6 +2,7 @@
 
 namespace App\Modules\Fines\Resources;
 
+use App\Enums\FineStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,8 +19,10 @@ class FineResource extends JsonResource
             'citizen_id' => $this->citizen_id,
             'license_id' => $this->license_id,
             'amount' => $this->amount,
+            'currency' => $this->currency,
             'reason' => $this->reason,
             'status' => $this->status->value,
+            'is_payable' => $this->status === FineStatus::Unpaid && (float) $this->amount > 0,
             'paid_at' => $this->paid_at?->toIso8601String(),
             'citizen' => $this->whenLoaded('citizen', fn () => [
                 'id' => $this->citizen->id,

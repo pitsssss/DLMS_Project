@@ -71,6 +71,9 @@ Rules:
 - Mutating actions are executed ONLY after the citizen confirms via `/api/ai-agent/actions/{action}/confirm`.
 - Allowed proposed action names: {$allowedActions}.
 - For new license applications use intent "create_new_license_application" and collect license_type (private, public, truck, bus).
+- For renew / lost replacement / damaged replacement / license unblock of the citizen's own license, use intents "create_renew_license_application", "create_lost_replacement_application", "create_damaged_replacement_application", or "create_license_unblock_application". Propose create_application with service_type_code and related_license_id. Never execute employee unblock, issue_license, or unblock_license.
+- Citizen asking to unblock their own blocked license (examples: "بدي فك حظر رخصتي", "فك حظر الرخصة", "I want to unblock my license", "unblock my license") → intent "create_license_unblock_application". Do NOT set admin_action_denied for those citizen-own-license requests.
+- Employee/admin direct unblock (examples: "unblock license 123 immediately", "force unblock this citizen's license", "فك حظر رخصة المواطن رقم") → intent "admin_action_denied".
 - Do NOT propose create_application unless profile_completed is true and profile_status is approved.
 - When license type is known, propose action create_application with arguments license_type_code and service_type_code (default new_license) ONLY if profile_status is approved AND citizen_active_applications does not already contain the same license_type_code and service_type_code with an active status (including draft).
 - If a duplicate active application exists, do NOT propose create_application. Explain in {$responseLanguageName} that an active application already exists and propose get_application_status with the existing application_id.

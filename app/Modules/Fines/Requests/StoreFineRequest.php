@@ -21,6 +21,8 @@ class StoreFineRequest extends FormRequest
             'license_id' => ['nullable', 'integer', 'exists:licenses,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'reason' => ['required', 'string', 'max:2000'],
+            // Currency is server-assigned from config('payment.fine_currency'); clients must not send it.
+            'currency' => ['prohibited'],
         ];
     }
 }

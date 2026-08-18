@@ -166,6 +166,7 @@ enum NotificationType: string
             ],
             self::PaymentCompleted => [
                 'application_id',
+                'fine_id',
                 'payment_id',
                 'payment_number',
                 'amount',
@@ -173,6 +174,7 @@ enum NotificationType: string
             ],
             self::PaymentFailed, self::PaymentUnderVerification => [
                 'application_id',
+                'fine_id',
                 'payment_id',
                 'payment_number',
             ],

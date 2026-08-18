@@ -32,6 +32,7 @@ class AgentWorkflowActionMap
         'cancel_appointment',
         'renew_license',
         'request_license_replacement',
+        // Map-only label. Citizen unblock is create_application + license_unblock, not an executor action.
         'request_unblock',
     ];
 

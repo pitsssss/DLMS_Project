@@ -285,6 +285,7 @@ class AIAgentBilingualHardeningTest extends TestCase
             ['I want to renew my license', 'create_renew_license_application'],
             ['I lost my license', 'create_lost_replacement_application'],
             ['My license is damaged', 'create_damaged_replacement_application'],
+            ['I want to unblock my license', 'create_license_unblock_application'],
         ] as [$message, $intent]) {
             [$citizen] = $this->citizenWithLicense(strtoupper(substr($intent, 7, 3)));
             Sanctum::actingAs($citizen);

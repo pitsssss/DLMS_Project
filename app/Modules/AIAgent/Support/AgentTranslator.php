@@ -308,6 +308,12 @@ class AgentTranslator
             'ai_agent.other_license.service.renew_license' => 'تجديد',
             'ai_agent.other_license.service.lost_replacement' => 'بدل فاقد',
             'ai_agent.other_license.service.damaged_replacement' => 'بدل تالف',
+            'ai_agent.other_license.service.license_unblock' => 'فك حظر',
+            'ai_agent.other_license.none_eligible_license_unblock' => 'لا توجد لديك رخصة محظورة مؤهلة حاليًا لتقديم طلب فك الحظر.',
+            'ai_agent.other_license.fines_hint' => 'يمكنك عرض مخالفاتك بقول «المخالفات».',
+            'ai_agent.create_application.license_unblock.success' => 'تم إنشاء طلب فك حظر الرخصة بنجاح. رقم الطلب هو '
+                .($replace['number'] ?? '')
+                .'. الخطوة التالية هي رفع الوثائق المطلوبة.',
             'ai_agent.payment.start.confirm' => 'يمكنني تجهيز دفع رسوم الطلب. هل تؤكد المتابعة؟',
             'ai_agent.payment.fee.reply' => 'رسوم طلبك '
                 .($replace['number'] ?? '')
@@ -619,6 +625,12 @@ class AgentTranslator
             'ai_agent.other_license.service.renew_license' => 'renewal',
             'ai_agent.other_license.service.lost_replacement' => 'lost replacement',
             'ai_agent.other_license.service.damaged_replacement' => 'damaged replacement',
+            'ai_agent.other_license.service.license_unblock' => 'license unblock',
+            'ai_agent.other_license.none_eligible_license_unblock' => 'You do not currently have an eligible blocked license for an unblock request.',
+            'ai_agent.other_license.fines_hint' => 'You can view your fines by saying "fines".',
+            'ai_agent.create_application.license_unblock.success' => 'Your license unblock application was created successfully. Application number is '
+                .($replace['number'] ?? '')
+                .'. The next step is to upload the required documents.',
             'ai_agent.payment.start.confirm' => 'I can prepare the application fee payment. Do you confirm?',
             'ai_agent.payment.fee.reply' => 'The fee for application '
                 .($replace['number'] ?? '')
@@ -854,7 +866,11 @@ class AgentTranslator
             'administrative_review' => 'طلبك قيد المراجعة الإدارية حالياً. لا تحتاج لاتخاذ إجراء حالياً حتى يتم الانتهاء من المراجعة.',
             'license_issued' => 'تم إصدار الرخصة الخاصة بطلبك بنجاح. يمكنك الآن عرض تفاصيل الرخصة من قسم الرخص.',
             'rejected' => 'تم رفض الطلب. يمكنك مراجعة سبب الرفض من تفاصيل الطلب.',
+            'rejected_with_reason' => 'تم رفض الطلب. السبب: '.($replace['reason'] ?? ''),
             'cancelled' => 'تم إلغاء هذا الطلب. يمكنك إنشاء طلب جديد إذا كنت ترغب بمتابعة الخدمة من البداية.',
+            'completed' => 'تم إكمال هذا الطلب، ولا توجد خطوات إضافية مطلوبة منك.',
+            'license_unblock.approved' => 'تم استكمال متطلبات طلب فك الحظر، والطلب الآن بانتظار تنفيذ فك الحظر من الموظف المختص.',
+            'license_unblock.completed' => 'تم إكمال طلب فك الحظر، ولا توجد خطوات إضافية مطلوبة منك. يمكنك تحديث قائمة الرخص للتحقق من الحالة الحالية للرخصة.',
             'unknown' => 'لم أتمكن من تحديد الخطوة التالية لهذا الطلب. يمكنك فتح تفاصيل الطلب أو التواصل مع الدعم.',
             default => 'لم أتمكن من تحديد الخطوة التالية لهذا الطلب. يمكنك فتح تفاصيل الطلب أو التواصل مع الدعم.',
         };
@@ -883,7 +899,11 @@ class AgentTranslator
             'administrative_review' => 'Your application is currently under administrative review. You do not need to take any action now until the review is complete.',
             'license_issued' => 'The license for your application has been issued successfully. You can now view the license details from the licenses section.',
             'rejected' => 'The application has been rejected. You can review the reason for rejection from the application details.',
+            'rejected_with_reason' => 'The application has been rejected. Reason: '.($replace['reason'] ?? ''),
             'cancelled' => 'This application has been cancelled. You can create a new application if you want to continue the service from the beginning.',
+            'completed' => 'This application has been completed. No further action is required from you.',
+            'license_unblock.approved' => 'Your unblock application requirements are complete and the request is now waiting for an authorized employee to perform the final unblock.',
+            'license_unblock.completed' => 'Your license unblock request has been completed. No further action is required from you. Refresh your licenses to view the current license status.',
             'unknown' => 'I could not determine the next step for this application. You can open the application details or contact support.',
             default => 'I could not determine the next step for this application. You can open the application details or contact support.',
         };

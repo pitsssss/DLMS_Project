@@ -198,7 +198,7 @@ class AgentApplicationTextSelector
             'new_license' => ['رخصة جديدة', 'طلب رخصة جديدة', 'اصدار', 'إصدار', 'new license'],
             'renew_license' => ['تجديد', 'طلب التجديد', 'طلب تجديد', 'renew'],
             'lost_replacement' => ['بدل فاقد', 'فاقد', 'lost'],
-            'damaged_replacement' => ['بدل تالف', 'تالف', 'damaged'],
+            'license_unblock' => ['فك حظر', 'فك الحظر', 'unblock'],
         ];
 
         return self::matchByAttribute($normalized, $ordered, $map, static function (LicenseApplication $app): string {

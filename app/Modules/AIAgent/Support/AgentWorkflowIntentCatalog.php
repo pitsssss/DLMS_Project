@@ -165,6 +165,13 @@ class AgentWorkflowIntentCatalog
                 'action_name' => 'create_application',
                 'suggested_followups' => ['get_required_documents'],
             ],
+            AgentIntent::CreateLicenseUnblockApplication->value => [
+                'intent' => AgentIntent::CreateLicenseUnblockApplication->value,
+                'requires_application' => false,
+                'read_only' => false,
+                'action_name' => 'create_application',
+                'suggested_followups' => ['get_required_documents'],
+            ],
             AgentIntent::GeneralHelp->value => [
                 'intent' => AgentIntent::GeneralHelp->value,
                 'requires_application' => false,

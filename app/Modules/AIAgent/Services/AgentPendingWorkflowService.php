@@ -344,6 +344,7 @@ class AgentPendingWorkflowService
             AgentIntent::CreateRenewLicenseApplication->value => \App\Enums\ServiceCode::RenewLicense,
             AgentIntent::CreateLostReplacementApplication->value => \App\Enums\ServiceCode::LostReplacement,
             AgentIntent::CreateDamagedReplacementApplication->value => \App\Enums\ServiceCode::DamagedReplacement,
+            AgentIntent::CreateLicenseUnblockApplication->value => \App\Enums\ServiceCode::LicenseUnblock,
             default => null,
         };
         if ($service === null) {
@@ -1840,6 +1841,7 @@ class AgentPendingWorkflowService
             AgentIntent::CreateRenewLicenseApplication->value => \App\Enums\ServiceCode::RenewLicense,
             AgentIntent::CreateLostReplacementApplication->value => \App\Enums\ServiceCode::LostReplacement,
             AgentIntent::CreateDamagedReplacementApplication->value => \App\Enums\ServiceCode::DamagedReplacement,
+            AgentIntent::CreateLicenseUnblockApplication->value => \App\Enums\ServiceCode::LicenseUnblock,
             default => \App\Enums\ServiceCode::tryFrom((string) ($workflow['collected_slots']['service_type_code'] ?? '')),
         };
 

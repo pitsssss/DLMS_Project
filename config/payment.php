@@ -6,6 +6,10 @@ return [
     // Application fees and payments use USD. Comparisons are case-normalized; no conversion.
     'application_currency' => 'USD',
 
+    // Authoritative persisted currency for newly created fines (machine code, uppercase).
+    // Clients never choose fine currency; electronic fine payment will copy Fine.currency → Payment.currency.
+    'fine_currency' => strtoupper((string) env('FINE_CURRENCY', 'USD')),
+
     'stripe' => [
         'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
         'secret_key' => env('STRIPE_SECRET_KEY'),

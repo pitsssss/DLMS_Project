@@ -26,7 +26,7 @@ class PaymentReconciliationService
      */
     public function reconcile(Payment $payment, ?User $actor = null, string $source = 'dashboard'): array
     {
-        if (! $payment->isApplicationPayment()) {
+        if (! $payment->isSupportedPayable()) {
             throw new ApiException('messages.payments.not_found', 404);
         }
 

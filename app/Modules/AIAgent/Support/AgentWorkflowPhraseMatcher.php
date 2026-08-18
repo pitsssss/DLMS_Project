@@ -14,6 +14,14 @@ class AgentWorkflowPhraseMatcher
         ?string $lastSessionIntent = null,
         ?int $lastDiscussedApplicationId = null,
     ): ?AgentIntent {
+        if (AgentSafetyRules::messageLooksDirectAdminUnblock($message)) {
+            return AgentIntent::AdminActionDenied;
+        }
+
+        if (self::isLicenseUnblockRequest($message)) {
+            return AgentIntent::CreateLicenseUnblockApplication;
+        }
+
         if (AgentSafetyRules::messageLooksAdminRelated($message)) {
             return AgentIntent::AdminActionDenied;
         }
@@ -299,6 +307,49 @@ class AgentWorkflowPhraseMatcher
             'missing license',
             'cant find my license',
             "can't find my license",
+        ] as $phrase) {
+            if (str_contains($normalized, self::normalize($phrase))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isLicenseUnblockRequest(string $message): bool
+    {
+        $normalized = self::normalize($message);
+
+        foreach ([
+            // Arabic
+            'بدي فك حظر رخصتي',
+            'فك حظر الرخصة',
+            'بدي أفك حظر الرخصة',
+            'بدي افك حظر رخصتي',
+            'اريد فك حظر رخصتي',
+            'أريد فك حظر الرخصة',
+            'رخصتي محظورة وبدي فك الحظر',
+            'رخصتي محظورة',
+            'كيف بفك حظر رخصتي',
+            'طلب فك حظر الرخصة',
+            'فك الحظر عن رخصتي',
+            'فك حظر رخصتي',
+            'أفك حظر',
+            'افك حظر',
+            'فك الحظر',
+            'فك حظر',
+            // English
+            'i want to unblock my license',
+            'unblock my license',
+            'request license unblock',
+            'license unblock',
+            'my license is blocked',
+            'how can i unblock my license',
+            'i want to request an unblock',
+            'unblock license',
+            'unblocking my license',
+            'request an unblock',
+            'request unblock',
         ] as $phrase) {
             if (str_contains($normalized, self::normalize($phrase))) {
                 return true;

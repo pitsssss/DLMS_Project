@@ -407,6 +407,21 @@ DB_PASSWORD=
 php artisan migrate:fresh --seed
 ```
 
+This is the **canonical local development reset**.
+
+- Migrations always run with `migrate:fresh`.
+- `--seed` runs `DatabaseSeeder`:
+  - **all environments:** catalogs + super-admin bootstrap
+  - **local / testing only:** full development demos (FullLifecycle, Fine Payment, committee, …)
+
+Details, accounts, and production guards: [`docs/DEVELOPMENT_DATABASE_SEEDING.md`](docs/DEVELOPMENT_DATABASE_SEEDING.md).
+
+Fine Payment standalone (optional):
+
+```bash
+php artisan db:seed --class=CitizenFinePaymentDemoSeeder
+```
+
 ---
 
 ## 8. Create Storage Link

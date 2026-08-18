@@ -18,7 +18,7 @@ class SuperAdminUserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'superadmin@syrtak.gov.sy'],
             [
-                'name' => 'مدير النظام العام',
+                'name' => 'بيتر طوس - مدير النظام العام',
                 'phone' => '0999999998',
                 'password' => Hash::make('password123'),
                 'role_id' => $role->id,

@@ -77,6 +77,13 @@ class AgentActionReplyBuilder
     {
         $number = (string) ($result['application_number'] ?? '');
         $arguments = is_array($action->arguments) ? $action->arguments : [];
+        $serviceCode = (string) ($arguments['service_type_code'] ?? 'new_license');
+        if ($serviceCode === 'license_unblock') {
+            return AgentTranslator::message('ai_agent.create_application.license_unblock.success', [
+                'number' => $number,
+            ]);
+        }
+
         $licenseCode = (string) ($arguments['license_type_code'] ?? 'private');
         
         if (AgentTranslator::getLocale() === 'en') {

@@ -18,4 +18,14 @@ class FineController extends Controller
             'messages.fines.list'
         );
     }
+
+    public function show(Request $request, int $fine, FineService $fines)
+    {
+        $model = $fines->findOwnedByCitizen($request->user(), $fine);
+
+        return $this->successResponse(
+            new FineResource($model),
+            'messages.fines.retrieved'
+        );
+    }
 }

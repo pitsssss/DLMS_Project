@@ -225,6 +225,8 @@ return [
     'payments' => [
         'fee_retrieved' => 'Required fee retrieved successfully.',
         'list' => 'Payments retrieved successfully.',
+        'history_list' => 'Payments retrieved successfully.',
+        'history_details' => 'Payment retrieved successfully.',
         'status' => 'Payment status retrieved successfully.',
         'stripe_session' => 'Checkout session created successfully.',
         'initiated_mock' => 'Payment initiated. Please confirm once the transfer is complete (mock mode).',
@@ -255,6 +257,46 @@ return [
         'missing_provider_reference' => 'No provider reference is available to verify this payment.',
         'provider_unavailable' => 'The payment provider is currently unavailable. Please try again later.',
         'provider_currency_unsupported' => 'Fee currency is not supported by the current online payment provider.',
+        'stripe_product_application_fee' => 'DLMS Application Fee',
+        'stripe_product_fine' => 'DLMS Traffic Fine',
+        'stripe_description_fine' => 'Fine #:fine_id — :payment_number',
+        'purposes' => [
+            'fine' => 'Traffic fine payment',
+            'unknown' => 'Payment',
+        ],
+        'return' => [
+            'brand_ar' => 'سيرتك',
+            'brand_en' => 'SYRTAK',
+            'brand_full' => 'سيرتك | SYRTAK',
+            'return_to_app' => 'You no longer need this page. You may close it and return to the SYRTAK application.',
+            'security_note' => 'This page is for display only. Payment confirmation is handled securely by SYRTAK.',
+            'success' => [
+                'title' => 'Payment completed successfully',
+                'lead' => 'Your payment has been confirmed.',
+                'body' => 'You no longer need this page. You may close it and return to the SYRTAK application.',
+            ],
+            'processing' => [
+                'title' => 'Confirming your payment',
+                'lead' => 'Your payment result has been received and is being confirmed.',
+                'body' => 'You do not need to keep this page open. You may close it and return to the SYRTAK application. The status will update inside the app.',
+            ],
+            'verifying' => [
+                'title' => 'Payment received',
+                'lead' => 'Your payment is currently being verified.',
+                'body' => 'You may close this page and return to the SYRTAK application. The payment status will update in the app once verification is complete.',
+            ],
+            'inconclusive' => [
+                'title' => 'Unable to confirm payment status',
+                'lead' => 'We could not confirm the final payment status on this page.',
+                'body' => 'You may close this page and return to the SYRTAK application. Check your payment status inside the app.',
+            ],
+            'cancel' => [
+                'title' => 'Payment cancelled',
+                'lead' => 'The payment was not completed through the Stripe checkout page.',
+                'body' => 'No payment confirmation was completed on this page.',
+                'instruction' => 'You may close this page, return to the SYRTAK application, and try again.',
+            ],
+        ],
         'failure_codes' => [
             'checkout_creation_failed' => 'Unable to create the checkout session.',
             'session_expired' => 'Checkout session has expired.',
@@ -267,6 +309,7 @@ return [
             'obligation_already_settled' => 'This fee was already settled by another payment.',
             'workflow_conflict' => 'Application workflow conflict after payment.',
             'provider_currency_unsupported' => 'Fee currency is not supported by the payment provider.',
+            'provider_mismatch' => 'Payment provider changed. The previous attempt was closed; a new attempt is required.',
         ],
         'statuses' => [
             'pending' => 'Pending',
@@ -523,6 +566,7 @@ return [
 
     'fines' => [
         'list' => 'Fines retrieved successfully.',
+        'retrieved' => 'Fine retrieved successfully.',
         'created' => 'Fine created successfully.',
         'updated' => 'Fine updated successfully.',
         'amount_invalid' => 'Fine amount must be greater than zero.',
@@ -530,6 +574,12 @@ return [
         'license_not_found' => 'License not found for this citizen.',
         'not_found' => 'Fine not found.',
         'paid_cannot_cancel' => 'A paid fine cannot be cancelled.',
+        'already_paid' => 'This fine has already been paid.',
+        'not_payable' => 'This fine cannot be paid electronically in its current state.',
+        'not_payable_cancelled' => 'A cancelled fine cannot be paid.',
+        'payment_already_completed' => 'This fine has already been settled.',
+        'payment_confirmed' => 'Fine payment completed successfully.',
+        'currency_unsupported' => 'Fine currency is not supported for electronic payment.',
         'statuses' => [
             'unpaid' => 'Unpaid',
             'paid' => 'Paid',

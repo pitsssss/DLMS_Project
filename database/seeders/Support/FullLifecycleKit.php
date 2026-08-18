@@ -1186,10 +1186,10 @@ final class FullLifecycleKit
     private function attachOptionalFines(User $citizen, ?License $license, array $spec): void
     {
         if (($spec['unpaid_fine'] ?? false) === true) {
-            $this->createFine($citizen, $license, FineStatus::Unpaid, 75000, self::FINE_REASONS[0]);
+            $this->createFine($citizen, $license, FineStatus::Unpaid, 25.00, self::FINE_REASONS[0]);
         }
         if (($spec['paid_fine'] ?? false) === true) {
-            $fine = $this->createFine($citizen, $license, FineStatus::Paid, 40000, self::FINE_REASONS[1], now()->subDays(4));
+            $fine = $this->createFine($citizen, $license, FineStatus::Paid, 15.00, self::FINE_REASONS[1], now()->subDays(4));
             Payment::withTrashed()->updateOrCreate(
                 ['payment_number' => 'PAY-FINE-'.$fine->id],
                 [
@@ -1200,7 +1200,7 @@ final class FullLifecycleKit
                     'payable_type' => Fine::class,
                     'payable_id' => $fine->id,
                     'amount' => $fine->amount,
-                    'currency' => 'SYP',
+                    'currency' => strtoupper((string) config('payment.fine_currency', 'USD')),
                     'status' => PaymentStatus::Completed,
                     'provider' => 'mock',
                     'provider_reference' => 'FINE-'.$fine->id,
@@ -1211,7 +1211,7 @@ final class FullLifecycleKit
             );
         }
         if (($spec['cancelled_fine'] ?? false) === true) {
-            $this->createFine($citizen, $license, FineStatus::Cancelled, 25000, self::FINE_REASONS[2]);
+            $this->createFine($citizen, $license, FineStatus::Cancelled, 10.00, self::FINE_REASONS[2]);
         }
     }
 
@@ -1227,6 +1227,7 @@ final class FullLifecycleKit
             'citizen_id' => $citizen->id,
             'license_id' => $license?->id,
             'amount' => $amount,
+            'currency' => strtoupper((string) config('payment.fine_currency', 'USD')),
             'reason' => $reason,
             'status' => $status,
             'paid_at' => $status === FineStatus::Paid ? ($paidAt ?? now()->subDays(2)) : null,

@@ -60,7 +60,7 @@ class DashboardCitizenLicensesFinesDemoSeeder extends Seeder
         $this->seedFine(
             citizen: $citizen,
             license: $privateLicense,
-            amount: 75000,
+            amount: 25.00,
             reason: 'مخالفة سرعة زائدة على الطريق العام.',
             status: FineStatus::Unpaid
         );
@@ -68,7 +68,7 @@ class DashboardCitizenLicensesFinesDemoSeeder extends Seeder
         $this->seedFine(
             citizen: $citizen,
             license: $publicLicense,
-            amount: 50000,
+            amount: 15.00,
             reason: 'تأخير تجديد الرخصة بعد انتهاء الصلاحية.',
             status: FineStatus::Paid,
             paidAt: now()->subDays(5)
@@ -77,7 +77,7 @@ class DashboardCitizenLicensesFinesDemoSeeder extends Seeder
         $this->seedFine(
             citizen: $citizen,
             license: $truckLicense,
-            amount: 120000,
+            amount: 50.00,
             reason: 'قيادة مركبة برخصة عليها حظر إداري.',
             status: FineStatus::Cancelled
         );
@@ -154,7 +154,7 @@ class DashboardCitizenLicensesFinesDemoSeeder extends Seeder
     private function seedFine(
         User $citizen,
         License $license,
-        int $amount,
+        float $amount,
         string $reason,
         FineStatus $status,
         mixed $paidAt = null,
@@ -167,6 +167,7 @@ class DashboardCitizenLicensesFinesDemoSeeder extends Seeder
             ],
             [
                 'amount' => $amount,
+                'currency' => strtoupper((string) config('payment.fine_currency', 'USD')),
                 'status' => $status,
                 'paid_at' => $paidAt,
             ]

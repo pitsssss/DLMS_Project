@@ -1222,6 +1222,7 @@ class BenchmarkPerformanceSeeder extends Seeder
                 'citizen_id' => (int) $license->citizen_id,
                 'license_id' => (int) $license->id,
                 'amount' => $amount,
+                'currency' => 'USD',
                 'reason' => sprintf('benchmark fine reason %d', ($i % 17) + 1),
                 'status' => $status,
                 'paid_at' => $paidAt,

@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
+use App\Models\Fee;
 use App\Models\LicenseApplication;
 use App\Models\LicenseType;
+use App\Models\Payment;
 use App\Models\ServiceType;
 use App\Models\User;
+use App\Modules\Payments\Support\Money;
 use Database\Seeders\FeesSeeder;
 use Database\Seeders\LicenseTypesSeeder;
 use Database\Seeders\RolesSeeder;
@@ -111,6 +114,50 @@ class PaymentFlowTest extends TestCase
         $second = $this->postJson("/api/applications/{$application->id}/payments", [])->json('data.id');
 
         $this->assertSame($first, $second);
+        $this->assertSame('mock', Payment::query()->findOrFail($first)->provider);
+    }
+
+    public function test_does_not_reuse_pending_stripe_payment_when_configured_provider_is_mock(): void
+    {
+        config(['payment.provider' => 'mock']);
+        [$citizen, $application] = $this->citizenInPaymentPending();
+        Sanctum::actingAs($citizen);
+
+        $fee = Fee::query()->where('code', 'application_fee')->firstOrFail();
+        $obligationKey = Payment::obligationKey($application->id, $fee->id);
+
+        $stripePending = Payment::query()->create([
+            'payment_number' => 'PAY-APP-STRIPE-'.uniqid(),
+            'user_id' => $citizen->id,
+            'application_id' => $application->id,
+            'fine_id' => null,
+            'fee_id' => $fee->id,
+            'payable_type' => null,
+            'payable_id' => null,
+            'amount' => Money::format((string) $fee->amount),
+            'currency' => strtoupper((string) $fee->currency),
+            'status' => PaymentStatus::Pending,
+            'provider' => 'stripe',
+            'provider_reference' => 'cs_test_app_existing',
+            'paid_at' => null,
+            'metadata' => ['checkout_url' => 'https://checkout.stripe.com/c/pay/cs_test_app_existing'],
+            'active_obligation_key' => $obligationKey,
+            'settled_obligation_key' => null,
+        ]);
+
+        $newId = (int) $this->postJson("/api/applications/{$application->id}/payments", [])
+            ->assertOk()
+            ->json('data.id');
+
+        $this->assertNotSame($stripePending->id, $newId);
+        $this->assertDatabaseHas('payments', [
+            'id' => $stripePending->id,
+            'provider' => 'stripe',
+            'status' => PaymentStatus::Failed->value,
+            'failure_code' => 'provider_mismatch',
+            'active_obligation_key' => null,
+        ]);
+        $this->assertSame('mock', Payment::query()->findOrFail($newId)->provider);
     }
 
     public function test_cannot_create_payment_when_not_payment_pending(): void

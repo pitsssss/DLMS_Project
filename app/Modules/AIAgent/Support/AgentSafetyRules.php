@@ -134,8 +134,51 @@ class AgentSafetyRules
         return AgentWorkflowActionMap::isMutating($actionName);
     }
 
+    /**
+     * Direct employee/admin unblock of someone else's license — not a citizen request.
+     */
+    public static function messageLooksDirectAdminUnblock(string $message): bool
+    {
+        $normalized = mb_strtolower(trim($message));
+
+        $patterns = [
+            'force unblock',
+            'unblock immediately',
+            'immediately unblock',
+            "citizen's license",
+            'citizens license',
+            'this citizen',
+            'unblock citizen',
+            'citizen license',
+            'رخصة المواطن',
+            'فك حظر فورا',
+            'فك الحظر فورا',
+            'للمواطن',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (str_contains($normalized, mb_strtolower($pattern))) {
+                return true;
+            }
+        }
+
+        if (preg_match('/unblock\s+license\s+\d/u', $normalized) === 1) {
+            return true;
+        }
+
+        if (preg_match('/فك\s*حظر.{0,40}رقم\s*\d/u', $normalized) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
     public static function messageLooksAdminRelated(string $message): bool
     {
+        if (self::messageLooksDirectAdminUnblock($message)) {
+            return true;
+        }
+
         $normalized = mb_strtolower(trim($message));
 
         $patterns = [
@@ -143,7 +186,6 @@ class AgentSafetyRules
             'reject document',
             'issue license',
             'block license',
-            'unblock license',
             'record test result',
             'create fine',
             'audit log',

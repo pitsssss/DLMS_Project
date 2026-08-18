@@ -17,6 +17,7 @@ enum PaymentFailureCode: string
     case ObligationAlreadySettled = 'obligation_already_settled';
     case WorkflowConflict = 'workflow_conflict';
     case ProviderCurrencyUnsupported = 'provider_currency_unsupported';
+    case ProviderMismatch = 'provider_mismatch';
 
     public function label(): string
     {

@@ -129,7 +129,7 @@ class AIAgentFlowTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('data.locale', 'en')
             ->assertJsonPath('data.intent', 'general_help')
-            ->assertJsonPath('data.reply', 'I assist with driving license services only. I can help with new applications, status, documents, payments, appointments, results, licenses, and fines. How can I help?');
+            ->assertJsonPath('data.reply', 'I assist with driving license services only. I can help with new applications, license unblock requests, status, documents, payments, appointments, results, licenses, and fines. How can I help?');
     }
 
     public function test_citizen_can_send_message_and_create_session(): void
@@ -1182,6 +1182,7 @@ class AIAgentFlowTest extends TestCase
             'license_issued' => ['license_issued'],
             'rejected' => ['rejected'],
             'cancelled' => ['cancelled'],
+            'completed' => ['completed'],
         ];
     }
 

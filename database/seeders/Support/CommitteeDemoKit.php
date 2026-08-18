@@ -1031,7 +1031,8 @@ final class CommitteeDemoKit
         return Fine::query()->create([
             'citizen_id' => $citizen->id,
             'license_id' => null,
-            'amount' => 1500,
+            'amount' => 25.00,
+            'currency' => strtoupper((string) config('payment.fine_currency', 'USD')),
             'reason' => $reason,
             'status' => FineStatus::Unpaid,
             'paid_at' => null,

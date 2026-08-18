@@ -30,6 +30,7 @@ class AgentOtherLicenseServicesHandler
             ServiceCode::RenewLicense => AgentIntent::CreateRenewLicenseApplication,
             ServiceCode::LostReplacement => AgentIntent::CreateLostReplacementApplication,
             ServiceCode::DamagedReplacement => AgentIntent::CreateDamagedReplacementApplication,
+            ServiceCode::LicenseUnblock => AgentIntent::CreateLicenseUnblockApplication,
             default => AgentIntent::GeneralHelp,
         };
 
@@ -38,7 +39,7 @@ class AgentOtherLicenseServicesHandler
         if ($eligible->isEmpty()) {
             return $this->responseBuilder->basePayload($intent, $language, [
                 'confidence' => 0.9,
-                'reply' => AgentTranslator::message('ai_agent.other_license.none_eligible'),
+                'reply' => $this->noneEligibleReply($citizen, $service),
                 'proposed_action' => null,
                 'missing_slots' => [],
                 'message_type' => 'no_eligible_license',
@@ -122,5 +123,29 @@ class AgentOtherLicenseServicesHandler
         );
 
         return $payload;
+    }
+
+    private function noneEligibleReply(User $citizen, ServiceCode $service): string
+    {
+        if ($service !== ServiceCode::LicenseUnblock) {
+            return AgentTranslator::message('ai_agent.other_license.none_eligible');
+        }
+
+        $blocked = License::query()
+            ->where('citizen_id', $citizen->id)
+            ->with('licenseType')
+            ->orderByDesc('id')
+            ->get()
+            ->first(fn (License $license): bool => $this->eligibility->check($citizen, $license, $service)['message'] === 'messages.licenses.fines_before_unblock');
+
+        if ($blocked !== null) {
+            return trim(
+                AgentTranslator::message('messages.licenses.fines_before_unblock')
+                .' '
+                .AgentTranslator::message('ai_agent.other_license.fines_hint')
+            );
+        }
+
+        return AgentTranslator::message('ai_agent.other_license.none_eligible_license_unblock');
     }
 }

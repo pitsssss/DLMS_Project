@@ -26,6 +26,8 @@ class UpdateFineRequest extends FormRequest
                 FineStatus::Paid->value,
                 FineStatus::Cancelled->value,
             ])],
+            // Currency is immutable after creation; clients must not send it.
+            'currency' => ['prohibited'],
         ];
     }
 }
