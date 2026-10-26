@@ -156,19 +156,22 @@ Route::prefix('dashboard')
                 ->middleware('throttle:30,1');
         });
 
-        // Citizen management (citizens register themselves; Dashboard can view, update status and audit)
-        Route::middleware('permission:manage_users')->group(function (): void {
+        // Citizen management. Reads accept view_citizens; mutations stay on manage_users.
+        Route::middleware('permission:manage_users,view_citizens')->group(function (): void {
             Route::get('/citizens', [DashboardCitizenController::class, 'index']);
             Route::get('/citizens/stats', [DashboardCitizenController::class, 'stats']);
             Route::get('/citizens/search', [DashboardCitizenController::class, 'search']); // deprecated – use ?search= on /citizens
             Route::get('/citizens/profile-statuses', [DashboardCitizenController::class, 'profileStatuses']);
             Route::get('/citizens/{citizen}', [DashboardCitizenController::class, 'show'])->whereNumber('citizen');
-            Route::put('/citizens/{citizen}', [DashboardCitizenController::class, 'update'])->whereNumber('citizen');
-            Route::post('/citizens/{citizen}/activate', [DashboardCitizenController::class, 'activate'])->whereNumber('citizen');
-            Route::post('/citizens/{citizen}/deactivate', [DashboardCitizenController::class, 'deactivate'])->whereNumber('citizen');
             Route::get('/citizens/{citizen}/applications', [DashboardCitizenController::class, 'applications'])->whereNumber('citizen');
             Route::get('/citizens/{citizen}/licenses', [DashboardCitizenController::class, 'licenses'])->whereNumber('citizen');
             Route::get('/citizens/{citizen}/fines', [DashboardCitizenController::class, 'fines'])->whereNumber('citizen');
+        });
+
+        Route::middleware('permission:manage_users')->group(function (): void {
+            Route::put('/citizens/{citizen}', [DashboardCitizenController::class, 'update'])->whereNumber('citizen');
+            Route::post('/citizens/{citizen}/activate', [DashboardCitizenController::class, 'activate'])->whereNumber('citizen');
+            Route::post('/citizens/{citizen}/deactivate', [DashboardCitizenController::class, 'deactivate'])->whereNumber('citizen');
             Route::get('/citizens/{citizen}/audit-logs', [DashboardCitizenController::class, 'auditLogs'])->whereNumber('citizen');
         });
 
@@ -240,27 +243,32 @@ Route::prefix('dashboard')
                 ->middleware('throttle:60,1');
         });
 
-        // Yours: license types + service types settings
-        Route::middleware('permission:manage_settings')->group(function (): void {
+        // Catalog reads. Mutations and fee audit logs stay on manage_settings.
+        Route::middleware('permission:manage_settings,view_settings')->group(function (): void {
             Route::get('/license-types', [DashboardLicenseTypeController::class, 'index']);
-            Route::post('/license-types', [DashboardLicenseTypeController::class, 'store']);
             Route::get('/license-types/{licenseType}', [DashboardLicenseTypeController::class, 'show'])->whereNumber('licenseType');
-            Route::patch('/license-types/{licenseType}', [DashboardLicenseTypeController::class, 'update'])->whereNumber('licenseType');
-            Route::patch('/license-types/{licenseType}/activate', [DashboardLicenseTypeController::class, 'activate'])->whereNumber('licenseType');
-            Route::patch('/license-types/{licenseType}/deactivate', [DashboardLicenseTypeController::class, 'deactivate'])->whereNumber('licenseType');
 
             Route::get('/service-types', [DashboardServiceTypeController::class, 'index']);
-            Route::post('/service-types', [DashboardServiceTypeController::class, 'store']);
             Route::get('/service-types/{serviceType}', [DashboardServiceTypeController::class, 'show'])->whereNumber('serviceType');
-            Route::patch('/service-types/{serviceType}', [DashboardServiceTypeController::class, 'update'])->whereNumber('serviceType');
-            Route::patch('/service-types/{serviceType}/activate', [DashboardServiceTypeController::class, 'activate'])->whereNumber('serviceType');
-            Route::patch('/service-types/{serviceType}/deactivate', [DashboardServiceTypeController::class, 'deactivate'])->whereNumber('serviceType');
 
             Route::get('/fees', [DashboardFeeController::class, 'index']);
             Route::get('/fees/stats', [DashboardFeeController::class, 'stats']);
             Route::get('/fees/options', [DashboardFeeController::class, 'options']);
-            Route::post('/fees', [DashboardFeeController::class, 'store']);
             Route::get('/fees/{fee}', [DashboardFeeController::class, 'show'])->whereNumber('fee');
+        });
+
+        Route::middleware('permission:manage_settings')->group(function (): void {
+            Route::post('/license-types', [DashboardLicenseTypeController::class, 'store']);
+            Route::patch('/license-types/{licenseType}', [DashboardLicenseTypeController::class, 'update'])->whereNumber('licenseType');
+            Route::patch('/license-types/{licenseType}/activate', [DashboardLicenseTypeController::class, 'activate'])->whereNumber('licenseType');
+            Route::patch('/license-types/{licenseType}/deactivate', [DashboardLicenseTypeController::class, 'deactivate'])->whereNumber('licenseType');
+
+            Route::post('/service-types', [DashboardServiceTypeController::class, 'store']);
+            Route::patch('/service-types/{serviceType}', [DashboardServiceTypeController::class, 'update'])->whereNumber('serviceType');
+            Route::patch('/service-types/{serviceType}/activate', [DashboardServiceTypeController::class, 'activate'])->whereNumber('serviceType');
+            Route::patch('/service-types/{serviceType}/deactivate', [DashboardServiceTypeController::class, 'deactivate'])->whereNumber('serviceType');
+
+            Route::post('/fees', [DashboardFeeController::class, 'store']);
             Route::patch('/fees/{fee}', [DashboardFeeController::class, 'update'])->whereNumber('fee');
             Route::patch('/fees/{fee}/activate', [DashboardFeeController::class, 'activate'])->whereNumber('fee');
             Route::patch('/fees/{fee}/deactivate', [DashboardFeeController::class, 'deactivate'])->whereNumber('fee');

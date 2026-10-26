@@ -42,6 +42,10 @@ class DashboardAuthService
             throw new ApiException('messages.dashboard.inactive_account', 403);
         }
 
+        if ($user->isVisitor() && ! config('demo.visitor.enabled')) {
+            throw new ApiException('messages.visitor.unavailable', 403);
+        }
+
         $user->load(['role.permissions', 'directPermissions']);
 
         $request ??= request();
@@ -74,14 +78,18 @@ class DashboardAuthService
                 'is_active' => (bool) $user->is_active,
                 'is_super_admin' => $user->isSuperAdmin(),
                 'is_root_super_admin' => $user->isRootSuperAdmin(),
+                'is_visitor' => $user->isVisitor(),
+                'is_read_only' => $user->isVisitor(),
                 'can_manage_employee_sessions' => $user->canManageEmployeeSessions(),
                 'role' => [
                     'name' => $user->role?->name,
                     'display_name' => $user->role?->display_name,
                 ],
                 'permissions' => $user->permissionNames(),
-                'role_permissions' => $user->isSuperAdmin() ? ['*'] : $user->rolePermissionNames(),
-                'direct_permissions' => $user->isSuperAdmin() ? [] : $user->directPermissionNames(),
+                'role_permissions' => $user->isSuperAdmin()
+                    ? ['*']
+                    : ($user->isVisitor() ? $user->permissionNames() : $user->rolePermissionNames()),
+                'direct_permissions' => ($user->isSuperAdmin() || $user->isVisitor()) ? [] : $user->directPermissionNames(),
                 'effective_permissions' => $user->permissionNames(),
                 'dashboard_modules' => $this->modules->modulesForUser($user),
             ],
@@ -91,7 +99,7 @@ class DashboardAuthService
     public function forgotPassword(string $email): void
     {
         $user = $this->users->findByEmail($email);
-        if ($user && $user->isDashboardUser() && ! $user->isCitizen()) {
+        if ($user && $user->isDashboardUser() && ! $user->isCitizen() && ! $user->isVisitor()) {
             $this->otps->sendEmailOtp($email, OtpPurpose::DashboardForgotPassword);
         }
     }
@@ -105,7 +113,7 @@ class DashboardAuthService
 
         return DB::transaction(function () use ($email) {
             $user = $this->users->findByEmail($email);
-            if ($user === null || ! $user->isDashboardUser() || $user->isCitizen()) {
+            if ($user === null || ! $user->isDashboardUser() || $user->isCitizen() || $user->isVisitor()) {
                 throw new ApiException('messages.dashboard.invalid_credentials', 422);
             }
 
@@ -120,7 +128,7 @@ class DashboardAuthService
     {
         DB::transaction(function () use ($email, $plainResetToken, $newPassword) {
             $user = $this->users->findByEmail($email);
-            if ($user === null || ! $user->isDashboardUser() || $user->isCitizen()) {
+            if ($user === null || ! $user->isDashboardUser() || $user->isCitizen() || $user->isVisitor()) {
                 throw new ApiException('messages.auth.invalid_reset_token', 422);
             }
 
@@ -137,6 +145,10 @@ class DashboardAuthService
 
     public function changePassword(User $user, string $currentPassword, string $newPassword): void
     {
+        if ($user->isVisitor()) {
+            throw new ApiException('messages.visitor.read_only', 403);
+        }
+
         if (! Hash::check($currentPassword, $user->password)) {
             throw new ApiException('messages.auth.current_password_wrong', 422);
         }

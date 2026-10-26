@@ -23,6 +23,7 @@ class RolesSeeder extends Seeder
             ['name' => 'citizen', 'display_name' => 'مواطن'],
             ['name' => 'admin', 'display_name' => 'مدير النظام'],
             ['name' => 'employee', 'display_name' => 'موظف'],
+            ['name' => 'visitor', 'display_name' => 'زائر تجريبي'],
         ];
 
         foreach ($roles as $role) {

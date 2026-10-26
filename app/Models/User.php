@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProfileStatus;
 use App\Enums\UserType;
+use App\Modules\Dashboard\Support\VisitorAccess;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -161,6 +162,11 @@ class User extends Authenticatable
         return in_array($this->user_type, [UserType::Admin, UserType::Employee], true);
     }
 
+    public function isVisitor(): bool
+    {
+        return $this->hasRole(VisitorAccess::ROLE);
+    }
+
     /**
      * Effective permission names = role permissions UNION direct grants.
      * Super Admin bypass returns ['*'] and is not editable via permission rows.
@@ -169,11 +175,31 @@ class User extends Authenticatable
      */
     public function permissionNames(): array
     {
+        if ($this->isVisitor()) {
+            return $this->visitorPermissionNames();
+        }
+
         if ($this->isSuperAdmin()) {
             return ['*'];
         }
 
         return $this->effectivePermissionNames();
+    }
+
+    /**
+     * Visitor grants are the intersection of the role pivot and the fixed allowlist.
+     * Direct permissions cannot widen a visitor.
+     *
+     * @return list<string>
+     */
+    public function visitorPermissionNames(): array
+    {
+        $allowed = array_flip(VisitorAccess::permissionNames());
+
+        return array_values(array_filter(
+            $this->rolePermissionNames(),
+            static fn (string $name): bool => isset($allowed[$name])
+        ));
     }
 
     /**
@@ -209,6 +235,10 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
+        if ($this->isVisitor()) {
+            return in_array($permission, $this->visitorPermissionNames(), true);
+        }
+
         if ($this->isSuperAdmin()) {
             return true;
         }

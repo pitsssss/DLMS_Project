@@ -65,9 +65,14 @@ Route::prefix('admin')
     });
 
 Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'dashboard', 'permission:manage_fines'])
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:view_fines,manage_fines'])
     ->group(function (): void {
         Route::get('/fines', [FineManagementController::class, 'index']);
+    });
+
+Route::prefix('admin')
+    ->middleware(['auth:sanctum', 'dashboard', 'permission:manage_fines'])
+    ->group(function (): void {
         Route::post('/fines', [FineManagementController::class, 'store'])
             ->middleware('throttle:60,1');
         Route::put('/fines/{fine}', [FineManagementController::class, 'update'])

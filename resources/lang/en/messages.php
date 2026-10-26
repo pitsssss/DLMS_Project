@@ -25,6 +25,14 @@ return [
         'account_inactive' => 'This account is inactive.',
     ],
 
+    'visitor' => [
+        'read_only' => 'The visitor account is read-only and cannot change system data.',
+        'unavailable' => 'The demo visitor account is not available.',
+        'dashboard_login_only' => 'The visitor account can only sign in through the dashboard.',
+        'redacted_value' => 'Hidden',
+        'redacted_name' => 'Demo record :ref',
+    ],
+
     'auth' => [
         'register_success' => 'Account created successfully. A verification code has been sent to your email.',
         'verify_success' => 'Verification completed successfully.',

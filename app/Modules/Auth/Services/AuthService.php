@@ -84,7 +84,7 @@ class AuthService
 
         return DB::transaction(function () use ($email) {
             $user = $this->users->findByEmail($email);
-            if (! $user) {
+            if (! $user || $user->isVisitor()) {
                 throw new ApiException('messages.auth.user_not_found', 404);
             }
 
@@ -104,6 +104,10 @@ class AuthService
             $user = $this->users->findByEmail($email);
             if (! $user) {
                 throw new ApiException('messages.auth.user_not_found', 404);
+            }
+
+            if ($user->isVisitor()) {
+                throw new ApiException('messages.auth.invalid_reset_token', 422);
             }
 
             $row = $this->passwordResetTokens->findMatchingValidToken($email, $plainResetToken);
@@ -135,6 +139,10 @@ class AuthService
 
         if (! $user->is_active) {
             throw new ApiException('messages.auth.account_inactive', 403);
+        }
+
+        if ($user->isVisitor()) {
+            throw new ApiException('messages.visitor.dashboard_login_only', 403);
         }
 
         if ($user->isCitizen()) {
@@ -186,7 +194,7 @@ class AuthService
     public function forgotPassword(string $email): void
     {
         $user = $this->users->findByEmail($email);
-        if ($user) {
+        if ($user && ! $user->isVisitor()) {
             $this->otps->sendEmailOtp($email, OtpPurpose::ForgotPassword);
         }
     }

@@ -50,7 +50,9 @@ class DashboardModuleService
                 || ($def['key'] === 'licenses' && $user->hasPermission('manage_licenses'))
                 || ($def['key'] === 'fines' && $user->hasPermission('manage_fines'))
                 || ($def['key'] === 'roles_permissions' && ($user->hasPermission('view_roles') || $user->hasPermission('manage_permissions')))
-                || ($def['key'] === 'ai_agent_monitoring' && $user->hasPermission('view_ai_agent_reports'));
+                || ($def['key'] === 'ai_agent_monitoring' && $user->hasPermission('view_ai_agent_reports'))
+                || ($def['key'] === 'citizens' && $user->hasPermission('view_citizens'))
+                || ($def['key'] === 'settings' && $user->hasPermission('view_settings'));
 
             if ($enabled) {
                 $modules[] = [

@@ -42,6 +42,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'dev.dashboard' => \App\Http\Middleware\EnsureDevDashboardAllowed::class,
             'locale' => \App\Http\Middleware\ResolveRequestLocale::class,
         ]);
+
+        $middleware->prependToGroup('api', [
+            \App\Http\Middleware\EnsureVisitorReadOnly::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (Request $request, \Throwable $e): bool {

@@ -21,7 +21,7 @@ class TrackEmployeeSessionActivity
         $response = $next($request);
 
         $user = $request->user();
-        if ($user === null || ! $user->isDashboardUser() || $user->isCitizen()) {
+        if ($user === null || ! $user->isDashboardUser() || $user->isCitizen() || $user->isVisitor()) {
             return $response;
         }
 
